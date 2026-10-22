@@ -9,6 +9,7 @@ const CATEGORY_NAMES = {
   disputes: 'Disputes & Arbitration',
   liability: 'Liability Limit',
   termination: 'Account Termination',
+  safety: 'Health & Safety Disclaimers',
   other: 'General Clause',
 };
 

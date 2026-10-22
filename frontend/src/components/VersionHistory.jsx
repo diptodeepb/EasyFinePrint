@@ -1,5 +1,6 @@
 import React from 'react';
 import { History, Clock } from 'lucide-react';
+import { formatLocalDate } from '../lib/dateUtils';
 
 export default function VersionHistory({ events = [], onViewSnapshot }) {
   if (!events || events.length === 0) {
@@ -10,17 +11,7 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
     );
   }
 
-  const formatTime = (isoString) => {
-    try {
-      const d = new Date(isoString);
-      return d.toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
-    } catch {
-      return isoString;
-    }
-  };
+  const formatTime = (isoString) => formatLocalDate(isoString);
 
   return (
     <div className="space-y-3">
@@ -35,11 +26,19 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
           let label = 'Check event';
 
           if (evt.status === 'changed') {
-            badgeClass = 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50';
-            label = 'Version updated (text changed)';
+            if (!evt.old_snapshot_id) {
+              badgeClass = 'bg-blue-950/40 text-blue-400 border-blue-900/50';
+              label = 'Initial baseline created';
+            } else {
+              badgeClass = 'bg-emerald-950/40 text-emerald-400 border-emerald-900/50';
+              label = 'Version updated (text changed)';
+            }
+          } else if (evt.status === 'reanalyzed') {
+            badgeClass = 'bg-indigo-950/40 text-indigo-400 border-indigo-900/50';
+            label = 'Analysis refreshed (no text change)';
           } else if (evt.status === 'unchanged') {
             badgeClass = 'bg-zinc-900 text-zinc-400 border-zinc-800';
-            label = 'Unchanged (content hash match)';
+            label = 'Unchanged (content match)';
           } else if (evt.status === 'extraction_failed') {
             badgeClass = 'bg-rose-950/40 text-rose-400 border-rose-900/50';
             label = 'Extraction failed (baseline kept)';

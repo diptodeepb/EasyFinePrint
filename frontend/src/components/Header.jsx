@@ -1,33 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, ExternalLink } from 'lucide-react';
-import { api } from '../lib/api';
 
 export default function Header() {
-  const [health, setHealth] = useState(null);
-
-  useEffect(() => {
-    let mounted = true;
-    api.getHealth()
-      .then((data) => {
-        if (mounted) setHealth(data);
-      })
-      .catch(() => {
-        if (mounted) setHealth({ status: 'offline' });
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-zinc-800 bg-[#09090b]/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
         {/* Brand */}
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700 flex items-center justify-center">
-            <FileText className="w-3.5 h-3.5 text-zinc-200" />
-          </div>
+          <img
+            src="/logo.svg"
+            alt="EasyFinePrint Logo"
+            className="w-7 h-7 rounded-md border border-zinc-700/80 shadow-sm transition-transform group-hover:scale-105"
+          />
           <div className="flex items-center gap-2">
             <span className="font-semibold text-sm text-zinc-100 tracking-tight">EasyFinePrint</span>
             <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
@@ -36,19 +20,8 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Status & Navigation */}
+        {/* Navigation */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-xs font-mono">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                health?.status === 'healthy' ? 'bg-emerald-400' : 'bg-rose-400'
-              }`}
-            />
-            <span className="text-zinc-400 text-[11px]">
-              {health?.status === 'healthy' ? 'Engine ready' : 'Engine offline'}
-            </span>
-          </div>
-
           <nav className="flex items-center gap-2">
             <Link
               to="/"

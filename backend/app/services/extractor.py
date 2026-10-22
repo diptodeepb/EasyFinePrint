@@ -58,7 +58,7 @@ async def safe_fetch_page(
                 parsed = validate_url(current_url)
                 resolve_and_verify_hostname(parsed.hostname)
             except URLValidationError as exc:
-                raise ExtractionError(f"URL validation failed for {current_url}: {exc}")
+                raise ExtractionError(str(exc))
 
             try:
                 # Use streaming response to cap bytes downloaded

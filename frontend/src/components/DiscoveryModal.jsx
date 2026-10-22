@@ -15,6 +15,11 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
     const clean = query.trim();
     if (!clean) return;
 
+    if (clean.length < 2) {
+      setError('Please enter at least 2 characters to search for a company.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setResults(null);
@@ -72,15 +77,6 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
           </div>
         </form>
 
-        {/* Quota info */}
-        {results?.quota_remaining !== undefined && (
-          <div className="text-[11px] font-mono text-zinc-400 mb-3 flex items-center gap-1.5">
-            <Check className="w-3 h-3 text-emerald-400" />
-            <span>Monthly quota remaining: {results.quota_remaining} searches</span>
-            {results.cached && <span className="text-zinc-500">(cached)</span>}
-          </div>
-        )}
-
         {/* Error notice */}
         {error && (
           <div className="p-2.5 mb-3 rounded-md bg-amber-950/30 border border-amber-900/50 text-amber-300 text-xs font-mono flex items-center gap-2">
@@ -124,7 +120,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
         )}
 
         <div className="mt-3 pt-3 border-t border-zinc-800 text-[11px] text-zinc-500 font-mono">
-          Discovery uses SerpApi fallback with rate capping. Selected candidate URLs undergo full SSRF validation before extraction.
+          Official policy URLs discovered via verified directory and live website crawl. Selected URLs undergo full SSRF validation before extraction.
         </div>
       </div>
     </div>

@@ -19,6 +19,7 @@ VALID_CATEGORIES = {
     "disputes",
     "liability",
     "termination",
+    "safety",
     "other",
 }
 
@@ -53,6 +54,12 @@ def verify_quote_in_text(quote: str, source_text: str) -> bool:
     return clean_quote in clean_source
 
 
+def _safe_str(val: Any) -> str:
+    if val is None:
+        return ""
+    return str(val).strip()
+
+
 def validate_initial_findings(findings: List[Dict[str, Any]], source_text: str) -> Tuple[List[Dict[str, Any]], str]:
     """
     Validate findings from initial policy analysis against the snapshot text.
@@ -65,9 +72,9 @@ def validate_initial_findings(findings: List[Dict[str, Any]], source_text: str) 
     dropped_count = 0
 
     for item in findings:
-        excerpt = item.get("exact_excerpt", "")
-        category = item.get("category", "other").lower()
-        severity = item.get("severity", "uncertain").lower()
+        excerpt = _safe_str(item.get("exact_excerpt"))
+        category = _safe_str(item.get("category", "other")).lower()
+        severity = _safe_str(item.get("severity", "uncertain")).lower()
 
         # 1. Category and severity validation
         if category not in VALID_CATEGORIES:
@@ -82,10 +89,10 @@ def validate_initial_findings(findings: List[Dict[str, Any]], source_text: str) 
             validated.append({
                 "category": category,
                 "severity": severity,
-                "exact_excerpt": excerpt.strip(),
-                "explanation": item.get("explanation", "").strip(),
-                "why_it_might_matter": item.get("why_it_might_matter", "").strip(),
-                "uncertainty": item.get("uncertainty", "").strip() or None,
+                "exact_excerpt": excerpt,
+                "explanation": _safe_str(item.get("explanation")),
+                "why_it_might_matter": _safe_str(item.get("why_it_might_matter")),
+                "uncertainty": _safe_str(item.get("uncertainty")) or None,
             })
         else:
             dropped_count += 1
@@ -128,13 +135,13 @@ def validate_change_explanations(
         target_text = new_text if src_version == "new" else old_text
         quote_valid = verify_quote_in_text(excerpt, target_text) if excerpt else False
 
-        diff_map[cid]["explanation"] = item.get("explanation", "").strip()
-        diff_map[cid]["possible_implication"] = item.get("possible_implication", "").strip()
-        diff_map[cid]["uncertainty"] = item.get("uncertainty", "").strip() or None
+        diff_map[cid]["explanation"] = _safe_str(item.get("explanation"))
+        diff_map[cid]["possible_implication"] = _safe_str(item.get("possible_implication"))
+        diff_map[cid]["uncertainty"] = _safe_str(item.get("uncertainty")) or None
         diff_map[cid]["significance"] = significance
 
         if quote_valid and excerpt:
-            diff_map[cid]["exact_excerpt"] = excerpt.strip()
+            diff_map[cid]["exact_excerpt"] = excerpt
             diff_map[cid]["source_version"] = src_version
             validated_count += 1
         else:

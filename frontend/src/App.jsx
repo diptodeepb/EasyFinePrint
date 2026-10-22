@@ -21,6 +21,7 @@ export default function App() {
         <footer className="border-t border-zinc-800/80 py-6 text-xs text-zinc-500 font-mono bg-[#09090b]">
           <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2">
+              <img src="/logo.svg" alt="" className="w-4 h-4 rounded" />
               <span className="font-semibold text-zinc-400">EasyFinePrint</span>
               <span>/</span>
               <span>Deterministic policy change monitor</span>

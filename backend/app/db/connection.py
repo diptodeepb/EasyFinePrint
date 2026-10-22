@@ -8,16 +8,30 @@ from app.config import settings
 
 logger = logging.getLogger("easyfineprint.db")
 
+import asyncio
+
 _client: Optional[AsyncIOMotorClient] = None
+_client_loop: Optional[asyncio.AbstractEventLoop] = None
 
 
 def get_client() -> AsyncIOMotorClient:
-    global _client
-    if _client is None:
+    global _client, _client_loop
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    if _client is None or (_client_loop is not None and current_loop is not None and _client_loop != current_loop):
+        if _client is not None:
+            try:
+                _client.close()
+            except Exception:
+                pass
         _client = AsyncIOMotorClient(
             settings.mongodb_uri,
-            serverSelectionTimeoutMS=2000,
+            serverSelectionTimeoutMS=8000,
         )
+        _client_loop = current_loop
     return _client
 
 
@@ -88,7 +102,8 @@ async def create_indexes():
 
 
 def close_connection():
-    global _client
+    global _client, _client_loop
     if _client is not None:
         _client.close()
         _client = None
+        _client_loop = None
