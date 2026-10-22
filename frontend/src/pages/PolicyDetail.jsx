@@ -5,9 +5,6 @@ import {
   RefreshCw,
   ExternalLink,
   Clock,
-  GitCompare,
-  FileText,
-  History,
   AlertTriangle,
   CheckCircle2,
   Loader2,
@@ -15,6 +12,7 @@ import {
   Shield,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { formatLocalDate } from '../lib/dateUtils';
 import FindingCard from '../components/FindingCard';
 import DiffViewer from '../components/DiffViewer';
 import VersionHistory from '../components/VersionHistory';
@@ -27,8 +25,23 @@ export default function PolicyDetail() {
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
   const [checkResult, setCheckResult] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingSeconds, setAnalyzingSeconds] = useState(0);
   const [rawSnapshotText, setRawSnapshotText] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let timer;
+    if (analyzing) {
+      setAnalyzingSeconds(0);
+      timer = setInterval(() => {
+        setAnalyzingSeconds((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setAnalyzingSeconds(0);
+    }
+    return () => clearInterval(timer);
+  }, [analyzing]);
 
   const loadData = async () => {
     try {
@@ -75,6 +88,34 @@ export default function PolicyDetail() {
     }
   };
 
+  const handleReanalyze = async () => {
+    setAnalyzing(true);
+    setCheckResult(null);
+    try {
+      const updated = await api.reanalyzePolicy(id);
+      await loadData();
+      setActiveTab('findings');
+      if (updated?.reanalysis_status === 'skipped_unchanged') {
+        setCheckResult({
+          status: 'unchanged',
+          message: 'Document text is unchanged. Preserved existing baseline score and findings.',
+        });
+      } else {
+        setCheckResult({
+          status: 'reanalyzed',
+          message: 'Clause analysis and risk assessment refreshed successfully.',
+        });
+      }
+    } catch (err) {
+      setCheckResult({
+        status: 'extraction_failed',
+        message: err.message || 'Failed to re-analyze clauses',
+      });
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center space-y-2 font-mono">
@@ -103,6 +144,7 @@ export default function PolicyDetail() {
   const analysis = policy.latest_analysis;
   const findings = analysis?.findings || [];
   const changes = analysis?.changes || [];
+  const isFallback = analysis?.model_id === 'deterministic-fallback';
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
@@ -116,31 +158,52 @@ export default function PolicyDetail() {
           <span>Tracked Policies</span>
         </Link>
 
-        {/* Check for Updates Action */}
-        <button
-          onClick={handleRecheck}
-          disabled={checking}
-          className="px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs font-mono flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer self-start sm:self-auto"
-        >
-          {checking ? (
-            <>
-              <Loader2 className="w-3 h-3 animate-spin" />
-              <span>Fetching & Diffing...</span>
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-3 h-3" />
-              <span>Check for Updates</span>
-            </>
-          )}
-        </button>
+        {/* Action Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleReanalyze}
+            disabled={analyzing || checking}
+            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 font-medium text-xs font-mono flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+            title="Re-run deep semantic single-pass clause analysis across the entire policy"
+          >
+            {analyzing ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin text-zinc-400" />
+                <span>Analyzing Clauses...</span>
+              </>
+            ) : (
+              <>
+                <Shield className="w-3 h-3 text-zinc-400" />
+                <span>Re-analyze Clauses</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={handleRecheck}
+            disabled={checking || analyzing}
+            className="px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs font-mono flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            {checking ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>Fetching & Diffing...</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-3 h-3" />
+                <span>Check for Updates</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Recheck Alert Banner */}
+      {/* Recheck / Reanalyze Alert Banner */}
       {checkResult && (
         <div
           className={`p-3.5 rounded-lg border flex items-start justify-between gap-3 text-xs font-mono ${
-            checkResult.status === 'unchanged'
+            checkResult.status === 'unchanged' || checkResult.status === 'reanalyzed'
               ? 'bg-zinc-900 border-zinc-700 text-zinc-300'
               : checkResult.status === 'changed'
               ? 'bg-emerald-950/30 border-emerald-900/50 text-emerald-300'
@@ -148,7 +211,9 @@ export default function PolicyDetail() {
           }`}
         >
           <div className="flex items-start gap-2">
-            {checkResult.status === 'unchanged' && <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />}
+            {(checkResult.status === 'unchanged' || checkResult.status === 'reanalyzed') && (
+              <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400 shrink-0 mt-0.5" />
+            )}
             {checkResult.status === 'changed' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />}
             {checkResult.status === 'extraction_failed' && <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0 mt-0.5" />}
             <div>
@@ -164,6 +229,29 @@ export default function PolicyDetail() {
           >
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* Real-time Single-Pass Analyzing Banner */}
+      {analyzing && (
+        <div className="p-4 rounded-xl panel border space-y-2.5 font-mono text-xs">
+          <div className="flex items-center justify-between text-zinc-200">
+            <span className="flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-zinc-400 shrink-0" />
+              <span>Evaluating policy clauses with Gemma 4...</span>
+            </span>
+            <span className="font-semibold text-zinc-300">{analyzingSeconds}s</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px] text-zinc-500">
+            <span>Model: gemma-4-26b-a4b-it · Source quote verification active</span>
+            <span>Realistic estimate: ~20-25s</span>
+          </div>
+          <div className="w-full bg-zinc-900 h-2 rounded-full overflow-hidden border border-zinc-800">
+            <div
+              className="bg-zinc-200 h-full transition-all duration-300"
+              style={{ width: `${Math.min(95, Math.max(6, (analyzingSeconds / 25) * 100))}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -188,14 +276,7 @@ export default function PolicyDetail() {
           <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
             <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400 flex items-center gap-1">
               <Clock className="w-3 h-3 text-zinc-500" />
-              <span>
-                {policy.last_checked_at
-                  ? new Date(policy.last_checked_at).toLocaleString(undefined, {
-                      dateStyle: 'short',
-                      timeStyle: 'short',
-                    })
-                  : 'Just now'}
-              </span>
+              <span>{formatLocalDate(policy.last_checked_at)}</span>
             </span>
 
             <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/50 text-emerald-400">
@@ -204,11 +285,128 @@ export default function PolicyDetail() {
           </div>
         </div>
 
+        {/* Consumer Risk Score & Clause Metrics Card */}
+        {analysis && (
+          <div className="p-4 rounded-lg bg-zinc-950/80 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold tracking-wider">
+                  Consumer Risk Score
+                </span>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  {analysis.risk_score !== null && analysis.risk_score !== undefined ? (
+                    <>
+                      <span
+                        className={`text-2xl font-bold font-mono ${
+                          analysis.risk_score > 80
+                            ? 'text-rose-400'
+                            : analysis.risk_score > 65
+                            ? 'text-amber-400'
+                            : analysis.risk_score > 35
+                            ? 'text-yellow-400'
+                            : 'text-emerald-400'
+                        }`}
+                      >
+                        {analysis.risk_score}
+                      </span>
+                      <span className="text-xs font-mono text-zinc-500">/ 100</span>
+                    </>
+                  ) : (
+                    <span className="text-sm font-semibold font-mono text-amber-400/90 py-1">
+                      Unrated (Fallback)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="h-9 w-px bg-zinc-800" />
+
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider ${
+                      analysis.risk_level === 'high'
+                        ? 'bg-rose-950/60 border border-rose-800 text-rose-300'
+                        : analysis.risk_level === 'elevated'
+                        ? 'bg-amber-950/60 border border-amber-800 text-amber-300'
+                        : analysis.risk_level === 'moderate'
+                        ? 'bg-yellow-950/50 border border-yellow-800 text-yellow-300'
+                        : analysis.risk_level === 'low'
+                        ? 'bg-emerald-950/50 border border-emerald-800 text-emerald-300'
+                        : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
+                    }`}
+                  >
+                    {analysis.risk_level ? `${analysis.risk_level} concern` : 'Evaluation pending'}
+                  </span>
+                  <span className="text-xs text-zinc-400 font-mono">
+                    {findings.length} clause{findings.length === 1 ? '' : 's'} flagged
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                <div className="w-48 h-1.5 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      analysis.risk_score > 80
+                        ? 'bg-rose-500'
+                        : analysis.risk_score > 65
+                        ? 'bg-amber-500'
+                        : analysis.risk_score > 35
+                        ? 'bg-yellow-500'
+                        : analysis.risk_score !== null && analysis.risk_score !== undefined
+                        ? 'bg-emerald-500'
+                        : 'bg-zinc-800'
+                    }`}
+                    style={{ width: `${Math.min(100, Math.max(8, analysis.risk_score || 8))}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Severity Distribution Pills */}
+            <div className="flex items-center gap-2 text-[11px] font-mono">
+              <span className="px-2 py-0.5 rounded bg-rose-950/40 border border-rose-900/60 text-rose-300">
+                {findings.filter((f) => f.severity === 'high').length} High
+              </span>
+              <span className="px-2 py-0.5 rounded bg-amber-950/40 border border-amber-900/60 text-amber-300">
+                {findings.filter((f) => f.severity === 'medium').length} Med
+              </span>
+              <span className="px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-400">
+                {findings.filter((f) => f.severity === 'low').length} Low
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback Mode Notice if applicable */}
+        {isFallback && (
+          <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-900/40 flex items-center justify-between gap-3 text-xs font-mono text-amber-300/90">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                Policy was indexed in fallback mode. Click <strong>Re-analyze Clauses</strong> above to run deep Gemma evaluation.
+              </span>
+            </div>
+            <button
+              onClick={handleReanalyze}
+              disabled={analyzing}
+              className="px-2.5 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 text-[11px] cursor-pointer whitespace-nowrap"
+            >
+              Analyze Now
+            </button>
+          </div>
+        )}
+
         {/* Executive Summary */}
         {analysis?.summary && (
           <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800/80 space-y-1 text-xs">
-            <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">
-              Policy Overview
+            <div className="font-mono text-[11px] uppercase tracking-wider text-zinc-500 font-semibold flex items-center justify-between">
+              <span>Policy Overview</span>
+              {analysis.model_id && (
+                <span className="text-[10px] text-zinc-600 font-normal lowercase">
+                  model: {analysis.model_id}
+                </span>
+              )}
             </div>
             <p className="text-zinc-300 leading-relaxed">{analysis.summary}</p>
           </div>
@@ -272,13 +470,31 @@ export default function PolicyDetail() {
       {activeTab === 'findings' && (
         <div className="space-y-3">
           {findings.length === 0 ? (
-            <div className="p-8 text-center rounded-xl panel text-zinc-400 text-xs font-mono space-y-1">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <div className="font-semibold text-zinc-200">No Notable High-Risk Clauses Flagged</div>
-              <div className="text-zinc-500 max-w-md mx-auto text-[11px]">
-                No explicit auto-renewal traps, mandatory arbitration waivers, or unexpected data-sharing clauses were identified in the verified text.
+            isFallback ? (
+              <div className="p-8 text-center rounded-xl panel border border-amber-900/40 bg-amber-950/10 text-xs font-mono space-y-3">
+                <AlertTriangle className="w-6 h-6 text-amber-400 mx-auto mb-1" />
+                <div className="font-semibold text-zinc-200 text-sm">Clause AI Analysis Deferred (Fallback Mode)</div>
+                <div className="text-zinc-400 max-w-lg mx-auto text-xs leading-relaxed">
+                  {analysis?.summary || 'Policy successfully extracted and indexed. AI clause evaluation is currently in fallback mode due to free-tier rate limits or unconfigured credentials. Deterministic versioning, hashing, and diff monitoring remain 100% active.'}
+                </div>
+                <button
+                  onClick={handleReanalyze}
+                  disabled={analyzing}
+                  className="px-3.5 py-1.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 font-medium text-xs font-mono inline-flex items-center gap-1.5 cursor-pointer transition-colors"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  <span>Re-analyze Clauses Now</span>
+                </button>
               </div>
-            </div>
+            ) : (
+              <div className="p-8 text-center rounded-xl panel text-zinc-400 text-xs font-mono space-y-1">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
+                <div className="font-semibold text-zinc-200">No Notable High-Risk Clauses Flagged</div>
+                <div className="text-zinc-500 max-w-md mx-auto text-[11px]">
+                  No explicit auto-renewal traps, mandatory arbitration waivers, or unexpected data-sharing clauses were identified in the verified text.
+                </div>
+              </div>
+            )
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {findings.map((f, idx) => (

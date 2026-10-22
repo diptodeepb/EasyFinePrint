@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -73,9 +74,59 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    """Enforce strict security headers (MITM, XSS, Clickjacking prevention) and request body limits."""
+    # Enforce maximum payload size (10 MB) to prevent memory exhaustion attacks
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > 10 * 1024 * 1024:
+                return JSONResponse(status_code=413, content={"detail": "Payload exceeds maximum allowed size of 10MB."})
+        except ValueError:
+            pass
+
+    response = await call_next(request)
+
+    # Enterprise security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
+    response.headers["Content-Security-Policy"] = "frame-ancestors 'none'; object-src 'none';"
+    return response
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = exc.errors()
+    messages = []
+    for err in errors:
+        loc = err.get("loc", [])
+        field = loc[-1] if loc else "input"
+        msg = err.get("msg", "Invalid input")
+        err_type = err.get("type", "")
+        if "string_too_short" in err_type:
+            min_l = err.get("ctx", {}).get("min_length", 2)
+            messages.append(f"Please enter at least {min_l} characters for {field}.")
+        elif "string_too_long" in err_type:
+            max_l = err.get("ctx", {}).get("max_length", 120)
+            messages.append(f"Input for {field} exceeds maximum permitted length of {max_l} characters.")
+        else:
+            clean_field = str(field).replace("_", " ").capitalize()
+            messages.append(f"{clean_field}: {msg}")
+    friendly_msg = "; ".join(messages) or "Invalid input provided."
+    return JSONResponse(
+        status_code=422,
+        content={"detail": friendly_msg},
+    )
 
 
 @app.exception_handler(Exception)

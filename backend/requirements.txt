@@ -8,8 +8,9 @@ trafilatura>=2.0.0
 motor>=3.7.0
 pymongo>=4.10.1
 dnspython>=2.7.0
-google-genai>=1.14.0
 pytest>=8.3.4
 pytest-asyncio>=0.25.0
 python-multipart>=0.0.20
 sentry-sdk[fastapi]>=2.19.2
+json-repair>=0.35.0
+

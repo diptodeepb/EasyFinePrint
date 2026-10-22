@@ -4,15 +4,16 @@ import {
   GitCompare,
   FileCheck,
   ShieldCheck,
-  Clock,
   ExternalLink,
   ChevronRight,
   RefreshCw,
   Loader2,
   AlertCircle,
   Database,
+  X,
 } from 'lucide-react';
 import { api } from '../lib/api';
+import { formatLocalDate } from '../lib/dateUtils';
 import UrlForm from '../components/UrlForm';
 import DiscoveryModal from '../components/DiscoveryModal';
 
@@ -71,12 +72,21 @@ export default function Home() {
 
         {/* Global Error Banner */}
         {analyzeError && (
-          <div className="p-3.5 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs font-mono flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
-            <div>
-              <span className="font-semibold">Analysis error: </span>
-              <span>{analyzeError}</span>
+          <div className="p-3.5 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs font-mono flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+              <div>
+                <span className="font-semibold text-rose-200">Unable to analyze policy: </span>
+                <span>{analyzeError}</span>
+              </div>
             </div>
+            <button
+              onClick={() => setAnalyzeError('')}
+              className="text-rose-400 hover:text-rose-200 cursor-pointer p-0.5 rounded shrink-0"
+              title="Dismiss error"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
 
@@ -159,50 +169,86 @@ export default function Home() {
                 <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 uppercase tracking-wider text-[11px]">
                   <tr>
                     <th className="py-2.5 px-3">Policy Document</th>
-                    <th className="py-2.5 px-3 hidden sm:table-cell">Canonical URL</th>
-                    <th className="py-2.5 px-3">Last Checked</th>
-                    <th className="py-2.5 px-3 text-right">Action</th>
+                    <th className="py-2.5 px-3 hidden md:table-cell">Canonical URL</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">Risk Assessment</th>
+                    <th className="py-2.5 px-3 whitespace-nowrap">Last Checked</th>
+                    <th className="py-2.5 px-3 text-right whitespace-nowrap">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800/80">
                   {policies.map((pol) => {
-                    const formattedDate = pol.last_checked_at
-                      ? new Date(pol.last_checked_at).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : 'Never';
+                    const formattedDate = formatLocalDate(pol.last_checked_at);
+                    const analysis = pol.latest_analysis;
+                    const score = analysis?.risk_score;
+                    const level = analysis?.risk_level;
+                    const isFb = analysis?.model_id === 'deterministic-fallback';
 
                     return (
                       <tr
                         key={pol.id}
                         className="hover:bg-zinc-900/50 transition-colors"
                       >
-                        <td className="py-2.5 px-3">
+                        <td className="py-2.5 px-3 max-w-xs">
                           <Link
                             to={`/policies/${pol.id}`}
-                            className="font-medium text-zinc-200 hover:text-white transition-colors"
+                            className="font-medium text-zinc-200 hover:text-white transition-colors line-clamp-1"
+                            title={pol.title || 'Policy Document'}
                           >
                             {pol.title || 'Policy Document'}
                           </Link>
                         </td>
-                        <td className="py-2.5 px-3 text-zinc-500 hidden sm:table-cell max-w-xs truncate">
+                        <td className="py-2.5 px-3 text-zinc-500 hidden md:table-cell max-w-sm truncate">
                           <a
                             href={pol.canonical_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="hover:text-zinc-300 transition-colors inline-flex items-center gap-1 truncate"
+                            className="hover:text-zinc-300 transition-colors inline-flex items-center gap-1 truncate max-w-full"
+                            title={pol.canonical_url}
                           >
                             <span className="truncate">{pol.canonical_url}</span>
                             <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60" />
                           </a>
                         </td>
-                        <td className="py-2.5 px-3 text-zinc-400">
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          {score !== null && score !== undefined ? (
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium tracking-wide whitespace-nowrap ${
+                                level === 'high' || (!level && score > 80)
+                                  ? 'bg-rose-950/50 border border-rose-800/80 text-rose-300'
+                                  : level === 'elevated' || (!level && score > 65)
+                                  ? 'bg-amber-950/50 border border-amber-800/80 text-amber-300'
+                                  : level === 'moderate' || (!level && score > 35)
+                                  ? 'bg-yellow-950/40 border border-yellow-800/70 text-yellow-300'
+                                  : 'bg-emerald-950/40 border border-emerald-800/70 text-emerald-300'
+                              }`}
+                            >
+                              <span
+                                className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                  level === 'high' || (!level && score > 80)
+                                    ? 'bg-rose-400'
+                                    : level === 'elevated' || (!level && score > 65)
+                                    ? 'bg-amber-400'
+                                    : level === 'moderate' || (!level && score > 35)
+                                    ? 'bg-yellow-400'
+                                    : 'bg-emerald-400'
+                                }`}
+                              />
+                              <span className="font-semibold">{score}</span>
+                              <span className="text-[10px] text-zinc-500 font-normal">/100</span>
+                              <span className="text-zinc-600 font-normal">·</span>
+                              <span className="capitalize">{level || 'rated'}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 whitespace-nowrap">
+                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
+                              <span>{isFb ? 'Fallback' : 'Pending'}</span>
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2.5 px-3 text-zinc-400 whitespace-nowrap">
                           {formattedDate}
                         </td>
-                        <td className="py-2.5 px-3 text-right">
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
                           <Link
                             to={`/policies/${pol.id}`}
                             className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 transition-colors text-xs"

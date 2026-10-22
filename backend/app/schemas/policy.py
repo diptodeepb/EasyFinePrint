@@ -13,12 +13,13 @@ FindingCategory = Literal[
     "disputes",
     "liability",
     "termination",
+    "safety",
     "other",
 ]
 
 SeverityLevel = Literal["low", "medium", "high", "uncertain"]
 ValidationStatus = Literal["passed", "partial", "failed", "skipped"]
-CheckStatus = Literal["unchanged", "changed", "extraction_failed", "analysis_failed"]
+CheckStatus = Literal["unchanged", "changed", "reanalyzed", "extraction_failed", "analysis_failed"]
 
 
 class FindingSchema(BaseModel):
@@ -54,6 +55,8 @@ class AnalysisResponse(BaseModel):
     old_snapshot_id: Optional[str] = None
     new_snapshot_id: str
     summary: str
+    risk_score: Optional[int] = Field(None, ge=0, le=100)
+    risk_level: Optional[Literal["low", "moderate", "elevated", "high"]] = None
     findings: List[FindingSchema] = []
     changes: List[DiffChangeSchema] = []
     model_id: str
@@ -71,6 +74,7 @@ class PolicyResponse(BaseModel):
     last_checked_at: Optional[datetime] = None
     latest_snapshot_id: Optional[str] = None
     latest_analysis: Optional[AnalysisResponse] = None
+    reanalysis_status: Optional[str] = None
 
 
 class SnapshotResponse(BaseModel):
@@ -113,11 +117,10 @@ class DiscoveryCandidate(BaseModel):
     title: str
     url: str
     snippet: Optional[str] = None
-    source: str = "serpapi"
+    source: str = "discovery"
 
 
 class DiscoveryResponse(BaseModel):
     query: str
     candidates: List[DiscoveryCandidate]
     cached: bool = False
-    quota_remaining: Optional[int] = None

@@ -13,6 +13,32 @@ from app.db.connection import get_db, check_db_health
 logger = logging.getLogger("easyfineprint.repository")
 
 
+import re
+
+def _sanitize_string_id(val: Any, field_name: str = "id") -> str:
+    """Strictly sanitize identifier strings, rejecting null bytes, dicts, or NoSQL operator injection."""
+    if not isinstance(val, str):
+        raise ValueError(f"Invalid {field_name}: expected string, got {type(val).__name__}")
+    clean = val.strip()
+    if not clean or len(clean) > 128:
+        raise ValueError(f"Invalid {field_name}: invalid length")
+    if not re.match(r"^[a-zA-Z0-9_\-\.:/]+$", clean):
+        raise ValueError(f"Invalid {field_name}: illegal characters detected")
+    return clean
+
+
+def _normalize_doc(doc: Optional[dict]) -> Optional[dict]:
+    if not doc:
+        return None
+    res = dict(doc)
+    if "_id" in res:
+        res["id"] = str(res.get("_id", res.get("id")))
+    for k, v in res.items():
+        if isinstance(v, datetime) and v.tzinfo is None:
+            res[k] = v.replace(tzinfo=timezone.utc)
+    return res
+
+
 class PolicyRepository:
     """Async repository for policy tracking operations."""
 
@@ -28,42 +54,47 @@ class PolicyRepository:
         return await check_db_health()
 
     # --- Policies ---
-    async def get_policy_by_url(self, canonical_url: str) -> Optional[dict]:
+    async def get_policy_by_url(self, url: str) -> Optional[dict]:
+        clean = url.strip()
+        alt = clean[:-1] if clean.endswith("/") else clean + "/"
+        candidates = list({clean, alt})
         if await self._use_mongo():
-            doc = await get_db()["policies"].find_one({"canonical_url": canonical_url})
-            if doc:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-            return doc
+            doc = await get_db()["policies"].find_one({
+                "$or": [
+                    {"canonical_url": {"$in": candidates}},
+                    {"url": {"$in": candidates}},
+                ]
+            })
+            return _normalize_doc(doc)
         for p in self._mem_policies.values():
-            if p.get("canonical_url") == canonical_url:
-                return dict(p)
+            if p.get("canonical_url") in candidates or p.get("url") in candidates:
+                return _normalize_doc(p)
         return None
 
     async def get_policy_by_id(self, policy_id: str) -> Optional[dict]:
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
         if await self._use_mongo():
-            doc = await get_db()["policies"].find_one({"_id": policy_id})
+            doc = await get_db()["policies"].find_one({"_id": {"$eq": clean_id}})
             if not doc:
-                doc = await get_db()["policies"].find_one({"id": policy_id})
-            if doc:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-            return doc
-        p = self._mem_policies.get(policy_id)
-        return dict(p) if p else None
+                doc = await get_db()["policies"].find_one({"id": {"$eq": clean_id}})
+            return _normalize_doc(doc)
+        p = self._mem_policies.get(clean_id)
+        return _normalize_doc(p)
 
     async def list_policies(self, limit: int = 50) -> List[dict]:
+        safe_limit = min(max(1, int(limit)), 100)
         if await self._use_mongo():
-            cursor = get_db()["policies"].find().sort("last_checked_at", -1).limit(limit)
+            cursor = get_db()["policies"].find().sort("last_checked_at", -1).limit(safe_limit)
             items = []
             async for doc in cursor:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-                items.append(doc)
+                items.append(_normalize_doc(doc))
             return items
         items = sorted(
             list(self._mem_policies.values()),
             key=lambda x: x.get("last_checked_at") or x.get("created_at") or datetime.min,
             reverse=True,
         )
-        return [dict(x) for x in items[:limit]]
+        return [_normalize_doc(x) for x in items[:limit]]
 
     async def create_policy(self, url: str, canonical_url: str, title: str) -> dict:
         now = datetime.now(timezone.utc)
@@ -86,12 +117,13 @@ class PolicyRepository:
         return doc
 
     async def update_policy(self, policy_id: str, updates: dict) -> Optional[dict]:
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
         if await self._use_mongo():
-            await get_db()["policies"].update_one({"_id": policy_id}, {"$set": updates})
-            return await self.get_policy_by_id(policy_id)
-        if policy_id in self._mem_policies:
-            self._mem_policies[policy_id].update(updates)
-            return dict(self._mem_policies[policy_id])
+            await get_db()["policies"].update_one({"_id": {"$eq": clean_id}}, {"$set": updates})
+            return await self.get_policy_by_id(clean_id)
+        if clean_id in self._mem_policies:
+            self._mem_policies[clean_id].update(updates)
+            return dict(self._mem_policies[clean_id])
         return None
 
     # --- Snapshots ---
@@ -133,27 +165,48 @@ class PolicyRepository:
         return doc
 
     async def get_snapshot_by_id(self, snapshot_id: str) -> Optional[dict]:
+        clean_id = _sanitize_string_id(snapshot_id, "snapshot_id")
         if await self._use_mongo():
-            doc = await get_db()["snapshots"].find_one({"_id": snapshot_id})
+            doc = await get_db()["snapshots"].find_one({"_id": {"$eq": clean_id}})
             if not doc:
-                doc = await get_db()["snapshots"].find_one({"id": snapshot_id})
-            if doc:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-            return doc
-        s = self._mem_snapshots.get(snapshot_id)
-        return dict(s) if s else None
+                doc = await get_db()["snapshots"].find_one({"id": {"$eq": clean_id}})
+            return _normalize_doc(doc)
+        s = self._mem_snapshots.get(clean_id)
+        return _normalize_doc(s)
 
     async def list_snapshots_for_policy(self, policy_id: str) -> List[dict]:
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
         if await self._use_mongo():
-            cursor = get_db()["snapshots"].find({"policy_id": policy_id}).sort("checked_at", -1)
+            cursor = get_db()["snapshots"].find({"policy_id": {"$eq": clean_id}}).sort("checked_at", -1)
             items = []
             async for doc in cursor:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-                items.append(doc)
+                items.append(_normalize_doc(doc))
             return items
-        items = [s for s in self._mem_snapshots.values() if s.get("policy_id") == policy_id]
+        items = [s for s in self._mem_snapshots.values() if s.get("policy_id") == clean_id]
         items.sort(key=lambda x: x.get("checked_at", datetime.min), reverse=True)
-        return [dict(x) for x in items]
+        return [_normalize_doc(x) for x in items]
+
+    async def get_latest_snapshot_for_policy(self, policy_id: str) -> Optional[dict]:
+        """Fetch newest snapshot for a policy, checking latest_snapshot_id or sorting by checked_at."""
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
+        policy = await self.get_policy_by_id(clean_id)
+        if policy and policy.get("latest_snapshot_id"):
+            snap = await self.get_snapshot_by_id(policy["latest_snapshot_id"])
+            if snap:
+                return snap
+        snaps = await self.list_snapshots_for_policy(clean_id)
+        return snaps[0] if snaps else None
+
+    async def get_snapshot_by_hash(self, content_hash: str) -> Optional[dict]:
+        """Find an existing snapshot matching the exact content hash."""
+        clean_hash = _sanitize_string_id(content_hash, "content_hash")
+        if await self._use_mongo():
+            doc = await get_db()["snapshots"].find_one({"content_hash": {"$eq": clean_hash}})
+            return _normalize_doc(doc)
+        for s in self._mem_snapshots.values():
+            if s.get("content_hash") == clean_hash:
+                return _normalize_doc(s)
+        return None
 
     # --- Analyses ---
     async def create_analysis(
@@ -167,6 +220,8 @@ class PolicyRepository:
         model_id: str,
         validation_status: str,
         old_snapshot_id: Optional[str] = None,
+        risk_score: Optional[int] = None,
+        risk_level: Optional[str] = None,
     ) -> dict:
         now = datetime.now(timezone.utc)
         ana_id = f"ana_{uuid.uuid4().hex[:12]}"
@@ -178,6 +233,8 @@ class PolicyRepository:
             "old_snapshot_id": old_snapshot_id,
             "new_snapshot_id": new_snapshot_id,
             "summary": summary,
+            "risk_score": risk_score,
+            "risk_level": risk_level,
             "findings": findings,
             "changes": changes,
             "model_id": model_id,
@@ -188,19 +245,18 @@ class PolicyRepository:
             await get_db()["analyses"].insert_one(doc)
         else:
             self._mem_analyses[ana_id] = dict(doc)
-        return doc
+        return _normalize_doc(doc)
 
     async def get_latest_analysis_for_policy(self, policy_id: str) -> Optional[dict]:
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
         if await self._use_mongo():
-            doc = await get_db()["analyses"].find_one({"policy_id": policy_id}, sort=[("created_at", -1)])
-            if doc:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-            return doc
-        matches = [a for a in self._mem_analyses.values() if a.get("policy_id") == policy_id]
+            doc = await get_db()["analyses"].find_one({"policy_id": {"$eq": clean_id}}, sort=[("created_at", -1)])
+            return _normalize_doc(doc)
+        matches = [a for a in self._mem_analyses.values() if a.get("policy_id") == clean_id]
         if not matches:
             return None
         matches.sort(key=lambda x: x.get("created_at", datetime.min), reverse=True)
-        return dict(matches[0])
+        return _normalize_doc(matches[0])
 
     # --- Check Events ---
     async def record_check_event(
@@ -211,17 +267,20 @@ class PolicyRepository:
         old_snapshot_id: Optional[str] = None,
         new_snapshot_id: Optional[str] = None,
     ) -> dict:
+        clean_policy_id = _sanitize_string_id(policy_id, "policy_id")
+        clean_old_snap = _sanitize_string_id(old_snapshot_id, "old_snapshot_id") if old_snapshot_id else None
+        clean_new_snap = _sanitize_string_id(new_snapshot_id, "new_snapshot_id") if new_snapshot_id else None
         now = datetime.now(timezone.utc)
         evt_id = f"evt_{uuid.uuid4().hex[:12]}"
         doc = {
             "_id": evt_id,
             "id": evt_id,
-            "policy_id": policy_id,
+            "policy_id": clean_policy_id,
             "checked_at": now,
             "status": status,
             "message": message,
-            "old_snapshot_id": old_snapshot_id,
-            "new_snapshot_id": new_snapshot_id,
+            "old_snapshot_id": clean_old_snap,
+            "new_snapshot_id": clean_new_snap,
         }
         if await self._use_mongo():
             await get_db()["check_events"].insert_one(doc)
@@ -229,20 +288,36 @@ class PolicyRepository:
             self._mem_check_events[evt_id] = dict(doc)
 
         # Update last_checked_at on policy
-        await self.update_policy(policy_id, {"last_checked_at": now})
-        return doc
+        await self.update_policy(clean_policy_id, {"last_checked_at": now})
+        return _normalize_doc(doc)
 
     async def list_check_events(self, policy_id: str, limit: int = 30) -> List[dict]:
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
+        safe_limit = min(max(1, int(limit)), 100)
         if await self._use_mongo():
-            cursor = get_db()["check_events"].find({"policy_id": policy_id}).sort("checked_at", -1).limit(limit)
+            cursor = get_db()["check_events"].find({"policy_id": {"$eq": clean_id}}).sort("checked_at", -1).limit(safe_limit)
             items = []
             async for doc in cursor:
-                doc["id"] = str(doc.get("_id", doc.get("id")))
-                items.append(doc)
+                items.append(_normalize_doc(doc))
             return items
-        items = [e for e in self._mem_check_events.values() if e.get("policy_id") == policy_id]
+        items = [e for e in self._mem_check_events.values() if e.get("policy_id") == clean_id]
         items.sort(key=lambda x: x.get("checked_at", datetime.min), reverse=True)
-        return [dict(x) for x in items[:limit]]
+        return [_normalize_doc(x) for x in items[:safe_limit]]
+
+    async def clear_all_data(self) -> dict:
+        """Wipe all documents across database collections for a clean state."""
+        counts = {}
+        if await self._use_mongo():
+            db = get_db()
+            for col in ["policies", "snapshots", "analyses", "check_events", "usage_counters"]:
+                res = await db[col].delete_many({})
+                counts[col] = res.deleted_count
+        self._mem_policies.clear()
+        self._mem_snapshots.clear()
+        self._mem_analyses.clear()
+        self._mem_check_events.clear()
+        self._mem_usage.clear()
+        return counts
 
 
 repo = PolicyRepository()

@@ -21,7 +21,7 @@ BLOCKED_HOSTNAMES = {
 }
 
 CARRIER_GRADE_NAT = ipaddress.ip_network("100.64.0.0/10")
-ALLOWED_PORTS = {80, 443, 8080, 8443}
+ALLOWED_PORTS = {80, 443}
 
 
 class URLValidationError(Exception):
@@ -81,6 +81,9 @@ def validate_url(url_str: str) -> ParseResult:
         raise URLValidationError("URL cannot be empty")
 
     url_str = url_str.strip()
+    if len(url_str) > 2048:
+        raise URLValidationError("URL exceeds maximum permitted length of 2048 characters.")
+
     try:
         parsed = urlparse(url_str)
     except Exception as exc:
@@ -127,8 +130,10 @@ def resolve_and_verify_hostname(hostname: str) -> List[str]:
 
     try:
         addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-    except socket.gaierror as exc:
-        raise URLValidationError(f"DNS resolution failed for {hostname}: {exc}")
+    except socket.gaierror:
+        raise URLValidationError(
+            f"Unable to resolve domain '{hostname}'. Please check that the URL is spelled correctly and the website is publicly reachable."
+        )
 
     resolved_ips: List[str] = []
     for entry in addr_info:

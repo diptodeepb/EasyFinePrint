@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, Loader2, Globe, Search } from 'lucide-react';
 
 const SAMPLE_POLICIES = [
@@ -11,6 +11,20 @@ const SAMPLE_POLICIES = [
 export default function UrlForm({ onAnalyze, loading, onOpenDiscovery }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    let timer;
+    if (loading) {
+      setElapsed(0);
+      timer = setInterval(() => {
+        setElapsed((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setElapsed(0);
+    }
+    return () => clearInterval(timer);
+  }, [loading]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -75,6 +89,38 @@ export default function UrlForm({ onAnalyze, loading, onOpenDiscovery }) {
               )}
             </button>
           </div>
+
+          {loading && (
+            <div className="p-3.5 rounded-lg bg-zinc-950 border border-zinc-800 space-y-2 font-mono text-xs">
+              <div className="flex items-center justify-between text-zinc-300">
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400 shrink-0" />
+                  <span>
+                    {elapsed < 4
+                      ? 'Fetching document & validating security rules...'
+                      : elapsed < 8
+                      ? 'Extracting text & calculating baseline hash...'
+                      : elapsed < 30
+                      ? 'Evaluating policy clauses with Gemma 4...'
+                      : 'Verifying verbatim citations against source text...'}
+                  </span>
+                </span>
+                <span className="text-zinc-400 font-semibold">{elapsed}s</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-zinc-500">
+                <span>Single-pass clause evaluation (Gemma 4)</span>
+                <span>
+                  {elapsed < 30 ? 'Realistic estimate: ~20-30s' : 'Deep verification in progress...'}
+                </span>
+              </div>
+              <div className="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-zinc-300 h-full transition-all duration-300"
+                  style={{ width: `${Math.min(96, Math.max(8, (elapsed / 35) * 100))}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="p-2.5 rounded-md bg-rose-950/30 border border-rose-900/50 text-rose-300 text-xs font-mono">
