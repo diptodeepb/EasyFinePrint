@@ -20,7 +20,7 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
         <span>Check Events & Snapshot History</span>
       </div>
 
-      <div className="border-l border-zinc-800 ml-3 pl-4 space-y-4">
+      <div className="border-l border-zinc-800 ml-2.5 sm:ml-3 pl-3 sm:pl-4 space-y-3 sm:space-y-4">
         {events.map((evt, idx) => {
           let badgeClass = 'bg-zinc-800 text-zinc-300 border-zinc-700';
           let label = 'Check event';
@@ -47,16 +47,16 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
           return (
             <div key={evt.id || idx} className="relative group">
               {/* Dot on line */}
-              <div className="absolute -left-[21px] top-1.5 w-2 h-2 rounded-full bg-zinc-600 border border-zinc-900" />
+              <div className="absolute -left-[17px] sm:-left-[21px] top-2 w-2 h-2 rounded-full bg-zinc-500 border border-zinc-900" />
 
-              <div className="panel rounded-lg p-3 border space-y-1.5 text-xs">
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2">
+              <div className="panel rounded-lg p-3 sm:p-3.5 border space-y-2 text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${badgeClass}`}>
                       {label}
                     </span>
                     <span className="text-[11px] font-mono text-zinc-500 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
+                      <Clock className="w-3 h-3 shrink-0" />
                       {formatTime(evt.checked_at)}
                     </span>
                   </div>
@@ -64,19 +64,20 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
                   {evt.new_snapshot_id && onViewSnapshot && (
                     <button
                       onClick={() => onViewSnapshot(evt.new_snapshot_id)}
-                      className="text-[11px] font-mono text-zinc-400 hover:text-zinc-200 transition-colors cursor-pointer"
+                      className="text-xs sm:text-[11px] font-mono text-zinc-300 hover:text-white transition-colors cursor-pointer py-1 active:scale-95 flex items-center gap-1"
                     >
-                      View text snapshot →
+                      <span>View text snapshot</span>
+                      <span>→</span>
                     </button>
                   )}
                 </div>
 
                 {evt.message && (
-                  <p className="text-zinc-300 font-mono text-xs leading-relaxed">{evt.message}</p>
+                  <p className="text-zinc-300 font-mono text-xs leading-relaxed break-words">{evt.message}</p>
                 )}
 
                 {(evt.old_snapshot_id || evt.new_snapshot_id) && (
-                  <div className="flex items-center gap-3 text-[11px] text-zinc-500 font-mono pt-1">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] text-zinc-500 font-mono pt-1 break-all">
                     {evt.old_snapshot_id && <span>Old: {evt.old_snapshot_id}</span>}
                     {evt.new_snapshot_id && <span>New: {evt.new_snapshot_id}</span>}
                   </div>
