@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { ShieldCheck, ExternalLink } from "lucide-react";
 
 export default function Footer() {
@@ -27,10 +28,9 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
-              Deterministic paragraph diffing and citation-backed clause risk
-              analysis for public terms of service and privacy agreements.
-              Continuous change monitoring anchored strictly to verbatim source
-              records.
+              Automated clause risk analysis and revision tracking for public
+              terms of service and privacy agreements, grounded strictly in
+              verbatim source records.
             </p>
           </div>
 
@@ -42,21 +42,25 @@ export default function Footer() {
                 Architecture
               </div>
               <ul className="space-y-2 text-[11px] text-zinc-400">
-                <li className="flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Deterministic Diffing</span>
+                  <span>Verbatim Quote Validation</span>
                 </li>
-                <li className="flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Verbatim Grounding</span>
+                  <span>Single-Pass Inference</span>
                 </li>
-                <li className="flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>SHA-256 Hashes</span>
+                  <span>Deterministic Myers Diff</span>
                 </li>
-                <li className="flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Single-Pass Eval</span>
+                  <span>Zero-Drift Baseline Cache</span>
+                </li>
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                  <span>Multi-Hop SSRF Guard</span>
                 </li>
               </ul>
             </div>
@@ -100,17 +104,6 @@ export default function Footer() {
                     <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
                   </a>
                 </li>
-                <li>
-                  <a
-                    href={licenseUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group"
-                  >
-                    <span>Apache 2.0 License</span>
-                    <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
-                  </a>
-                </li>
               </ul>
             </div>
 
@@ -120,21 +113,42 @@ export default function Footer() {
                 Compliance
               </div>
               <ul className="space-y-2 text-[11px] text-zinc-400">
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Automated Audit Protocol</span>
+                <li>
+                  <Link
+                    to="/terms"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span>Terms of Use</span>
+                  </Link>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Zero-Hallucination Guardrails</span>
+                <li>
+                  <Link
+                    to="/privacy"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span>Privacy Policy</span>
+                  </Link>
                 </li>
-                <li className="flex items-center gap-1.5">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Public Domain Disclosures</span>
+                <li>
+                  <a
+                    href={licenseUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span>Apache 2.0 License</span>
+                  </a>
                 </li>
-                <li className="flex items-center gap-1.5">
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
                   <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
-                  <span>Consumer Rights Transparency</span>
+                  <span>No Personal Data Stored</span>
+                </li>
+                <li className="flex items-center gap-1.5 whitespace-nowrap">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                  <span>No Legal Advice</span>
                 </li>
               </ul>
             </div>
@@ -160,10 +174,24 @@ export default function Footer() {
 
         {/* Bottom Bar: Copyright & Rights */}
         <div className="border-t border-zinc-800/80 pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[11px] text-zinc-400">
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 sm:gap-x-3 gap-y-1">
-            <span>
-              &copy; {currentYear} EasyFinePrint. All rights reserved.
-            </span>
+          <div>
+            &copy; {currentYear} EasyFinePrint. All rights reserved.
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-2.5 sm:gap-x-3 gap-y-1">
+            <Link
+              to="/terms"
+              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+            >
+              Terms of Use
+            </Link>
+            <span className="text-zinc-700 hidden sm:inline">&middot;</span>
+            <Link
+              to="/privacy"
+              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+            >
+              Privacy Policy
+            </Link>
             <span className="text-zinc-700 hidden sm:inline">&middot;</span>
             <a
               href={licenseUrl}
@@ -174,12 +202,6 @@ export default function Footer() {
               <span>Apache 2.0 License</span>
               <ExternalLink className="w-2.5 h-2.5 text-zinc-500 shrink-0" />
             </a>
-          </div>
-
-          <div className="flex items-center justify-center gap-2.5 sm:gap-3 text-zinc-500 text-[10px] sm:text-[11px]">
-            <span>Deterministic Legal Tech</span>
-            <span className="text-zinc-700">&middot;</span>
-            <span>Verbatim Source Attribution</span>
           </div>
         </div>
       </div>

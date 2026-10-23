@@ -88,7 +88,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
 
         {/* Candidates list */}
         {results?.candidates && results.candidates.length > 0 && (
-          <div className="space-y-2 flex-1 overflow-y-auto pr-1 no-scrollbar sm:scroll-auto min-h-0">
+          <div className="space-y-2 flex-1 overflow-y-auto pr-1 min-h-0">
             {results.candidates.map((cand, idx) => (
               <div
                 key={idx}
@@ -121,7 +121,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
         )}
 
         <div className="mt-3 pt-3 border-t border-zinc-800/80 text-[11px] text-zinc-500 font-mono leading-relaxed">
-          Official policy URLs discovered via verified directory and live website crawl. Selected URLs undergo full SSRF validation before extraction.
+          Discovered via verified directory and direct website inspection. All selected URLs undergo strict multi-hop SSRF validation prior to extraction.
         </div>
       </div>
     </div>

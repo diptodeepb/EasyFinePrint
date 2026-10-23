@@ -70,7 +70,50 @@
   background-color: #16161b;
 }
 
-/* Hide scrollbar for smooth mobile horizontal swipe tabs */
+/* Custom Themed Scrollbar for PC and Mobile */
+html,
+body,
+#root,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #27272a #09090b;
+}
+
+/* WebKit & Blink Browsers (Chrome, Safari, Edge, Opera, iOS/Android WebKit) */
+::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 9999px;
+  border: 1px solid #09090b;
+}
+
+::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+  background: #52525b;
+}
+
+::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: #09090b;
+}
+
+/* Hide scrollbar for smooth mobile horizontal swipe tabs when explicitly needed */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -79,3 +122,4 @@
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+

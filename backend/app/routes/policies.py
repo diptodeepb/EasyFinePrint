@@ -6,6 +6,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Query, Path
 from app.schemas.policy import (
     PolicyAnalyzeRequest,
+    PolicySelfAnalyzeRequest,
     PolicyResponse,
     AnalysisResponse,
     SnapshotResponse,
@@ -18,6 +19,7 @@ from app.services.extractor import safe_fetch_page, extract_policy_content, Extr
 from app.services.normalizer import normalize_policy_text, compute_content_hash
 from app.services.diff_engine import compute_policy_diff
 from app.services.gemma import analyze_policy_risk, explain_policy_changes, is_ai_configured
+from app.legal import get_self_policy, SELF_POLICIES
 from app.db.repositories import repo
 
 logger = logging.getLogger("easyfineprint.policies")
@@ -47,26 +49,14 @@ def _format_analysis_response(analysis_doc: dict) -> AnalysisResponse:
     )
 
 
-@router.post("/analyze", response_model=PolicyResponse)
-async def analyze_policy(req: PolicyAnalyzeRequest):
-    """
-    Analyze a public Terms of Service or Privacy Policy URL.
-    Enforces SSRF guards, extracts text, stores baseline snapshot, and analyzes potential concerns.
-    """
-    raw_url = req.url.strip()
-    try:
-        html, canonical_url, status_code = await safe_fetch_page(raw_url)
-    except ExtractionError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
-        logger.error("Unexpected fetch failure for %s: %s", raw_url, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch policy page: {exc}")
-
-    try:
-        title, extracted_text, warnings = extract_policy_content(html)
-    except ExtractionError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-
+async def _process_policy_ingestion(
+    raw_url: str,
+    canonical_url: str,
+    title: str,
+    extracted_text: str,
+    status_code: int = 200,
+) -> PolicyResponse:
+    """Core deterministic ingestion and risk analysis pipeline."""
     normalized_text = normalize_policy_text(extracted_text)
     content_hash = compute_content_hash(normalized_text)
 
@@ -99,8 +89,6 @@ async def analyze_policy(req: PolicyAnalyzeRequest):
     # 4. IF EXACT MATCH: REUSE BASELINE IMMEDIATELY (0 AI calls, instant response, consistent score)
     if is_exact_match and policy and latest_snap:
         latest_analysis = await repo.get_latest_analysis_for_policy(policy["id"])
-        # If an analysis exists, reuse it immediately:
-        # (Only re-analyze if AI credentials are newly configured and existing was deterministic-fallback)
         should_upgrade = (
             is_ai_configured()
             and latest_analysis is not None
@@ -221,6 +209,81 @@ async def analyze_policy(req: PolicyAnalyzeRequest):
     )
 
 
+@router.post("/analyze", response_model=PolicyResponse)
+async def analyze_policy(req: PolicyAnalyzeRequest):
+    """
+    Analyze a public Terms of Service or Privacy Policy URL.
+    Enforces SSRF guards, extracts text, stores baseline snapshot, and analyzes potential concerns.
+    Automatically handles self-policies (/terms, /privacy, easyfineprint://) without network hops.
+    """
+    raw_url = req.url.strip()
+
+    # Self-policy intercept (dogfooding / testing our own terms)
+    self_doc = get_self_policy(raw_url)
+    if self_doc:
+        return await _process_policy_ingestion(
+            raw_url=self_doc["url"],
+            canonical_url=self_doc["canonical_url"],
+            title=self_doc["title"],
+            extracted_text=self_doc["text"],
+            status_code=200,
+        )
+
+    try:
+        html, canonical_url, status_code = await safe_fetch_page(raw_url)
+    except ExtractionError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        logger.error("Unexpected fetch failure for %s: %s", raw_url, exc)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch policy page: {exc}")
+
+    try:
+        title, extracted_text, warnings = extract_policy_content(html)
+    except ExtractionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    return await _process_policy_ingestion(
+        raw_url=raw_url,
+        canonical_url=canonical_url,
+        title=title,
+        extracted_text=extracted_text,
+        status_code=status_code,
+    )
+
+
+@router.post("/analyze-self", response_model=PolicyResponse)
+async def analyze_self_policy(req: Optional[PolicySelfAnalyzeRequest] = None):
+    """
+    Explicit endpoint to analyze EasyFinePrint's own Terms of Use or Privacy Policy.
+    Demonstrates eating our own dog food: single-pass analysis on our own legal commitments.
+    """
+    target_type = req.policy_type if req else "terms"
+    self_doc = get_self_policy(target_type) or SELF_POLICIES["terms"]
+    return await _process_policy_ingestion(
+        raw_url=self_doc["url"],
+        canonical_url=self_doc["canonical_url"],
+        title=self_doc["title"],
+        extracted_text=self_doc["text"],
+        status_code=200,
+    )
+
+
+@router.get("/self-policies")
+async def list_self_policies_metadata():
+    """List available self-policies (Terms of Use, Privacy Policy) for dogfooding and testing."""
+    return [
+        {
+            "key": item["key"],
+            "title": item["title"],
+            "url": item["url"],
+            "canonical_url": item["canonical_url"],
+            "description": item["description"],
+        }
+        for item in SELF_POLICIES.values()
+    ]
+
+
+
 @router.get("", response_model=List[PolicyResponse])
 async def list_policies(limit: int = Query(50, ge=1, le=100)):
     """List tracked policies with latest snapshot and analysis summary."""
@@ -283,38 +346,46 @@ async def check_policy_for_updates(
     if not latest_snap:
         raise HTTPException(status_code=400, detail="Policy has no baseline snapshot. Run initial analysis first.")
 
-    # Fetch page
-    try:
-        html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
-        title, extracted_text, warnings = extract_policy_content(html)
-    except ExtractionError as exc:
-        # Record failure event, preserve old baseline!
-        await repo.record_check_event(
-            policy_id=policy_id,
-            status="extraction_failed",
-            message=str(exc),
-            old_snapshot_id=latest_snap["id"],
-        )
-        return CheckResponse(
-            status="extraction_failed",
-            policy_id=policy_id,
-            message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
-            old_snapshot_id=latest_snap["id"],
-        )
-    except Exception as exc:
-        logger.error("Recheck unexpected error: %s", exc)
-        await repo.record_check_event(
-            policy_id=policy_id,
-            status="extraction_failed",
-            message=str(exc),
-            old_snapshot_id=latest_snap["id"],
-        )
-        return CheckResponse(
-            status="extraction_failed",
-            policy_id=policy_id,
-            message=f"Fetch failed: {exc}",
-            old_snapshot_id=latest_snap["id"],
-        )
+    # Check if target is an internal self-policy (dogfooding)
+    self_doc = get_self_policy(policy.get("canonical_url", "") or policy.get("url", ""))
+    if self_doc:
+        title = self_doc["title"]
+        extracted_text = self_doc["text"]
+        canonical_url = self_doc["canonical_url"]
+        status_code = 200
+    else:
+        # Fetch page
+        try:
+            html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
+            title, extracted_text, warnings = extract_policy_content(html)
+        except ExtractionError as exc:
+            # Record failure event, preserve old baseline!
+            await repo.record_check_event(
+                policy_id=policy_id,
+                status="extraction_failed",
+                message=str(exc),
+                old_snapshot_id=latest_snap["id"],
+            )
+            return CheckResponse(
+                status="extraction_failed",
+                policy_id=policy_id,
+                message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
+                old_snapshot_id=latest_snap["id"],
+            )
+        except Exception as exc:
+            logger.error("Recheck unexpected error: %s", exc)
+            await repo.record_check_event(
+                policy_id=policy_id,
+                status="extraction_failed",
+                message=str(exc),
+                old_snapshot_id=latest_snap["id"],
+            )
+            return CheckResponse(
+                status="extraction_failed",
+                policy_id=policy_id,
+                message=f"Fetch failed: {exc}",
+                old_snapshot_id=latest_snap["id"],
+            )
 
     normalized_text = normalize_policy_text(extracted_text)
     content_hash = compute_content_hash(normalized_text)
@@ -459,12 +530,12 @@ async def reanalyze_policy(
     if not snapshot or not snapshot.get("extracted_text"):
         raise HTTPException(status_code=400, detail="Snapshot text unavailable.")
 
-    # 1. Actually fetch the live page from the web and verify character-for-character against DB
+    # 1. Actually fetch the live page from the web (or internal self-policy) and verify character-for-character against DB
     is_live_identical = True
     active_text = snapshot["extracted_text"]
-    try:
-        html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
-        title, extracted_text, warnings = extract_policy_content(html)
+    self_doc = get_self_policy(policy.get("canonical_url", "") or policy.get("url", ""))
+    if self_doc:
+        extracted_text = self_doc["text"]
         live_norm = normalize_policy_text(extracted_text)
         live_hash = compute_content_hash(live_norm)
         is_live_identical = (
@@ -473,9 +544,21 @@ async def reanalyze_policy(
         )
         if not is_live_identical:
             active_text = live_norm
-    except Exception as exc:
-        logger.info("Could not re-fetch live page during re-analysis (%s); verifying against DB snapshot.", exc)
-        is_live_identical = True
+    else:
+        try:
+            html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
+            title, extracted_text, warnings = extract_policy_content(html)
+            live_norm = normalize_policy_text(extracted_text)
+            live_hash = compute_content_hash(live_norm)
+            is_live_identical = (
+                live_hash == snapshot.get("content_hash")
+                or live_norm == snapshot.get("extracted_text")
+            )
+            if not is_live_identical:
+                active_text = live_norm
+        except Exception as exc:
+            logger.info("Could not re-fetch live page during re-analysis (%s); verifying against DB snapshot.", exc)
+            is_live_identical = True
 
     # 2. Check if a valid previous analysis exists for this snapshot
     latest_analysis = await repo.get_latest_analysis_for_policy(policy_id)
