@@ -11,7 +11,7 @@ router = APIRouter(prefix="/discovery", tags=["discovery"])
 async def search_policy_urls(req: DiscoverySearchRequest):
     """
     Search for candidate legal policy URLs by company or product name.
-    Utilizes an authoritative directory and live heuristic crawler.
+    Utilizes an authoritative directory and live heuristic direct website inspection.
     """
     result = await discover_policy_urls(req.query)
 

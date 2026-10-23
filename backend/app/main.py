@@ -2,7 +2,7 @@
 from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -142,6 +142,59 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(health.router, prefix="/api")
 app.include_router(policies.router, prefix="/api")
 app.include_router(discovery.router, prefix="/api")
+
+
+async def forward_envelope_to_sentry(sentry_url: str, body: bytes) -> Response:
+    """Forward an envelope payload to authentic upstream Sentry servers."""
+    import httpx
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.post(sentry_url, content=body)
+        return Response(content=resp.content, status_code=resp.status_code)
+
+
+@app.post("/api/tunnel")
+async def sentry_tunnel(request: Request):
+    """Tunnel Sentry envelopes through our backend to prevent Brave Shields / adblocker drops.
+
+    Parses the envelope header, validates the destination DSN hostname against authentic Sentry
+    ingest domains to prevent open proxying, and proxies the payload server-to-server.
+    """
+    import json
+    from urllib.parse import urlparse
+
+    try:
+        body = await request.body()
+        if not body:
+            return Response(status_code=200, content="OK")
+
+        # Envelopes start with a JSON header on the first line
+        first_line = body.split(b"\n")[0]
+        if not first_line:
+            return Response(status_code=200, content="OK")
+
+        header = json.loads(first_line.decode("utf-8"))
+        dsn = header.get("dsn")
+        if not dsn:
+            return Response(status_code=200, content="OK")
+
+        parsed = urlparse(dsn)
+        project_id = parsed.path.strip("/")
+        hostname = (parsed.hostname or "").lower()
+
+        # Validate that the destination is a genuine Sentry ingest host
+        is_valid_sentry_host = (
+            hostname == "sentry.io"
+            or hostname.endswith(".sentry.io")
+        )
+        if not is_valid_sentry_host or not project_id:
+            logger.warning("Rejected Sentry tunnel request to invalid host/project: %s", hostname)
+            return Response(status_code=403, content="Invalid target host")
+
+        sentry_url = f"https://{hostname}/api/{project_id}/envelope/"
+        return await forward_envelope_to_sentry(sentry_url, body)
+    except Exception as exc:
+        logger.warning("Sentry tunnel proxy warning: %s", exc)
+        return Response(status_code=200, content="OK")
 
 
 @app.get("/")

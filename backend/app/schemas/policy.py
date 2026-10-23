@@ -48,6 +48,10 @@ class PolicyAnalyzeRequest(BaseModel):
     url: str = Field(..., description="Target public policy URL")
 
 
+class PolicySelfAnalyzeRequest(BaseModel):
+    policy_type: Literal["terms", "privacy"] = Field("terms", description="Self-policy document type")
+
+
 class AnalysisResponse(BaseModel):
     id: str
     policy_id: str

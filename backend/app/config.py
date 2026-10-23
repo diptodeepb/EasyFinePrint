@@ -26,5 +26,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    def get_frontend_base_url(self) -> str:
+        """Return canonical frontend URL based on current environment (deployed state vs localhost)."""
+        origin = (self.frontend_origin or "").strip().rstrip("/")
+        if origin and "localhost" not in origin:
+            return origin
+        if self.environment.lower() == "production":
+            return "https://easyfineprint.vercel.app"
+        return origin or "http://localhost:5173"
+
 
 settings = Settings()

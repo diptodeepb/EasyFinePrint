@@ -6,9 +6,9 @@ EasyFinePrint is evaluated against an automated suite of unit and integration te
 
 ## 1. Test Summary
 
-- **Total Test Cases**: 39
-- **Passed**: 39 (100%)
-- **Execution Time**: ~55 seconds (includes live Gemma 4 inference and integration flows)
+- **Total Test Cases**: 50
+- **Passed**: 50 (100%)
+- **Execution Time**: ~95 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
 - **Platform**: Python 3.14 on Linux (x86_64)
 
 ```
@@ -36,6 +36,17 @@ backend/tests/test_policies_flow.py::test_policy_full_lifecycle PASSED
 backend/tests/test_policies_flow.py::test_character_for_character_match_bypasses_analysis PASSED
 backend/tests/test_policies_flow.py::test_reanalyze_skipped_when_text_unchanged PASSED
 backend/tests/test_policies_flow.py::test_security_protections_and_nosql_mitigation PASSED
+backend/tests/test_self_policy.py::test_self_policies_metadata PASSED
+backend/tests/test_self_policy.py::test_analyze_self_terms PASSED
+backend/tests/test_self_policy.py::test_analyze_self_privacy PASSED
+backend/tests/test_self_policy.py::test_analyze_url_intercept_self_terms_and_exact_match PASSED
+backend/tests/test_self_policy.py::test_analyze_url_intercept_self_privacy PASSED
+backend/tests/test_tunnel.py::test_tunnel_empty_body PASSED
+backend/tests/test_tunnel.py::test_tunnel_no_dsn PASSED
+backend/tests/test_tunnel.py::test_tunnel_reject_invalid_host PASSED
+backend/tests/test_tunnel.py::test_tunnel_reject_spoofed_subdomain PASSED
+backend/tests/test_tunnel.py::test_tunnel_valid_sentry_forwarding PASSED
+backend/tests/test_tunnel.py::test_tunnel_resilience_on_upstream_exception PASSED
 backend/tests/test_url_guard.py::test_allowed_public_urls PASSED
 backend/tests/test_url_guard.py::test_reject_credentials_in_url PASSED
 backend/tests/test_url_guard.py::test_reject_invalid_schemes PASSED
@@ -52,7 +63,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_passed PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_partial_and_drops_unsupported PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_fails PASSED
 
-============================= 39 passed in 55.51s ==============================
+======================== 50 passed in 95.01s ========================
 ```
 
 ---
@@ -68,6 +79,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_f
 | **Prompt Injection Isolation** | 100% prompt isolation inside `<UNTRUSTED_DOCUMENT_CONTENT>` | Document text is sandboxed from instructions and stripped of control characters |
 | **NoSQL Injection Resistance** | 100% query operator injection blocked | Enforces strict string-only ID validation and MongoDB `$eq` operator binding |
 | **Anti-Reconnaissance & Privacy** | 100% sensitive telemetry omitted | Health and public endpoints omit internal model IDs, providers, and DB topology |
+| **Sentry Tunnel & Privacy Shield Evasion** | 100% invalid target hosts rejected & first-party telemetry preserved | Same-origin envelope tunnel rejects untrusted DSN hosts with HTTP 403, and module hardening avoids adblocker script drops |
 | **Zero-Spend Adherence** | 100% $0 operation | Uses free static hosting, free Vercel serverless tier, free Atlas M0, and Cloudflare Workers AI free tier |
 | **Extraction Failure Safety** | Previous snapshot preserved intact | Extraction errors never report false "unchanged" status |
 

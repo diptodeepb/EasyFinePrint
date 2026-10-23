@@ -59,15 +59,15 @@ A user supplies a massive 100 MB HTML file or a streaming connection that hangs 
 
 ---
 
-## 4. Threat: Discovery Endpoint Abuse & Web Scraping SSRF
+## 4. Threat: Discovery Endpoint Abuse & SSRF Probing
 
 ### 4.1 Attack Vector
-Adversaries use `/api/discovery/search` to probe internal networks or force backend crawlers to visit unverified target hosts.
+Adversaries use `/api/discovery/search` to probe internal networks or force backend servers to visit unverified target hosts.
 
 ### 4.2 Implemented Mitigations
 1. **Zero External Search Dependencies**: The discovery engine operates entirely without third-party search APIs, eliminating API token theft and quota exhaustion vectors.
 2. **Authoritative Directory Precedence**: High-profile companies are resolved instantly from an audited, hardcoded directory of official policy URLs.
-3. **SSRF Guard on Heuristic Crawling**: When falling back to live homepage crawling, candidate domains undergo full `resolve_and_verify_hostname` validation before any HTTP request is issued.
+3. **SSRF Guard on Direct Website Inspection**: When falling back to direct homepage inspection, candidate domains undergo full `resolve_and_verify_hostname` validation before any HTTP request is issued.
 4. **In-Memory Query Cache**: Search results are cached in-memory by trimmed query to eliminate redundant outbound HTTP traffic.
 
 ---
@@ -118,3 +118,27 @@ Attackers scrape `/api/health`, error tracebacks, or development logs to identif
    - Network resolution errors never expose raw Python `[Errno -5]` socket tracebacks to the client.
 3. **Runner-Level Credential Redaction (`start.py`)**:
    - All log streams passing through the unified development runner are filtered through regex and in-memory token masks, redacting Bearer tokens, MongoDB credentials, and API keys before reaching console output.
+
+---
+
+## 8. Threat: Telemetry Eavesdropping, Tracker Interception, & Open Tunnel Proxying
+
+### 8.1 Attack Vector
+- Client-side error monitoring (Sentry) can be blocked by browser privacy protections (such as Brave Shields or EasyPrivacy) as third-party advertising trackers when telemetry pings are dispatched directly to external ingest domains (`*.ingest.sentry.io`).
+- Background session replays generate continuous network requests, triggering false-positive tracking flags.
+- If an application provides a reverse-proxy tunnel for telemetry without strict domain checks, malicious actors could abuse the tunnel endpoint (`/api/tunnel`) as an open HTTP proxy to exfiltrate data or reach internal networks.
+
+### 8.2 Implemented Mitigations
+1. **Host-Enforced Envelope Tunneling (`/api/tunnel`)**:
+   - The backend validates each incoming envelope's header. It parses the embedded `dsn` and verifies that the destination hostname is an authentic Sentry ingest domain (`hostname == "sentry.io"` or `hostname.endswith(".sentry.io")`).
+   - Any request targeting non-Sentry domains is rejected with HTTP 403 Forbidden, preventing open proxy exploitation.
+2. **First-Party Network Routing**:
+   - The frontend routes telemetry through `${API_BASE}/api/tunnel`. Because requests target the application's own origin, Brave Shields and adblockers classify them as first-party application operations rather than third-party trackers, preventing request abortion.
+3. **Zero Continuous Session Replays**:
+   - `replaysSessionSampleRate` is set to `0.0` and `replaysOnErrorSampleRate` is set to `1.0`. Normal user browsing generates zero background session recording traffic, eliminating continuous tracking pings while preserving forensic diagnostics when exceptions occur.
+4. **Client-Side Query & Credential Redaction**:
+   - The frontend `beforeSend` hook automatically strips query parameters and token strings from event URLs before telemetry payloads are serialized.
+5. **Client-Side Module Name Hardening (`PolicyDoc.jsx`)**:
+   - Browser adblocker rulesets (such as EasyPrivacy and Brave Shields tracking lists) intercept network requests matching `*/privacypolicy.*` or `/PrivacyPolicy.*` under the false assumption that they are third-party tracking or consent management scripts.
+   - The Privacy Policy view component is structured as `PolicyDoc.jsx` (imported in `App.jsx` and mounted on the `/privacy` route). This eliminates false-positive `net::ERR_BLOCKED_BY_CLIENT` script abortions while keeping the public route canonical and clean.
+

@@ -90,4 +90,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ query }),
     }),
+
+  // Self Policies (Dogfooding / Fun testing)
+  analyzeSelfPolicy: (policyType = 'terms') =>
+    fetchJson('/api/policies/analyze-self', {
+      method: 'POST',
+      body: JSON.stringify({ policy_type: policyType }),
+    }),
+
+  listSelfPolicies: () => fetchJson('/api/policies/self-policies'),
 };

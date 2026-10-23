@@ -48,11 +48,13 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 ## 2. Component Breakdown
 
 ### 2.1 Frontend (`frontend/`)
+
 - **Technology**: React 19, Vite 8, Tailwind CSS v4, Lucide React, React Router.
-- **Role**: Client-side application for submitting policy URLs, performing instant company lookups, visualizing risk findings, exploring paragraph-level diffs, and browsing version history.
+- **Role**: Client-side application for submitting policy URLs, performing instant company lookups, visualizing risk findings, exploring paragraph-level diffs, and browsing version history. Features custom dark-themed scrollbars, responsive 2x2 grid card view with centered odd cards on mobile, responsive 4-column tab navigation without horizontal overflow, instant route scroll-to-top restoration, in-place validation dismissals, and direct self-policy auditing. Pages include Home, PolicyDetail, TermsOfService, and PolicyDoc (`/privacy`, renamed to avoid browser adblocker and Brave Shields false-positive tracking interception).
 - **Hosting**: Vercel Static Edge (Free tier, zero compute costs).
 
 ### 2.2 Backend (`backend/app/`)
+
 - **Framework**: FastAPI with asynchronous endpoints (`httpx`, `motor`, `asyncio`).
 - **Hosting**: Vercel Serverless Function (Python runtime via `api/index.py`).
 - **Security & Safety Modules**:
@@ -62,11 +64,13 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
   - `diff_engine.py`: Deterministic paragraph-level sequence matcher (`difflib`). Categorizes changes into additions, removals, and modifications.
   - `gemma.py`: Cloudflare Workers AI REST adapter for Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) with strict safety prompts isolating untrusted text inside `<UNTRUSTED_DOCUMENT_CONTENT>` tags and specialized detection for arbitration, disputes, and human harm.
   - `validator.py`: Server-side evidence checker. Ensures every quotation returned by the LLM is present verbatim in the source text.
-  - `discovery.py`: Zero-dependency discovery engine with an authoritative directory of 30+ top platforms (Discord, Spotify, Roblox, GitHub, OpenAI, etc.) and an SSRF-safe heuristic HTML crawler that inspects verified corporate homepages for legal links.
+  - `discovery.py`: Zero-dependency discovery engine with an authoritative directory of 30+ top platforms (Discord, Spotify, Roblox, GitHub, OpenAI, etc.) and an SSRF-safe direct website inspector that evaluates verified corporate homepages for legal links under strict multi-hop SSRF validation.
   - `health.py`: Anti-reconnaissance health check endpoint returning minimal status (`status: healthy`) without leaking internal AI models, provider names, environment modes, or database topologies to external scanners.
   - `security.py`: HTTP security middleware enforcing HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and request body size caps.
+  - `sentry_tunnel` (`/api/tunnel`): Same-origin Sentry envelope proxy that validates DSN target hostnames and routes client telemetry server-to-server, preventing Brave Shields and adblockers from misclassifying error monitoring as advertising trackers.
 
 ### 2.3 Persistence Layer (`backend/app/db/`)
+
 - **Database**: MongoDB Atlas Free (M0 sandbox cluster, 512 MB) or local MongoDB.
 - **Collections**:
   - `policies`: Tracked URLs, titles, and latest snapshot references.
@@ -83,6 +87,7 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 ## 3. Data Flow
 
 ### Journey A: Initial Policy Analysis
+
 1. User submits a public policy URL (or selects a candidate from the Company Lookup modal).
 2. `url_guard` validates scheme (http/https only), authority (no credentials), and resolves DNS to ensure all target IPs are public.
 3. `extractor` streams the HTML body, capping bytes at 5 MB.
@@ -93,12 +98,13 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 8. Frontend renders executive summary, finding cards, and source quotes.
 
 ### Journey B: Recheck Tracked Policy
+
 1. User clicks "Check for Updates".
 2. `extractor` fetches the current live webpage.
-   - *If fetch fails*: Status is set to `extraction_failed`; the previous baseline snapshot remains completely intact and immutable.
+   - _If fetch fails_: Status is set to `extraction_failed`; the previous baseline snapshot remains completely intact and immutable.
 3. `normalizer` calculates current SHA-256 hash.
-   - *If hash matches*: Status is set to `unchanged`. The model call is skipped entirely (preserving zero-cost quota and preventing false score drift).
-   - *If hash differs*: `diff_engine` calculates exact paragraph additions, removals, and modifications.
+   - _If hash matches_: Status is set to `unchanged`. The model call is skipped entirely (preserving zero-cost quota and preventing false score drift).
+   - _If hash differs_: `diff_engine` calculates exact paragraph additions, removals, and modifications.
 4. `gemma` explains the bounded differences.
 5. `validator` verifies quotes against the respective old/new snapshots.
 6. Frontend displays side-by-side / unified diffs and AI implications.

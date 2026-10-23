@@ -265,15 +265,24 @@ export default function PolicyDetail() {
             <h1 className="text-lg sm:text-xl font-bold text-zinc-100 tracking-tight leading-snug">
               {policy.title || 'Policy Document'}
             </h1>
-            <a
-              href={policy.canonical_url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1 max-w-full"
-            >
-              <span className="truncate break-all">{policy.canonical_url}</span>
-              <ExternalLink className="w-3 h-3 shrink-0 opacity-70" />
-            </a>
+            {policy.canonical_url?.startsWith('/') ? (
+              <Link
+                to={policy.canonical_url}
+                className="text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1 max-w-full"
+              >
+                <span className="truncate break-all">{policy.canonical_url}</span>
+              </Link>
+            ) : (
+              <a
+                href={policy.canonical_url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-mono text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1 max-w-full"
+              >
+                <span className="truncate break-all">{policy.canonical_url}</span>
+                <ExternalLink className="w-3 h-3 shrink-0 opacity-70" />
+              </a>
+            )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap text-xs font-mono shrink-0">
@@ -290,7 +299,7 @@ export default function PolicyDetail() {
 
         {/* Consumer Risk Score & Clause Metrics Card */}
         {analysis && (
-          <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
               <div className="flex items-center justify-between sm:justify-start gap-3">
                 <div className="flex flex-col">
@@ -448,10 +457,10 @@ export default function PolicyDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-zinc-800 pb-2 text-xs font-mono overflow-x-auto no-scrollbar">
+      <div className="grid grid-cols-4 gap-1 sm:flex sm:items-center sm:gap-1.5 border-b border-zinc-800 pb-2 text-[11px] sm:text-xs font-mono">
         <button
           onClick={() => setActiveTab('findings')}
-          className={`px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-lg whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
             activeTab === 'findings'
               ? 'bg-zinc-100 text-zinc-950 font-medium shadow-xs'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 active:bg-zinc-800'
@@ -462,7 +471,7 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('diff')}
-          className={`px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-lg whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
             activeTab === 'diff'
               ? 'bg-zinc-100 text-zinc-950 font-medium shadow-xs'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 active:bg-zinc-800'
@@ -473,7 +482,7 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-lg whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
             activeTab === 'history'
               ? 'bg-zinc-100 text-zinc-950 font-medium shadow-xs'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 active:bg-zinc-800'
@@ -484,7 +493,7 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('raw')}
-          className={`px-3.5 py-2 sm:px-3 sm:py-1.5 rounded-lg whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
             activeTab === 'raw'
               ? 'bg-zinc-100 text-zinc-950 font-medium shadow-xs'
               : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 active:bg-zinc-800'
