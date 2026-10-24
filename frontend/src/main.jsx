@@ -13,28 +13,52 @@ if (sentryDsn) {
     dsn: sentryDsn,
     tunnel: `${apiBase}/api/tunnel`,
     environment: import.meta.env.MODE || 'development',
+    sendDefaultPii: false,
+    dataCollection: {
+      userInfo: false,
+    },
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
     ],
     tracesSampleRate: 0.1,
-    replaysSessionSampleRate: 0.0,
-    replaysOnErrorSampleRate: 1.0,
     beforeSend(event) {
-      // Redact query strings from URLs to prevent leaking tokens or user identifiers
-      if (event.request && event.request.url) {
-        try {
-          const u = new URL(event.request.url);
-          u.search = '';
-          event.request.url = u.toString();
-        } catch {
-          // ignore parsing error
+      // 1. Force anonymous user with zeroed IP (prevents Sentry socket inference)
+      event.user = { ip_address: '0.0.0.0' };
+
+      // 2. Strip query strings, cookies, and headers from request data
+      if (event.request) {
+        if (event.request.url) {
+          try {
+            const u = new URL(event.request.url);
+            u.search = '';
+            event.request.url = u.toString();
+          } catch {
+            // ignore parsing error
+          }
         }
+        delete event.request.cookies;
+        delete event.request.headers;
       }
       return event;
+    },
+    beforeBreadcrumb(breadcrumb) {
+      // Strip query parameters from fetch / XHR network breadcrumbs
+      if (breadcrumb.category === 'fetch' || breadcrumb.category === 'xhr') {
+        if (breadcrumb.data?.url) {
+          try {
+            const u = new URL(breadcrumb.data.url);
+            u.search = '';
+            breadcrumb.data.url = u.toString();
+          } catch {
+            // ignore parsing error
+          }
+        }
+      }
+      // Drop click target details that might contain user input
+      if (breadcrumb.category === 'ui.click') {
+        delete breadcrumb.data;
+      }
+      return breadcrumb;
     },
   });
 }

@@ -126,6 +126,25 @@ class PolicyRepository:
             return dict(self._mem_policies[clean_id])
         return None
 
+    async def delete_policy(self, policy_id: str) -> bool:
+        """Permanently delete a policy and all associated snapshots, analyses, and check events."""
+        clean_id = _sanitize_string_id(policy_id, "policy_id")
+        if await self._use_mongo():
+            db = get_db()
+            res = await db["policies"].delete_one({"_id": {"$eq": clean_id}})
+            await db["snapshots"].delete_many({"policy_id": {"$eq": clean_id}})
+            await db["analyses"].delete_many({"policy_id": {"$eq": clean_id}})
+            await db["check_events"].delete_many({"policy_id": {"$eq": clean_id}})
+            return res.deleted_count > 0
+        else:
+            if clean_id in self._mem_policies:
+                del self._mem_policies[clean_id]
+                self._mem_snapshots = {k: v for k, v in self._mem_snapshots.items() if v.get("policy_id") != clean_id}
+                self._mem_analyses = {k: v for k, v in self._mem_analyses.items() if v.get("policy_id") != clean_id}
+                self._mem_check_events = {k: v for k, v in self._mem_check_events.items() if v.get("policy_id") != clean_id}
+                return True
+            return False
+
     # --- Snapshots ---
     async def create_snapshot(
         self,

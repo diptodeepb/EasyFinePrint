@@ -17,28 +17,66 @@ logging.basicConfig(
 )
 logger = logging.getLogger("easyfineprint")
 
-# Optional Sentry error monitoring with redaction
+# Silence httpx and httpcore request logging to prevent Sentry ingest URLs from leaking into console logs
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+# Optional Sentry error monitoring with strict zero-PII redaction
 if settings.sentry_dsn:
     try:
         import sentry_sdk
 
         def _strip_sensitive_data(event, hint):
-            # Redact headers, query strings, and body data
+            # 1. Force anonymous user with zeroed IP (prevents Sentry socket inference)
+            event["user"] = {"ip_address": "0.0.0.0"}
+
+            # 2. Scrub request metadata, headers, cookies, and payloads
             if "request" in event:
                 req = event["request"]
+
+                # Strip query strings from URLs to prevent leaking tokens or parameters
+                if "query_string" in req:
+                    req["query_string"] = ""
+                if "url" in req and "?" in req["url"]:
+                    req["url"] = req["url"].split("?")[0]
+
+                # Strip cookies completely
+                req.pop("cookies", None)
+
+                # Keep only safe, non-identifying headers
+                safe_headers = {"host", "content-type", "accept", "accept-encoding"}
                 if "headers" in req:
-                    req["headers"] = {k: "[REDACTED]" if "auth" in k.lower() or "cookie" in k.lower() else v for k, v in req["headers"].items()}
+                    req["headers"] = {
+                        k: v for k, v in req["headers"].items()
+                        if k.lower() in safe_headers
+                    }
+
+                # Redact body payload
                 if "data" in req:
                     req["data"] = "[REDACTED]"
+
+                # Strip ASGI client connection / socket environment
+                req.pop("env", None)
+
             return event
+
+        def _scrub_breadcrumb(crumb, hint):
+            # Strip query strings from internal HTTP client calls
+            if crumb.get("category") == "httpx":
+                data = crumb.get("data", {})
+                if "url" in data and "?" in data["url"]:
+                    data["url"] = data["url"].split("?")[0]
+            return crumb
 
         sentry_sdk.init(
             dsn=settings.sentry_dsn,
             environment=settings.environment,
+            data_collection={"user_info": False},
             before_send=_strip_sensitive_data,
+            before_breadcrumb=_scrub_breadcrumb,
             traces_sample_rate=0.1,
         )
-        logger.info("Sentry monitoring initialized with telemetry redaction.")
+        logger.info("Sentry monitoring initialized with strict zero-PII telemetry.")
     except Exception as exc:
         logger.warning("Failed to initialize Sentry: %s", exc)
 

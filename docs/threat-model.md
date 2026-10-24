@@ -116,8 +116,9 @@ Attackers scrape `/api/health`, error tracebacks, or development logs to identif
 2. **Exception & Validation Sanitization**:
    - `RequestValidationError` errors are intercepted by a centralized handler and converted into friendly, concise text, preventing internal schema or Pydantic JSON structure leakage.
    - Network resolution errors never expose raw Python `[Errno -5]` socket tracebacks to the client.
-3. **Runner-Level Credential Redaction (`start.py`)**:
-   - All log streams passing through the unified development runner are filtered through regex and in-memory token masks, redacting Bearer tokens, MongoDB credentials, and API keys before reaching console output.
+3. **Runner & Logger Credential Redaction (`start.py` & `main.py`)**:
+   - All log streams passing through the unified development runner are filtered through regex and in-memory token masks, redacting Bearer tokens, MongoDB credentials, API keys, and Sentry DSNs before reaching console output.
+   - Internal HTTP client loggers (`httpx` and `httpcore`) are silenced to `WARNING` level in `main.py`, and `start.py` regex-replaces outbound Sentry ingest endpoints with `https://[REDACTED_SENTRY_ENDPOINT]` to eliminate telemetry URL exposure in stdout.
 
 ---
 
@@ -125,7 +126,6 @@ Attackers scrape `/api/health`, error tracebacks, or development logs to identif
 
 ### 8.1 Attack Vector
 - Client-side error monitoring (Sentry) can be blocked by browser privacy protections (such as Brave Shields or EasyPrivacy) as third-party advertising trackers when telemetry pings are dispatched directly to external ingest domains (`*.ingest.sentry.io`).
-- Background session replays generate continuous network requests, triggering false-positive tracking flags.
 - If an application provides a reverse-proxy tunnel for telemetry without strict domain checks, malicious actors could abuse the tunnel endpoint (`/api/tunnel`) as an open HTTP proxy to exfiltrate data or reach internal networks.
 
 ### 8.2 Implemented Mitigations
@@ -134,10 +134,10 @@ Attackers scrape `/api/health`, error tracebacks, or development logs to identif
    - Any request targeting non-Sentry domains is rejected with HTTP 403 Forbidden, preventing open proxy exploitation.
 2. **First-Party Network Routing**:
    - The frontend routes telemetry through `${API_BASE}/api/tunnel`. Because requests target the application's own origin, Brave Shields and adblockers classify them as first-party application operations rather than third-party trackers, preventing request abortion.
-3. **Zero Continuous Session Replays**:
-   - `replaysSessionSampleRate` is set to `0.0` and `replaysOnErrorSampleRate` is set to `1.0`. Normal user browsing generates zero background session recording traffic, eliminating continuous tracking pings while preserving forensic diagnostics when exceptions occur.
+3. **Complete Elimination of Session Replays**:
+   - We do not embed session replay scripts (such as `rrweb`), screen recording, or DOM mutation listeners. The application never records or captures user screen interactions or browsing sessions.
 4. **Client-Side Query & Credential Redaction**:
-   - The frontend `beforeSend` hook automatically strips query parameters and token strings from event URLs before telemetry payloads are serialized.
+   - The frontend `beforeSend` hook automatically strips query parameters and token strings from event URLs, and completely purges cookies and sensitive headers before telemetry payloads are serialized.
 5. **Client-Side Module Name Hardening (`PolicyDoc.jsx`)**:
    - Browser adblocker rulesets (such as EasyPrivacy and Brave Shields tracking lists) intercept network requests matching `*/privacypolicy.*` or `/PrivacyPolicy.*` under the false assumption that they are third-party tracking or consent management scripts.
    - The Privacy Policy view component is structured as `PolicyDoc.jsx` (imported in `App.jsx` and mounted on the `/privacy` route). This eliminates false-positive `net::ERR_BLOCKED_BY_CLIENT` script abortions while keeping the public route canonical and clean.
