@@ -2,7 +2,7 @@
   <img src="frontend/public/logo.svg" alt="EasyFinePrint Logo" width="128" height="128" />
   <h1>EasyFinePrint</h1>
   <p>
-    <strong>Public Legal Agreements Auditor</strong> &mdash; Deterministic Legal Policy Change Monitoring &amp; Single-Pass Clause Risk Intelligence.<br />
+    <strong>Public Legal Agreements Auditor</strong>: Deterministic Legal Policy Change Monitoring &amp; Single-Pass Clause Risk Intelligence.<br />
     Audit public legal agreements for mandatory arbitration, broad data sharing, and unilateral terms. Grounded in verbatim citations with automated revision tracking.
   </p>
   <p>
@@ -50,7 +50,7 @@
 
 ## ⚖️ The Core Problem
 
-Consumers routinely accept terms of service and privacy agreements without reading them. Over time, companies update these contracts—introducing mandatory binding arbitration, broad behavioral data-sharing clauses, unilateral termination rights, and unexpected auto-renewal provisions.
+Consumers routinely accept terms of service and privacy agreements without reading them. Over time, companies update these contracts, introducing mandatory binding arbitration, broad behavioral data-sharing clauses, unilateral termination rights, and unexpected auto-renewal provisions.
 
 Traditional monitoring approaches suffer from two fatal flaws:
 
@@ -96,7 +96,22 @@ Evaluates comprehensive legal policy text in a single end-to-end inference pass 
 
 ### High-Impact Clause Prioritization (Disputes, Arbitration & Safety)
 
-Specialized heuristics ensure that critical legal clauses—specifically mandatory arbitration, court waivers, class action bans, unilateral indemnification, and any provisions impacting human safety or liability—are explicitly surfaced and flagged when present. Risk ratings follow calibrated baselines out of 100 rather than arbitrary spikes.
+Specialized heuristics ensure that critical legal clauses (specifically mandatory arbitration, court waivers, class action bans, unilateral indemnification, and any provisions impacting human safety or liability) are explicitly surfaced and flagged when present. Risk ratings follow calibrated baselines out of 100 rather than arbitrary spikes:
+
+- **Diminishing Returns Severity Weighting**: Base score starts at 15 for agreements with active consumer clauses. High severity clauses add weighted points (+12, +9, +7, +5...) with diminishing returns to prevent artificial additive score runaway. Medium severity clauses add +6, +4, +3... and low severity clauses add +1 each (capped at 4).
+- **Hazard Multipliers**: Direct legal disenfranchisement (+7 for mandatory arbitration or court waivers), human safety or bodily harm waivers (+10 to +12), unilateral termination (+4), and broad AI training rights on consumer content (+4).
+- **Ceiling Caps**: Standard commercial agreements are capped at 84 unless an extreme clause (human safety hazard or 4+ severe risk categories) is explicitly validated.
+
+#### Calibrated Consumer Risk Tiers
+
+Every agreement is evaluated and mapped to four transparent, deterministic tiers:
+
+| Tier | Score Range | UI Color | Classification Criteria |
+| :--- | :--- | :--- | :--- |
+| **Low Concern** | `0 - 30` | Emerald (`text-emerald-400`) | Standard consumer terms with clear remedies, mutual termination rights, and no unverified data monetization or broad liability disclaimers. |
+| **Moderate Concern** | `31 - 55` | Yellow (`text-yellow-400`) | Standard commercial agreements with typical liability caps, third-party analytics telemetry, or routine dispute resolution mechanisms. |
+| **Elevated Concern** | `56 - 74` | Amber (`text-amber-400`) | Restrictive terms including unilateral account termination without cause, class action bans, or rights to train AI models on user content. |
+| **High Concern** | `75 - 100` | Rose (`text-rose-400`) | Aggressive or predatory provisions, unilateral customer indemnification of the vendor, total waivers for physical safety or bodily harm, or silent asset/fund forfeiture. |
 
 ### Character-for-Character Verification & Cache
 
@@ -272,12 +287,12 @@ python3 start.py
 
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated test suite of **51 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
+EasyFinePrint includes an automated test suite of **52 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
 
 ```bash
 # Run tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 51 passed in 98.24s ========================
+# Output: ======================== 52 passed in 90.24s ========================
 ```
 
 ### CI Pipeline

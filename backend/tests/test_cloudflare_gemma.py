@@ -11,6 +11,7 @@ from app.services.gemma import (
     analyze_policy_risk,
     explain_policy_changes,
     inspect_quota_error,
+    compute_risk_score,
 )
 
 SAMPLE_POLICY = """
@@ -182,3 +183,48 @@ async def test_explain_policy_changes_with_cf_mock():
         assert res["model_id"] == "@cf/google/gemma-4-26b-a4b-it"
         assert len(res["changes"]) == 1
         assert res["changes"][0]["exact_excerpt"] == "You authorize recurring charges to your payment method."
+
+
+def test_compute_risk_score_tiers():
+    """Verify calibrated consumer risk score calculation and tier boundaries."""
+    # 1. Empty findings -> minimal baseline
+    score, level = compute_risk_score([])
+    assert score == 12
+    assert level == "low"
+
+    # 2. Low-risk findings only (score <= 30 -> low)
+    score, level = compute_risk_score([
+        {"category": "renewal", "severity": "low", "exact_excerpt": "..."},
+        {"category": "cancellation", "severity": "low", "exact_excerpt": "..."},
+    ])
+    assert score <= 30
+    assert level == "low"
+
+    # 3. Moderate-risk findings (e.g. mandatory arbitration clause, score 31-55 -> moderate)
+    score, level = compute_risk_score([
+        {"category": "disputes", "severity": "high", "exact_excerpt": "All claims shall be resolved in arbitration."},
+        {"category": "renewal", "severity": "medium", "exact_excerpt": "Subscriptions renew automatically."},
+    ])
+    assert 31 <= score <= 55
+    assert level == "moderate"
+
+    # 4. Elevated-risk findings (score 56-74 -> elevated)
+    score, level = compute_risk_score([
+        {"category": "disputes", "severity": "high", "exact_excerpt": "..."},
+        {"category": "termination", "severity": "high", "exact_excerpt": "..."},
+        {"category": "data", "severity": "high", "exact_excerpt": "..."},
+        {"category": "liability", "severity": "medium", "exact_excerpt": "..."},
+    ])
+    assert 56 <= score <= 74
+    assert level == "elevated"
+
+    # 5. High-risk findings (score >= 75 -> high)
+    score, level = compute_risk_score([
+        {"category": "safety", "severity": "high", "exact_excerpt": "physical injury and death disclaimed"},
+        {"category": "disputes", "severity": "high", "exact_excerpt": "..."},
+        {"category": "liability", "severity": "high", "exact_excerpt": "bodily harm and death", "explanation": "bodily harm"},
+        {"category": "termination", "severity": "high", "exact_excerpt": "..."},
+        {"category": "data", "severity": "high", "exact_excerpt": "..."},
+    ])
+    assert score >= 75
+    assert level == "high"

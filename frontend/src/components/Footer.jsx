@@ -34,39 +34,39 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Links Grid: 2 columns on mobile/tablet, expands via contents on desktop */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:contents gap-6 sm:gap-8">
+          {/* Links Grid: 1 column left-aligned on mobile (Architecture, then Resources, then Compliance), 3 columns on tablet/desktop */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:contents gap-6 sm:gap-8">
             {/* Architecture */}
-            <div className="space-y-2.5 sm:space-y-3">
+            <div className="space-y-2.5 sm:space-y-3 text-left">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
                 Architecture
               </div>
               <ul className="space-y-2 text-[11px] text-zinc-400">
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>Verbatim Quote Validation</span>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>Single-Pass Inference</span>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>Deterministic Myers Diff</span>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>Zero-Drift Baseline Cache</span>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>Multi-Hop SSRF Guard</span>
                 </li>
               </ul>
             </div>
 
             {/* Resources */}
-            <div className="space-y-2.5 sm:space-y-3">
+            <div className="space-y-2.5 sm:space-y-3 text-left">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
                 Resources
               </div>
@@ -76,7 +76,7 @@ export default function Footer() {
                     href="https://github.com/diptodeepb/EasyFinePrint"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group"
+                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
                   >
                     <span>Source Code</span>
                     <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
@@ -87,7 +87,7 @@ export default function Footer() {
                     href="https://github.com/diptodeepb/EasyFinePrint/blob/main/README.md"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group"
+                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
                   >
                     <span>Documentation</span>
                     <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
@@ -98,7 +98,7 @@ export default function Footer() {
                     href="https://github.com/diptodeepb/EasyFinePrint/issues"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group"
+                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
                   >
                     <span>Issue Tracker</span>
                     <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
@@ -108,7 +108,7 @@ export default function Footer() {
             </div>
 
             {/* Compliance & Governance */}
-            <div className="space-y-2.5 sm:space-y-3 col-span-2 sm:col-span-1">
+            <div className="space-y-2.5 sm:space-y-3 text-left">
               <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
                 Compliance
               </div>
@@ -116,18 +116,18 @@ export default function Footer() {
                 <li>
                   <Link
                     to="/terms"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                     <span>Terms of Use</span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     to="/privacy"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                     <span>Privacy Policy</span>
                   </Link>
                 </li>
@@ -136,18 +136,18 @@ export default function Footer() {
                     href={licenseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300"
+                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                     <span>Apache 2.0 License</span>
                   </a>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>No Personal Data Stored</span>
                 </li>
-                <li className="flex items-center gap-1.5 whitespace-nowrap">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0"></span>
+                <li className="flex items-start gap-1.5 leading-snug">
+                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>No Legal Advice</span>
                 </li>
               </ul>

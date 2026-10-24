@@ -65,7 +65,7 @@ Public agreement snapshots are retained to maintain historical change records. I
 
 ## 8. Changes to This Privacy Policy
 
-Any revisions to this Privacy Policy will be published directly to our source repository with timestamped version history. Your continued use of the Platform after changes are posted represents your acknowledgment of the updated policy.
+We may revise this Privacy Policy from time to time. Any revisions will be committed directly to our public repository with verifiable commit timestamps. Your continued use of EasyFinePrint following published updates constitutes your acceptance of the modified Privacy Policy.
 
 ---
 
