@@ -20,7 +20,7 @@ import { formatLocalDate } from "../lib/dateUtils";
 import UrlForm from "../components/UrlForm";
 import DiscoveryModal from "../components/DiscoveryModal";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 8;
 
 /**
  * Multi-tier fuzzy matching algorithm:
@@ -482,19 +482,6 @@ export default function Home() {
                                         : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
                                 }`}
                               >
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                    level === "high" || (!level && score > 80)
-                                      ? "bg-rose-400"
-                                      : level === "elevated" ||
-                                          (!level && score > 65)
-                                        ? "bg-amber-400"
-                                        : level === "moderate" ||
-                                            (!level && score > 35)
-                                          ? "bg-yellow-400"
-                                          : "bg-emerald-400"
-                                  }`}
-                                />
                                 <span className="font-semibold">{score}</span>
                                 <span className="text-[10px] text-zinc-500 font-normal">
                                   /100
@@ -508,7 +495,6 @@ export default function Home() {
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 whitespace-nowrap">
-                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
                                 <span>{isFb ? "Fallback" : "Pending"}</span>
                               </span>
                             )}
@@ -606,7 +592,7 @@ export default function Home() {
                       <div className="flex items-center justify-between gap-1">
                         {score !== null && score !== undefined ? (
                           <span
-                            className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
                               level === "high" || (!level && score > 80)
                                 ? "bg-rose-950/50 border border-rose-800/80 text-rose-300"
                                 : level === "elevated" || (!level && score > 65)
@@ -616,23 +602,11 @@ export default function Home() {
                                     : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
                             }`}
                           >
-                            <span
-                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                                level === "high" || (!level && score > 80)
-                                  ? "bg-rose-400"
-                                  : level === "elevated" || (!level && score > 65)
-                                    ? "bg-amber-400"
-                                    : level === "moderate" || (!level && score > 35)
-                                      ? "bg-yellow-400"
-                                      : "bg-emerald-400"
-                              }`}
-                            />
                             <span>{score}</span>
                             <span className="text-zinc-500 font-normal">/100</span>
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800">
-                            <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" />
                             <span>{isFb ? "Fallback" : "Pending"}</span>
                           </span>
                         )}

@@ -50,7 +50,7 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 ### 2.1 Frontend (`frontend/`)
 
 - **Technology**: React 19, Vite 8, Tailwind CSS v4, Lucide React, React Router.
-- **Role**: Client-side application for submitting policy URLs, performing instant company lookups, visualizing risk findings, exploring paragraph-level diffs, and browsing version history. Features custom dark-themed scrollbars, responsive 2x2 grid card view with centered odd cards on mobile, responsive 4-column tab navigation without horizontal overflow, instant route scroll-to-top restoration, in-place validation dismissals, and direct self-policy auditing. Pages include Home, PolicyDetail, TermsOfService, and PolicyDoc (`/privacy`, renamed to avoid browser adblocker and Brave Shields false-positive tracking interception).
+- **Role**: Client-side application for submitting policy URLs, performing instant company lookups, visualizing risk findings, exploring paragraph-level diffs, and browsing version history. Features custom dark-themed scrollbars, responsive 2x2 grid card view with centered odd cards on mobile, 8-per-page sliding window pagination, responsive 4-column tab navigation without horizontal overflow, instant route scroll-to-top restoration, in-place validation dismissals, and direct self-policy auditing. Pages include Home, PolicyDetail, TermsOfUse (`/terms`), and PolicyDoc (`/privacy`, renamed to avoid browser adblocker and Brave Shields false-positive tracking interception). Both legal documents dynamically parse and render Markdown directly from `docs/TERMS_OF_USE.md` and `docs/PRIVACY_POLICY.md` via `MarkdownDocViewer.jsx`.
 - **Hosting**: Vercel Static Edge (Free tier, zero compute costs).
 
 ### 2.2 Backend (`backend/app/`)
@@ -65,9 +65,10 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
   - `gemma.py`: Cloudflare Workers AI REST adapter for Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) with strict safety prompts isolating untrusted text inside `<UNTRUSTED_DOCUMENT_CONTENT>` tags and specialized detection for arbitration, disputes, and human harm.
   - `validator.py`: Server-side evidence checker. Ensures every quotation returned by the LLM is present verbatim in the source text.
   - `discovery.py`: Zero-dependency discovery engine with an authoritative directory of 30+ top platforms (Discord, Spotify, Roblox, GitHub, OpenAI, etc.) and an SSRF-safe direct website inspector that evaluates verified corporate homepages for legal links under strict multi-hop SSRF validation.
+  - `policies.py`: Manages policy ingestion, single-pass clause risk scoring, Myers diff generation, self-policy intercept, exact-match baseline upgrade, and `DELETE /api/policies/{id}` cascade deletion.
   - `health.py`: Anti-reconnaissance health check endpoint returning minimal status (`status: healthy`) without leaking internal AI models, provider names, environment modes, or database topologies to external scanners.
   - `security.py`: HTTP security middleware enforcing HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and request body size caps.
-  - `sentry_tunnel` (`/api/tunnel`): Same-origin Sentry envelope proxy that validates DSN target hostnames and routes client telemetry server-to-server, preventing Brave Shields and adblockers from misclassifying error monitoring as advertising trackers.
+  - `sentry_tunnel` (`/api/tunnel`): Same-origin Sentry envelope proxy that validates DSN target hostnames and routes client telemetry server-to-server, preventing Brave Shields and adblockers from misclassifying error monitoring as advertising trackers. HTTP client logging (`httpx`/`httpcore`) is silenced to `WARNING` to prevent telemetry URL leakage.
 
 ### 2.3 Persistence Layer (`backend/app/db/`)
 

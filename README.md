@@ -175,16 +175,19 @@ Instant policy discovery without third-party search APIs or quota caps:
 
 | Method | Endpoint                                     | Description                                                                                          |
 | ------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `POST` | `/api/policies/analyze`                      | Ingests a public policy URL, validates text, caches or runs single-pass risk analysis.               |
-| `GET`  | `/api/policies`                              | Lists all monitored policies with latest score and status.                                           |
-| `GET`  | `/api/policies/{id}`                         | Retrieves detailed policy information and the latest validated clause findings.                      |
-| `POST` | `/api/policies/{id}/check`                   | Safely fetches live page, performs character-for-character comparison, and diffs if changed.         |
-| `POST` | `/api/policies/{id}/reanalyze`               | Re-evaluates an existing baseline snapshot through Gemma 4 (skips if text unchanged).                |
-| `GET`  | `/api/policies/{id}/history`                 | Retrieves chronologically ordered check events, snapshot transitions, and audit logs.                |
-| `GET`  | `/api/policies/{id}/snapshots/{snapshot_id}` | Retrieves raw snapshot text, content hash, and HTTP status code.                                     |
-| `POST` | `/api/discovery/search`                      | Legal policy URL lookup via authoritative directory & SSRF-safe direct website inspection.           |
-| `POST` | `/api/tunnel`                                | Sentry envelope reverse-proxy tunnel with DSN host validation (bypasses Brave Shields & adblockers). |
-| `GET`  | `/api/health`                                | Service health status and MongoDB connectivity check.                                                |
+| `POST`   | `/api/policies/analyze`                      | Ingests a public policy URL, validates text, caches or runs single-pass risk analysis.               |
+| `POST`   | `/api/policies/analyze-self`                 | Evaluates EasyFinePrint's own Terms of Use or Privacy Policy directly without network hops.          |
+| `GET`    | `/api/policies`                              | Lists all monitored policies with latest score and status.                                           |
+| `GET`    | `/api/policies/{id}`                         | Retrieves detailed policy information and the latest validated clause findings.                      |
+| `DELETE` | `/api/policies/{id}`                         | Permanently deletes a monitored policy and its snapshots, analyses, and check events.               |
+| `POST`   | `/api/policies/{id}/check`                   | Safely fetches live page, performs character-for-character comparison, and diffs if changed.         |
+| `POST`   | `/api/policies/{id}/reanalyze`               | Re-evaluates an existing baseline snapshot through Gemma 4 (skips if text unchanged).                |
+| `GET`    | `/api/policies/{id}/history`                 | Retrieves chronologically ordered check events, snapshot transitions, and audit logs.                |
+| `GET`    | `/api/policies/{id}/snapshots/{snapshot_id}` | Retrieves raw snapshot text, content hash, and HTTP status code.                                     |
+| `GET`    | `/api/self-policies`                         | Lists metadata and markdown content for self-hosted legal policies (Terms of Use & Privacy Policy).  |
+| `POST`   | `/api/discovery/search`                      | Legal policy URL lookup via authoritative directory & SSRF-safe direct website inspection.           |
+| `POST`   | `/api/tunnel`                                | Sentry envelope reverse-proxy tunnel with DSN host validation (bypasses Brave Shields & adblockers). |
+| `GET`    | `/api/health`                                | Service health status and MongoDB connectivity check.                                                |
 
 ---
 
@@ -194,7 +197,9 @@ When browser privacy shields (like Brave Shields or uBlock Origin) are enabled, 
 
 - **Same-Origin Route**: The frontend dispatches envelopes to `${API_BASE}/api/tunnel`, which adblockers recognize as first-party application traffic.
 - **Host-Bound Relay**: The backend inspects the envelope header and validates that the destination DSN hostname is an authentic Sentry ingest server (`*.sentry.io`), rejecting untrusted targets with HTTP 403 to prevent open proxying.
-- **Zero Background Replays**: Session replays are sampled at `0.0` during standard navigation and only captured upon runtime errors (`replaysOnErrorSampleRate: 1.0`), preventing continuous tracking pings.
+- **No Session Replays**: We do not embed session replay scripts (such as `rrweb`), screen recording, or DOM mutation listeners. No browser interactions or user sessions are recorded.
+- **Telemetry Redaction**: Automated filters strip sensitive headers (including `Authorization` and `Cookie`), request payloads, and URL query strings before diagnostic reports are transmitted.
+- **Console Log Redaction**: Outbound HTTP client logging (`httpx`, `httpcore`) is silenced to `WARNING` in the application, and the unified development runner (`start.py`) scrubs Sentry DSNs, ingest hostnames, and telemetry endpoints (`https://[REDACTED_SENTRY_ENDPOINT]`) from console output.
 
 ---
 
@@ -267,12 +272,12 @@ python3 start.py
 
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated test suite of **50 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, and self-hosted policy analysis:
+EasyFinePrint includes an automated test suite of **51 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
 
 ```bash
 # Run tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 50 passed in 95.01s ========================
+# Output: ======================== 51 passed in 98.24s ========================
 ```
 
 ### CI Pipeline
@@ -329,6 +334,7 @@ Deploy both frontend and backend in a single project using the root [`vercel.jso
 - **NoSQL Injection Resistance**: Alphanumeric ID sanitization with MongoDB `$eq` operator binding.
 - **Prompt Injection Isolation**: Policy content is sanitized and sandboxed within `<UNTRUSTED_DOCUMENT_CONTENT>` boundary tags.
 - **Zero Hallucination Tolerance**: No finding is presented to the user unless backed by an exact verbatim excerpt verified by the server-side validator.
+- **Strict Telemetry Redaction**: Zero personal data collection, anonymized IP masking (`0.0.0.0`), sensitive header and cookie stripping, and zero browser session replay recording.
 - **HTTP Security Headers**: HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and 10 MB payload caps.
 
 For in-depth threat analysis and mitigations, see [`docs/threat-model.md`](docs/threat-model.md).

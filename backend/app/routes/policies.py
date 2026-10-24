@@ -91,8 +91,12 @@ async def _process_policy_ingestion(
         latest_analysis = await repo.get_latest_analysis_for_policy(policy["id"])
         should_upgrade = (
             is_ai_configured()
-            and latest_analysis is not None
-            and latest_analysis.get("model_id") == "deterministic-fallback"
+            and (
+                latest_analysis is None
+                or latest_analysis.get("model_id") == "deterministic-fallback"
+                or latest_analysis.get("risk_score") is None
+                or latest_analysis.get("risk_level") is None
+            )
         )
         if latest_analysis and not should_upgrade:
             logger.info(
@@ -122,6 +126,48 @@ async def _process_policy_ingestion(
                 latest_snapshot_id=latest_snap["id"],
                 latest_analysis=_format_analysis_response(latest_analysis),
                 reanalysis_status="skipped_unchanged",
+            )
+
+        if should_upgrade:
+            logger.info(
+                "Exact match found for %s, but previous analysis is unrated or fallback. Upgrading analysis with Gemma 4...",
+                policy.get("canonical_url"),
+            )
+            ai_res = await analyze_policy_risk(normalized_text)
+            analysis_doc = await repo.create_analysis(
+                policy_id=policy["id"],
+                analysis_type="initial",
+                new_snapshot_id=latest_snap["id"],
+                summary=ai_res["summary"],
+                risk_score=ai_res.get("risk_score"),
+                risk_level=ai_res.get("risk_level"),
+                findings=ai_res.get("findings", []),
+                changes=[],
+                model_id=ai_res["model_id"],
+                validation_status=ai_res["validation_status"],
+            )
+            await repo.record_check_event(
+                policy_id=policy["id"],
+                status="reanalyzed",
+                message="Upgraded policy analysis with single-pass Gemma 4 clause risk scoring.",
+                new_snapshot_id=latest_snap["id"],
+            )
+            await repo.update_policy(policy["id"], {
+                "last_checked_at": datetime.now(timezone.utc),
+                "latest_snapshot_id": latest_snap["id"],
+                "title": title or policy.get("title"),
+            })
+            return PolicyResponse(
+                id=policy["id"],
+                url=policy["url"],
+                canonical_url=policy["canonical_url"],
+                title=policy["title"],
+                status=policy["status"],
+                created_at=policy["created_at"],
+                last_checked_at=datetime.now(timezone.utc),
+                latest_snapshot_id=latest_snap["id"],
+                latest_analysis=_format_analysis_response(analysis_doc),
+                reanalysis_status="upgraded",
             )
 
     # 5. NEW POLICY OR GENUINE TEXT CHANGE:
@@ -164,20 +210,23 @@ async def _process_policy_ingestion(
             new_snapshot_id=new_snapshot["id"],
         )
     else:
-        # Changed version analysis
+        # Changed version analysis: explain deterministic diff and score new clauses
         diff_res = compute_policy_diff(latest_snap["extracted_text"], normalized_text)
         ai_res = await explain_policy_changes(
             diff_data=diff_res,
             old_text=latest_snap["extracted_text"],
             new_text=normalized_text,
         )
+        risk_res = await analyze_policy_risk(normalized_text)
         analysis_doc = await repo.create_analysis(
             policy_id=policy["id"],
             analysis_type="change",
             old_snapshot_id=latest_snap["id"],
             new_snapshot_id=new_snapshot["id"],
             summary=ai_res["summary"],
-            findings=[],
+            risk_score=risk_res.get("risk_score"),
+            risk_level=risk_res.get("risk_level"),
+            findings=risk_res.get("findings", []),
             changes=ai_res["changes"],
             model_id=ai_res["model_id"],
             validation_status=ai_res["validation_status"],
@@ -270,7 +319,7 @@ async def analyze_self_policy(req: Optional[PolicySelfAnalyzeRequest] = None):
 
 @router.get("/self-policies")
 async def list_self_policies_metadata():
-    """List available self-policies (Terms of Use, Privacy Policy) for dogfooding and testing."""
+    """List available self-policies (Terms of Use, Privacy Policy) for dogfooding, in-app viewing, and testing."""
     return [
         {
             "key": item["key"],
@@ -278,9 +327,19 @@ async def list_self_policies_metadata():
             "url": item["url"],
             "canonical_url": item["canonical_url"],
             "description": item["description"],
+            "text": item["text"],
         }
         for item in SELF_POLICIES.values()
     ]
+
+
+@router.get("/self-policies/{key}")
+async def get_single_self_policy(key: str = Path(..., description="Self-policy key ('terms' or 'privacy')")):
+    """Retrieve full text and metadata for EasyFinePrint's own Terms of Use or Privacy Policy."""
+    doc = get_self_policy(key)
+    if not doc:
+        raise HTTPException(status_code=404, detail=f"Self policy '{key}' not found. Valid keys: 'terms', 'privacy'.")
+    return doc
 
 
 
@@ -564,8 +623,12 @@ async def reanalyze_policy(
     latest_analysis = await repo.get_latest_analysis_for_policy(policy_id)
     should_upgrade = (
         is_ai_configured()
-        and latest_analysis is not None
-        and latest_analysis.get("model_id") == "deterministic-fallback"
+        and (
+            latest_analysis is None
+            or latest_analysis.get("model_id") == "deterministic-fallback"
+            or latest_analysis.get("risk_score") is None
+            or latest_analysis.get("risk_level") is None
+        )
     )
     has_valid_previous_analysis = (
         latest_analysis is not None
@@ -631,3 +694,12 @@ async def reanalyze_policy(
         latest_analysis=_format_analysis_response(analysis_doc),
         reanalysis_status="reanalyzed",
     )
+
+
+@router.delete("/{policy_id}")
+async def delete_policy_endpoint(policy_id: str):
+    """Delete a tracked policy and all associated snapshots, analyses, and check events."""
+    deleted = await repo.delete_policy(policy_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Policy not found")
+    return {"status": "deleted", "policy_id": policy_id}

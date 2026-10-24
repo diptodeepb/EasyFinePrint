@@ -6,7 +6,7 @@ import BackToTop from './components/BackToTop';
 import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import PolicyDetail from './pages/PolicyDetail';
-import TermsOfService from './pages/TermsOfService';
+import TermsOfUse from './pages/TermsOfUse';
 import PrivacyPolicy from './pages/PolicyDoc';
 
 export default function App() {
@@ -20,7 +20,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/policies/:id" element={<PolicyDetail />} />
-            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/terms" element={<TermsOfUse />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

@@ -46,22 +46,31 @@ def _load_sensitive_strings():
                         k, v = line.split("=", 1)
                         k = k.strip()
                         v = v.strip().strip('"').strip("'")
-                        if len(v) >= 5 and any(term in k.upper() for term in ("TOKEN", "KEY", "SECRET", "PASS", "ACCOUNT_ID", "URI")):
+                        if len(v) >= 5 and any(term in k.upper() for term in ("TOKEN", "KEY", "SECRET", "PASS", "ACCOUNT_ID", "URI", "DSN", "SENTRY")):
                             _SENSITIVE_STRINGS.add(v)
-                            # If Mongo URI, also extract the raw password
-                            if "://" in v and "@" in v:
+                            # If Mongo URI or Sentry DSN, also extract password and host
+                            if "://" in v:
                                 try:
                                     parsed = urlparse(v)
                                     if parsed.password:
                                         _SENSITIVE_STRINGS.add(parsed.password)
+                                    if parsed.hostname and "sentry.io" in parsed.hostname:
+                                        _SENSITIVE_STRINGS.add(parsed.hostname)
                                 except Exception:
                                     pass
             except Exception:
                 pass
 
     for k, v in os.environ.items():
-        if len(v) >= 5 and any(term in k.upper() for term in ("TOKEN", "KEY", "SECRET", "PASS", "ACCOUNT_ID")):
+        if len(v) >= 5 and any(term in k.upper() for term in ("TOKEN", "KEY", "SECRET", "PASS", "ACCOUNT_ID", "DSN", "SENTRY")):
             _SENSITIVE_STRINGS.add(v)
+            if "://" in v:
+                try:
+                    parsed = urlparse(v)
+                    if parsed.hostname and "sentry.io" in parsed.hostname:
+                        _SENSITIVE_STRINGS.add(parsed.hostname)
+                except Exception:
+                    pass
 
 
 _load_sensitive_strings()
@@ -70,7 +79,11 @@ _load_sensitive_strings()
 _RE_BEARER = re.compile(r"(Bearer\s+)[A-Za-z0-9_\-\.]{8,}", re.IGNORECASE)
 _RE_MONGO_PASS = re.compile(r"(mongodb(?:\+srv)?://[^:]+:)([^@]+)(@)", re.IGNORECASE)
 _RE_KV_SECRETS = re.compile(
-    r"(?i)\b(api_key|token|api_token|secret|password|account_id)\b\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.]{8,})['\"]?"
+    r"(?i)\b(api_key|token|api_token|secret|password|account_id|dsn)\b\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.]{8,})['\"]?"
+)
+_RE_SENTRY_INGEST = re.compile(
+    r"https?://(?:[^\s@/]+@)?[a-z0-9_.-]*ingest[a-z0-9_.-]*\.sentry\.io[^\s\"]*",
+    re.IGNORECASE,
 )
 
 
@@ -83,6 +96,7 @@ def redact_secrets(text: str) -> str:
     text = _RE_BEARER.sub(r"\1[REDACTED]", text)
     text = _RE_MONGO_PASS.sub(r"\1****\3", text)
     text = _RE_KV_SECRETS.sub(r"\1=[REDACTED]", text)
+    text = _RE_SENTRY_INGEST.sub("https://[REDACTED_SENTRY_ENDPOINT]", text)
 
     # Literal secret replacements
     for s in _SENSITIVE_STRINGS:

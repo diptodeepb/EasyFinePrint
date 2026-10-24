@@ -1,9 +1,7 @@
 # EasyFinePrint Privacy Policy
 
 **Effective Date:** October 24, 2026  
-**Document Version:** 1.0.0  
-**License:** Apache License 2.0  
-**Repository:** [https://github.com/diptodeepb/EasyFinePrint](https://github.com/diptodeepb/EasyFinePrint)  
+**License:** Apache License 2.0
 
 ---
 

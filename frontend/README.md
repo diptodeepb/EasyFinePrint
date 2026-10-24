@@ -10,7 +10,7 @@ The client-side single page application (SPA) for **EasyFinePrint: Public Legal 
 - **Custom Themed Scrollbars**: Native-styled dark scrollbars (`#27272a` thumb on `#09090b` track) configured across WebKit (Chrome, Safari, Edge, Android/iOS) and Firefox without layout shift.
 - **Mobile-First Responsive Layouts**:
   - **Tracked Policies 2x2 Grid**: Monitored policies display in a 2x2 grid with final odd cards centered between the columns.
-  - **Pagination (4 per page)**: Displays 4 policies per page (`PAGE_SIZE = 4`) with sliding-window page controls and persistent scroll position on pagination clicks.
+  - **Pagination (8 per page)**: Displays 8 policies per page (`PAGE_SIZE = 8`) with sliding-window page controls and persistent scroll position on pagination clicks.
   - **4-Tab Segmented Navigation**: Main policy detail tabs (`Clauses`, `Diffs`, `Log`, `Source Text`) adapt to a 4-column equal-width grid on mobile, eliminating horizontal scrolling.
   - **Automatic Route Scroll Restoration**: Navigating between routes (`/`, `/terms`, `/privacy`, `/policies/:id`) automatically scrolls to top `(0, 0)`.
   - **In-Place Validation Dismissal**: Input error banners feature interactive dismiss controls.
@@ -23,8 +23,8 @@ The client-side single page application (SPA) for **EasyFinePrint: Public Legal 
 |---|---|---|
 | `/` | `Home.jsx` | Hero search, URL ingestion form, quick samples, highlighted features, and tracked policies grid/table. |
 | `/policies/:id` | `PolicyDetail.jsx` | Full policy inspection: risk metrics card, verbatim findings, side-by-side Myers diffs, version history log, and raw text. |
-| `/terms` | `TermsOfService.jsx` | Self-hosted Terms of Use with inline analyze button and canonical policy verification. |
-| `/privacy` | `PolicyDoc.jsx` | Self-hosted Privacy Policy with zero-data-collection guarantees and direct auditor analysis. |
+| `/terms` | `TermsOfUse.jsx` | Self-hosted Terms of Use with inline analyze button and canonical policy verification. |
+| `/privacy` | `PolicyDoc.jsx` | Self-hosted Privacy Policy with telemetry redaction and direct auditor analysis. |
 
 ---
 

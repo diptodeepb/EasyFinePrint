@@ -232,3 +232,26 @@ async def test_security_protections_and_nosql_mitigation():
         assert "blocked" in resp_ssrf.json().get("detail", "").lower() or "forbidden" in resp_ssrf.json().get("detail", "").lower()
 
 
+@pytest.mark.asyncio
+async def test_delete_policy_lifecycle():
+    """Verify that deleting a tracked policy cascades and cleans up all related records."""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        # Create a self-policy record
+        resp = await client.post("/api/policies/analyze-self", json={"policy_type": "terms"})
+        assert resp.status_code == 200
+        pol_id = resp.json()["id"]
+
+        # Verify it exists
+        resp_get = await client.get(f"/api/policies/{pol_id}")
+        assert resp_get.status_code == 200
+
+        # Delete it
+        resp_del = await client.delete(f"/api/policies/{pol_id}")
+        assert resp_del.status_code == 200
+        assert resp_del.json()["status"] == "deleted"
+
+        # Verify 404 after deletion
+        resp_after = await client.get(f"/api/policies/{pol_id}")
+        assert resp_after.status_code == 404
+
+

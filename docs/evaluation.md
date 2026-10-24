@@ -6,9 +6,9 @@ EasyFinePrint is evaluated against an automated suite of unit and integration te
 
 ## 1. Test Summary
 
-- **Total Test Cases**: 50
-- **Passed**: 50 (100%)
-- **Execution Time**: ~95 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
+- **Total Test Cases**: 51
+- **Passed**: 51 (100%)
+- **Execution Time**: ~98 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
 - **Platform**: Python 3.14 on Linux (x86_64)
 
 ```
