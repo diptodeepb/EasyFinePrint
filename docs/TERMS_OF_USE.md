@@ -13,7 +13,7 @@ By accessing, browsing, self-hosting, or interacting with our web application or
 
 ---
 
-## 2. Scope and Nature of Service — Explicit Disclaimer of Legal Advice
+## 2. Scope and Nature of Service: Explicit Disclaimer of Legal Advice
 
 > **IMPORTANT NOTICE:**  
 > **EasyFinePrint is NOT a law firm and does NOT provide formal legal counsel, statutory compliance certifications, or attorney representation.**

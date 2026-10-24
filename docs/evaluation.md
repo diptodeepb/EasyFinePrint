@@ -6,9 +6,9 @@ EasyFinePrint is evaluated against an automated suite of unit and integration te
 
 ## 1. Test Summary
 
-- **Total Test Cases**: 51
-- **Passed**: 51 (100%)
-- **Execution Time**: ~98 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
+- **Total Test Cases**: 52
+- **Passed**: 52 (100%)
+- **Execution Time**: ~90 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
 - **Platform**: Python 3.14 on Linux (x86_64)
 
 ```
@@ -19,6 +19,7 @@ backend/tests/test_cloudflare_gemma.py::test_verify_cloudflare_token_mock PASSED
 backend/tests/test_cloudflare_gemma.py::test_fallback_when_unconfigured PASSED
 backend/tests/test_cloudflare_gemma.py::test_analyze_policy_risk_with_cf_mock PASSED
 backend/tests/test_cloudflare_gemma.py::test_explain_policy_changes_with_cf_mock PASSED
+backend/tests/test_cloudflare_gemma.py::test_compute_risk_score_tiers PASSED
 backend/tests/test_discovery.py::test_known_company_discovery PASSED
 backend/tests/test_discovery.py::test_case_insensitive_and_trimmed_query PASSED
 backend/tests/test_discovery.py::test_unknown_company_discovery_graceful PASSED
@@ -63,7 +64,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_passed PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_partial_and_drops_unsupported PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_fails PASSED
 
-======================== 50 passed in 95.01s ========================
+======================== 52 passed in 90.24s ========================
 ```
 
 ---
@@ -81,6 +82,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_f
 | **Anti-Reconnaissance & Privacy** | 100% sensitive telemetry omitted | Health and public endpoints omit internal model IDs, providers, and DB topology |
 | **Sentry Tunnel & Privacy Shield Evasion** | 100% invalid target hosts rejected & first-party telemetry preserved | Same-origin envelope tunnel rejects untrusted DSN hosts with HTTP 403, and module hardening avoids adblocker script drops |
 | **Zero-Spend Adherence** | 100% $0 operation | Uses free static hosting, free Vercel serverless tier, free Atlas M0, and Cloudflare Workers AI free tier |
+| **Calibrated Risk Tier Mapping** | 100% deterministic tier classification | Four-tier ladder (Low: 0-30, Moderate: 31-55, Elevated: 56-74, High: 75-100) calibrated against real consumer hazard |
 | **Extraction Failure Safety** | Previous snapshot preserved intact | Extraction errors never report false "unchanged" status |
 
 ---

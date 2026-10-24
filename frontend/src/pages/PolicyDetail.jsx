@@ -302,102 +302,140 @@ export default function PolicyDetail() {
           <div className="p-4 rounded-xl bg-zinc-950/80 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
               <div className="flex items-center justify-between sm:justify-start gap-3">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold tracking-wider">
-                    Consumer Risk Score
-                  </span>
-                  <div className="flex items-baseline gap-1.5 mt-0.5">
-                    {analysis.risk_score !== null && analysis.risk_score !== undefined ? (
-                      <>
-                        <span
-                          className={`text-2xl sm:text-3xl font-bold font-mono ${
-                            analysis.risk_score > 80
-                              ? 'text-rose-400'
-                              : analysis.risk_score > 65
-                              ? 'text-amber-400'
-                              : analysis.risk_score > 35
-                              ? 'text-yellow-400'
-                              : 'text-emerald-400'
-                          }`}
-                        >
-                          {analysis.risk_score}
-                        </span>
-                        <span className="text-xs font-mono text-zinc-500">/ 100</span>
-                      </>
-                    ) : (
-                      <span className="text-sm font-semibold font-mono text-amber-400/90 py-1">
-                        Unrated (Fallback)
+              {(() => {
+                const riskLevel =
+                  (analysis.risk_level || '').toLowerCase() ||
+                  (analysis.risk_score > 74
+                    ? 'high'
+                    : analysis.risk_score > 55
+                    ? 'elevated'
+                    : analysis.risk_score > 30
+                    ? 'moderate'
+                    : analysis.risk_score !== null && analysis.risk_score !== undefined
+                    ? 'low'
+                    : null);
+
+                return (
+                  <>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-mono uppercase text-zinc-500 font-semibold tracking-wider">
+                        Consumer Risk Score
                       </span>
-                    )}
-                  </div>
-                </div>
+                      <div className="flex items-baseline gap-1.5 mt-0.5">
+                        {analysis.risk_score !== null && analysis.risk_score !== undefined ? (
+                          <>
+                            <span
+                              className={`text-2xl sm:text-3xl font-bold font-mono ${
+                                riskLevel === 'high'
+                                  ? 'text-rose-400'
+                                  : riskLevel === 'elevated'
+                                  ? 'text-amber-400'
+                                  : riskLevel === 'moderate'
+                                  ? 'text-yellow-400'
+                                  : riskLevel === 'low'
+                                  ? 'text-emerald-400'
+                                  : 'text-zinc-400'
+                              }`}
+                            >
+                              {analysis.risk_score}
+                            </span>
+                            <span className="text-xs font-mono text-zinc-500">/ 100</span>
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold font-mono text-amber-400/90 py-1">
+                            Unrated (Fallback)
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                {/* Mobile badge indicator */}
-                <div className="sm:hidden">
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider ${
-                      analysis.risk_level === 'high'
-                        ? 'bg-rose-950/60 border border-rose-800 text-rose-300'
-                        : analysis.risk_level === 'elevated'
-                        ? 'bg-amber-950/60 border border-amber-800 text-amber-300'
-                        : analysis.risk_level === 'moderate'
-                        ? 'bg-yellow-950/50 border border-yellow-800 text-yellow-300'
-                        : analysis.risk_level === 'low'
-                        ? 'bg-emerald-950/50 border border-emerald-800 text-emerald-300'
-                        : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    {analysis.risk_level ? `${analysis.risk_level} concern` : 'Pending'}
-                  </span>
-                </div>
-              </div>
+                    {/* Mobile badge indicator */}
+                    <div className="sm:hidden">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider ${
+                          riskLevel === 'high'
+                            ? 'bg-rose-950/60 border border-rose-800 text-rose-300'
+                            : riskLevel === 'elevated'
+                            ? 'bg-amber-950/60 border border-amber-800 text-amber-300'
+                            : riskLevel === 'moderate'
+                            ? 'bg-yellow-950/50 border border-yellow-800 text-yellow-300'
+                            : riskLevel === 'low'
+                            ? 'bg-emerald-950/50 border border-emerald-800 text-emerald-300'
+                            : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {riskLevel ? `${riskLevel} concern` : 'Pending'}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
 
-              <div className="hidden sm:block h-9 w-px bg-zinc-800 shrink-0" />
+            <div className="hidden sm:block h-9 w-px bg-zinc-800 shrink-0" />
 
-              <div className="space-y-1.5 flex-1 min-w-0">
-                <div className="hidden sm:flex items-center gap-2">
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider ${
-                      analysis.risk_level === 'high'
-                        ? 'bg-rose-950/60 border border-rose-800 text-rose-300'
-                        : analysis.risk_level === 'elevated'
-                        ? 'bg-amber-950/60 border border-amber-800 text-amber-300'
-                        : analysis.risk_level === 'moderate'
-                        ? 'bg-yellow-950/50 border border-yellow-800 text-yellow-300'
-                        : analysis.risk_level === 'low'
-                        ? 'bg-emerald-950/50 border border-emerald-800 text-emerald-300'
-                        : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
-                    }`}
-                  >
-                    {analysis.risk_level ? `${analysis.risk_level} concern` : 'Evaluation pending'}
-                  </span>
-                  <span className="text-xs text-zinc-400 font-mono">
-                    {findings.length} clause{findings.length === 1 ? '' : 's'} flagged
-                  </span>
-                </div>
+            <div className="space-y-1.5 flex-1 min-w-0">
+              {(() => {
+                const riskLevel =
+                  (analysis.risk_level || '').toLowerCase() ||
+                  (analysis.risk_score > 74
+                    ? 'high'
+                    : analysis.risk_score > 55
+                    ? 'elevated'
+                    : analysis.risk_score > 30
+                    ? 'moderate'
+                    : analysis.risk_score !== null && analysis.risk_score !== undefined
+                    ? 'low'
+                    : null);
 
-                <div className="sm:hidden text-xs text-zinc-400 font-mono">
-                  {findings.length} clause{findings.length === 1 ? '' : 's'} flagged
-                </div>
+                return (
+                  <>
+                    <div className="hidden sm:flex items-center gap-2">
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold uppercase tracking-wider ${
+                          riskLevel === 'high'
+                            ? 'bg-rose-950/60 border border-rose-800 text-rose-300'
+                            : riskLevel === 'elevated'
+                            ? 'bg-amber-950/60 border border-amber-800 text-amber-300'
+                            : riskLevel === 'moderate'
+                            ? 'bg-yellow-950/50 border border-yellow-800 text-yellow-300'
+                            : riskLevel === 'low'
+                            ? 'bg-emerald-950/50 border border-emerald-800 text-emerald-300'
+                            : 'bg-zinc-900 border border-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {riskLevel ? `${riskLevel} concern` : 'Evaluation pending'}
+                      </span>
+                      <span className="text-xs text-zinc-400 font-mono">
+                        {findings.length} clause{findings.length === 1 ? '' : 's'} flagged
+                      </span>
+                    </div>
 
-                {/* Progress Bar (fluid on mobile, fixed width on desktop) */}
-                <div className="w-full sm:w-48 h-2 sm:h-1.5 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden">
-                  <div
-                    className={`h-full transition-all duration-500 ${
-                      analysis.risk_score > 80
-                        ? 'bg-rose-500'
-                        : analysis.risk_score > 65
-                        ? 'bg-amber-500'
-                        : analysis.risk_score > 35
-                        ? 'bg-yellow-500'
-                        : analysis.risk_score !== null && analysis.risk_score !== undefined
-                        ? 'bg-emerald-500'
-                        : 'bg-zinc-800'
-                    }`}
-                    style={{ width: `${Math.min(100, Math.max(8, analysis.risk_score || 8))}%` }}
-                  />
-                </div>
-              </div>
+                    <div className="sm:hidden text-xs text-zinc-400 font-mono">
+                      {findings.length} clause{findings.length === 1 ? '' : 's'} flagged
+                    </div>
+
+                    {/* Progress Bar (fluid on mobile, fixed width on desktop) */}
+                    <div className="w-full sm:w-48 h-2 sm:h-1.5 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-500 ${
+                          riskLevel === 'high'
+                            ? 'bg-rose-500'
+                            : riskLevel === 'elevated'
+                            ? 'bg-amber-500'
+                            : riskLevel === 'moderate'
+                            ? 'bg-yellow-500'
+                            : riskLevel === 'low'
+                            ? 'bg-emerald-500'
+                            : 'bg-zinc-800'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.max(8, analysis.risk_score || 8))}%` }}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
             </div>
 
             {/* Severity Distribution Pills */}

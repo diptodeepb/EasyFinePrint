@@ -22,6 +22,24 @@ import DiscoveryModal from "../components/DiscoveryModal";
 
 const PAGE_SIZE = 8;
 
+function getRiskTier(analysis) {
+  if (!analysis) return { level: "", score: null };
+  const score = analysis.risk_score;
+  const rawLevel = (analysis.risk_level || "").toLowerCase();
+  const level =
+    rawLevel ||
+    (score > 74
+      ? "high"
+      : score > 55
+      ? "elevated"
+      : score > 30
+      ? "moderate"
+      : score !== null && score !== undefined
+      ? "low"
+      : "");
+  return { level, score };
+}
+
 /**
  * Multi-tier fuzzy matching algorithm:
  * 1. Exact substring match in title/URL (highest priority)
@@ -36,12 +54,8 @@ function fuzzyMatchPolicy(policy, query) {
   const title = (policy.title || "").toLowerCase();
   const canonical = (policy.canonical_url || "").toLowerCase();
   const url = (policy.url || "").toLowerCase();
-  const level = (policy.latest_analysis?.risk_level || "").toLowerCase();
-  const scoreStr =
-    policy.latest_analysis?.risk_score !== undefined &&
-    policy.latest_analysis?.risk_score !== null
-      ? String(policy.latest_analysis.risk_score)
-      : "";
+  const { level, score } = getRiskTier(policy.latest_analysis);
+  const scoreStr = score !== undefined && score !== null ? String(score) : "";
 
   // 1. Exact substring in title
   const titleIdx = title.indexOf(q);
@@ -277,7 +291,7 @@ export default function Home() {
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed">
               Every flagged concern is anchored to an exact, unedited quotation
-              from the source text—ensuring transparent verification without AI
+              from the source text, ensuring transparent verification without AI
               hallucinations.
             </p>
           </div>
@@ -422,8 +436,7 @@ export default function Home() {
                         pol.last_checked_at,
                       );
                       const analysis = pol.latest_analysis;
-                      const score = analysis?.risk_score;
-                      const level = analysis?.risk_level;
+                      const { score, level } = getRiskTier(analysis);
                       const isFb =
                         analysis?.model_id === "deterministic-fallback";
 
@@ -471,13 +484,11 @@ export default function Home() {
                             {score !== null && score !== undefined ? (
                               <span
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium tracking-wide whitespace-nowrap ${
-                                  level === "high" || (!level && score > 80)
+                                  level === "high"
                                     ? "bg-rose-950/50 border border-rose-800/80 text-rose-300"
-                                    : level === "elevated" ||
-                                        (!level && score > 65)
+                                    : level === "elevated"
                                       ? "bg-amber-950/50 border border-amber-800/80 text-amber-300"
-                                      : level === "moderate" ||
-                                          (!level && score > 35)
+                                      : level === "moderate"
                                         ? "bg-yellow-950/40 border border-yellow-800/70 text-yellow-300"
                                         : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
                                 }`}
@@ -490,7 +501,7 @@ export default function Home() {
                                   ·
                                 </span>
                                 <span className="capitalize">
-                                  {level || "rated"}
+                                  {level ? `${level}` : "rated"}
                                 </span>
                               </span>
                             ) : (
@@ -528,8 +539,7 @@ export default function Home() {
                   day: "numeric",
                 });
                 const analysis = pol.latest_analysis;
-                const score = analysis?.risk_score;
-                const level = analysis?.risk_level;
+                const { score, level } = getRiskTier(analysis);
                 const isFb = analysis?.model_id === "deterministic-fallback";
                 const isFinalOdd =
                   idx === paginatedPolicies.length - 1 &&
@@ -593,11 +603,11 @@ export default function Home() {
                         {score !== null && score !== undefined ? (
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
-                              level === "high" || (!level && score > 80)
+                              level === "high"
                                 ? "bg-rose-950/50 border border-rose-800/80 text-rose-300"
-                                : level === "elevated" || (!level && score > 65)
+                                : level === "elevated"
                                   ? "bg-amber-950/50 border border-amber-800/80 text-amber-300"
-                                  : level === "moderate" || (!level && score > 35)
+                                  : level === "moderate"
                                     ? "bg-yellow-950/40 border border-yellow-800/70 text-yellow-300"
                                     : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
                             }`}
