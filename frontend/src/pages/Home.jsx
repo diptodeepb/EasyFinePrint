@@ -336,17 +336,18 @@ export default function Home() {
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
+                disabled={loadingPolicies}
                 placeholder="Search policies..."
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300/30 transition-colors"
+                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300/30 transition-colors disabled:opacity-50"
               />
-              {searchQuery && (
+              {searchQuery && !loadingPolicies && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-2 flex items-center text-zinc-500 hover:text-zinc-300 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
                   title="Clear search"
                   aria-label="Clear search"
                 >

@@ -84,6 +84,11 @@ export const api = {
       method: 'POST',
     }),
 
+  deletePolicy: (policyId) =>
+    fetchJson(`/api/policies/${policyId}`, {
+      method: 'DELETE',
+    }),
+
   // Discovery
   discoverPolicyUrls: (query) =>
     fetchJson('/api/discovery/search', {

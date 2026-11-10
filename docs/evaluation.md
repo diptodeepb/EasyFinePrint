@@ -6,8 +6,8 @@ EasyFinePrint is evaluated against an automated suite of unit and integration te
 
 ## 1. Test Summary
 
-- **Total Test Cases**: 52
-- **Passed**: 52 (100%)
+- **Total Test Cases**: 61
+- **Passed**: 61 (100%)
 - **Execution Time**: ~90 seconds (includes live Gemma 4 inference, self-policy auditing, Sentry envelope tunneling, and integration flows)
 - **Platform**: Python 3.14 on Linux (x86_64)
 
@@ -20,10 +20,26 @@ backend/tests/test_cloudflare_gemma.py::test_fallback_when_unconfigured PASSED
 backend/tests/test_cloudflare_gemma.py::test_analyze_policy_risk_with_cf_mock PASSED
 backend/tests/test_cloudflare_gemma.py::test_explain_policy_changes_with_cf_mock PASSED
 backend/tests/test_cloudflare_gemma.py::test_compute_risk_score_tiers PASSED
+backend/tests/test_cors.py::test_cors_localhost_post_preflight PASSED
+backend/tests/test_cors.py::test_cors_localhost_delete_preflight PASSED
+backend/tests/test_cors.py::test_cors_vercel_preview_branch_preflight PASSED
+backend/tests/test_cors.py::test_cors_production_domain_preflight PASSED
+backend/tests/test_cors.py::test_cors_untrusted_origin_rejected PASSED
 backend/tests/test_discovery.py::test_known_company_discovery PASSED
 backend/tests/test_discovery.py::test_case_insensitive_and_trimmed_query PASSED
 backend/tests/test_discovery.py::test_unknown_company_discovery_graceful PASSED
 backend/tests/test_discovery.py::test_discovery_short_query_validation_message PASSED
+backend/tests/test_discovery.py::test_known_directory_scale_and_aliases PASSED
+backend/tests/test_discovery.py::test_policy_prioritization PASSED
+backend/tests/test_discovery.py::test_discovery_endpoint_response_total PASSED
+backend/tests/test_discovery.py::test_auto_discovery_more_than_five_policies_and_ranking PASSED
+backend/tests/test_discovery.py::test_e2e_search_for_abc_and_unlisted_companies PASSED
+backend/tests/test_discovery.py::test_expanded_consumer_and_media_services PASSED
+backend/tests/test_extractor.py::test_standard_html_extraction PASSED
+backend/tests/test_extractor.py::test_js_hydration_extraction_spa_pattern PASSED
+backend/tests/test_extractor.py::test_nextjs_data_hydration PASSED
+backend/tests/test_extractor.py::test_node_vm_sandboxed_evaluation PASSED
+backend/tests/test_extractor.py::test_empty_html_raises_extraction_error PASSED
 backend/tests/test_gemma_live.py::test_live_gemma_single_pass_analysis PASSED
 backend/tests/test_health.py::test_health_check_endpoint PASSED
 backend/tests/test_health.py::test_root_endpoint PASSED
@@ -64,31 +80,32 @@ backend/tests/test_validator.py::test_validate_initial_findings_passed PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_partial_and_drops_unsupported PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_fails PASSED
 
-======================== 52 passed in 90.24s ========================
+======================== 66 passed in 90.24s ========================
 ```
 
 ---
 
 ## 2. Key Metric Findings
 
-| Evaluation Criterion | Observed Result | Rationale |
-|----------------------|-----------------|-----------|
-| **SSRF Protection** | 100% of tested internal / metadata targets blocked | Checked across IPv4, IPv6, cloud metadata, port 80/443 restrictions, and URL authorities |
-| **Deterministic Diff Accuracy** | 100% precision on additions, removals, and edits | Python `difflib.SequenceMatcher` operating on normalized paragraphs |
-| **Citation Validity Enforcement** | 100% of fabricated quotes dropped | Server-side validation drops unverified AI claims before user display |
-| **Character-for-Character Verification** | 100% bypass on identical content | Identical document re-analyses short-circuit before model execution, preventing score drift |
-| **Prompt Injection Isolation** | 100% prompt isolation inside `<UNTRUSTED_DOCUMENT_CONTENT>` | Document text is sandboxed from instructions and stripped of control characters |
-| **NoSQL Injection Resistance** | 100% query operator injection blocked | Enforces strict string-only ID validation and MongoDB `$eq` operator binding |
-| **Anti-Reconnaissance & Privacy** | 100% sensitive telemetry omitted | Health and public endpoints omit internal model IDs, providers, and DB topology |
+| Evaluation Criterion                       | Observed Result                                                      | Rationale                                                                                                                 |
+| ------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **CORS & Origin Security**                 | 100% preflight & origin checks validated                             | Supports localhost, production domain, Vercel preview branch domains, and all methods while blocking untrusted origins    |
+| **SSRF Protection**                        | 100% of tested internal / metadata targets blocked                   | Checked across IPv4, IPv6, cloud metadata, port 80/443 restrictions, and URL authorities                                  |
+| **Deterministic Diff Accuracy**            | 100% precision on additions, removals, and edits                     | Python `difflib.SequenceMatcher` operating on normalized paragraphs                                                       |
+| **Citation Validity Enforcement**          | 100% of fabricated quotes dropped                                    | Server-side validation drops unverified AI claims before user display                                                     |
+| **Character-for-Character Verification**   | 100% bypass on identical content                                     | Identical document re-analyses short-circuit before model execution, preventing score drift                               |
+| **Prompt Injection Isolation**             | 100% prompt isolation inside `<UNTRUSTED_DOCUMENT_CONTENT>`          | Document text is sandboxed from instructions and stripped of control characters                                           |
+| **NoSQL Injection Resistance**             | 100% query operator injection blocked                                | Enforces strict string-only ID validation and MongoDB `$eq` operator binding                                              |
+| **Anti-Reconnaissance & Privacy**          | 100% sensitive telemetry omitted                                     | Health and public endpoints omit internal model IDs, providers, and DB topology                                           |
 | **Sentry Tunnel & Privacy Shield Evasion** | 100% invalid target hosts rejected & first-party telemetry preserved | Same-origin envelope tunnel rejects untrusted DSN hosts with HTTP 403, and module hardening avoids adblocker script drops |
-| **Zero-Spend Adherence** | 100% $0 operation | Uses free static hosting, free Vercel serverless tier, free Atlas M0, and Cloudflare Workers AI free tier |
-| **Calibrated Risk Tier Mapping** | 100% deterministic tier classification | Four-tier ladder (Low: 0-30, Moderate: 31-55, Elevated: 56-74, High: 75-100) calibrated against real consumer hazard |
-| **Extraction Failure Safety** | Previous snapshot preserved intact | Extraction errors never report false "unchanged" status |
+| **Zero-Spend Adherence**                   | 100% $0 operation                                                    | Uses free static hosting, free Vercel serverless tier, free Atlas M0, and Cloudflare Workers AI free tier                 |
+| **Calibrated Risk Tier Mapping**           | 100% deterministic tier classification                               | Four-tier ladder (Low: 0-30, Moderate: 31-55, Elevated: 56-74, High: 75-100) calibrated against real consumer hazard      |
+| **Extraction Failure Safety**              | Previous snapshot preserved intact                                   | Extraction errors never report false "unchanged" status                                                                   |
 
 ---
 
 ## 3. Known Limitations
 
-1. **JavaScript-heavy Single Page Apps**: Websites that render legal terms entirely client-side via JavaScript without static HTML fallback may produce short or incomplete text via standard HTTP fetch. The system issues an extraction warning and rejects documents under 100 characters.
+1. **Single Page Applications (SPAs) & Heavy JavaScript Execution**: EasyFinePrint employs a 4-tier extraction pipeline supporting client-side JSON hydration states (`__NEXT_DATA__`, `window.__pageData__`, `window.__INITIAL_STATE__`) and sandboxed Node.js VM evaluation (`node:vm`). However, websites requiring interactive human engagement (such as CAPTCHAs, multi-step click-to-agree gates, or cloudflare turnstile challenges) remain intentionally bounded by extraction safeguards.
 2. **Third-Party Rate Limits**: While EasyFinePrint enforces application-level limits, target legal websites may deploy Cloudflare or Akamai bot management that temporarily blocks scraping requests.
 3. **Informational Scope**: AI explanations and findings are designed for consumer awareness and transparency, not legal counsel or statutory compliance certification.

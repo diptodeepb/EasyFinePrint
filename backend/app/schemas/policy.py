@@ -127,4 +127,5 @@ class DiscoveryCandidate(BaseModel):
 class DiscoveryResponse(BaseModel):
     query: str
     candidates: List[DiscoveryCandidate]
+    total: int = 0
     cached: bool = False
