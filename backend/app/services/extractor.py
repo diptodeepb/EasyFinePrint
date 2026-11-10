@@ -149,6 +149,7 @@ async def safe_fetch_page(
             verify=True,
             timeout=httpx.Timeout(timeout, connect=10.0, read=timeout, write=10.0),
             follow_redirects=False,
+            cookies=httpx.Cookies(),
         ) as client:
             while True:
                 # Re-verify URL and hostname before EVERY outbound request
@@ -449,3 +450,50 @@ def extract_policy_content(html: str) -> Tuple[str, str, List[str]]:
         warnings.append(f"Policy truncated to max character limit ({settings.max_policy_chars}).")
 
     return title, extracted_text, warnings
+
+
+async def fetch_wayback_snapshot(target_url: str, timeout_sec: float = 12.0) -> Optional[Tuple[str, str, str]]:
+    """
+    Tier 2 Public Web Archive Fallback (Internet Archive / Wayback Machine):
+    Queries the official Wayback Machine Availability API to retrieve the closest
+    public snapshot of a legal agreement when origin servers or CDN firewalls block cloud scrapers.
+    Returns (html_content, archive_url, timestamp_str) or None if unavailable.
+    """
+    api_url = f"https://archive.org/wayback/available?url={httpx.URL(target_url)}"
+    try:
+        async with httpx.AsyncClient(timeout=timeout_sec, follow_redirects=True) as client:
+            resp = await client.get(api_url, headers={"User-Agent": DEFAULT_USER_AGENT})
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            snapshot = data.get("archived_snapshots", {}).get("closest")
+            if not snapshot or not snapshot.get("available"):
+                return None
+
+            archive_url = snapshot.get("url")
+            timestamp = snapshot.get("timestamp", "")
+            if not archive_url:
+                return None
+
+            # Fetch archived HTML snapshot safely
+            parsed_archive = validate_url(archive_url)
+            resolve_and_verify_hostname(parsed_archive.hostname)
+
+            snap_resp = await client.get(archive_url, headers=STANDARD_BROWSER_HEADERS)
+            if snap_resp.status_code != 200 or len(snap_resp.text) < 200:
+                return None
+
+            # Clean out any Wayback Machine top navigation injected toolbars
+            html = snap_resp.text
+            try:
+                clean_soup = BeautifulSoup(html, "html.parser")
+                for banner in clean_soup.find_all(id=re.compile(r"^(wm-ipp|donato)")):
+                    banner.decompose()
+                cleaned_html = str(clean_soup)
+            except Exception:
+                cleaned_html = html
+
+            return cleaned_html, archive_url, timestamp
+    except Exception as exc:
+        logger.debug("Wayback Machine archive fallback lookup failed for %s: %s", target_url, exc)
+        return None

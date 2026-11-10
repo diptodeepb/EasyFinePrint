@@ -11,6 +11,8 @@ import {
   Info,
   Shield,
   X,
+  AlertCircle,
+  Globe,
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { formatLocalDate } from '../lib/dateUtils';
@@ -21,6 +23,7 @@ import VersionHistory from '../components/VersionHistory';
 export default function PolicyDetail() {
   const { id } = useParams();
   const [policy, setPolicy] = useState(null);
+  const [snapshot, setSnapshot] = useState(null);
   const [history, setHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('findings');
   const [loading, setLoading] = useState(true);
@@ -54,7 +57,11 @@ export default function PolicyDetail() {
 
       if (pData.latest_snapshot_id) {
         const sData = await api.getSnapshot(id, pData.latest_snapshot_id);
+        setSnapshot(sData);
         setRawSnapshotText(sData.extracted_text || '');
+      } else {
+        setSnapshot(null);
+        setRawSnapshotText('');
       }
     } catch (err) {
       setError(err.message || 'Failed to load policy');
@@ -145,6 +152,16 @@ export default function PolicyDetail() {
   const findings = analysis?.findings || [];
   const changes = analysis?.changes || [];
   const isFallback = analysis?.model_id === 'deterministic-fallback';
+  const isUserProvided =
+    policy?.provenance === 'user_pasted' ||
+    analysis?.provenance === 'user_pasted' ||
+    snapshot?.extractor === 'user_pasted' ||
+    snapshot?.provenance === 'user_pasted';
+  const isArchived =
+    policy?.provenance === 'archive' ||
+    analysis?.provenance === 'archive' ||
+    snapshot?.extractor === 'archive' ||
+    snapshot?.provenance === 'archive';
 
   return (
     <div className="max-w-5xl mx-auto px-3.5 sm:px-6 py-5 sm:py-8 space-y-5 sm:space-y-6">
@@ -294,8 +311,44 @@ export default function PolicyDetail() {
             <span className="px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-900/50 text-emerald-400">
               Active baseline
             </span>
+
+            {isArchived && (
+              <span className="px-2 py-0.5 rounded bg-blue-950/40 border border-blue-900/50 text-blue-300">
+                Archived Snapshot
+              </span>
+            )}
           </div>
         </div>
+
+        {/* User-Provided Content Warning Notice */}
+        {isUserProvided && (
+          <div className="p-3 rounded-lg bg-amber-950/30 border border-amber-900/60 text-amber-300 text-xs font-mono flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <span className="font-semibold uppercase tracking-wider text-[11px] text-amber-200">
+                User-Provided Ingestion Notice
+              </span>
+              <p className="text-amber-300/90 leading-relaxed text-[11px]">
+                This policy baseline was provided via direct text paste. Findings, scores, and future diffs reflect user-submitted content and may not represent the complete official agreement.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Public Web Archive Record Notice */}
+        {isArchived && (
+          <div className="p-3 rounded-lg bg-blue-950/30 border border-blue-900/60 text-blue-300 text-xs font-mono flex items-start gap-2.5">
+            <Globe className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <div className="space-y-0.5">
+              <span className="font-semibold uppercase tracking-wider text-[11px] text-blue-200">
+                Public Web Archive Record
+              </span>
+              <p className="text-blue-300/90 leading-relaxed text-[11px]">
+                Live fetch was restricted by the origin website; document was retrieved from a verified public snapshot via the Internet Archive Wayback Machine.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Consumer Risk Score & Clause Metrics Card */}
         {analysis && (

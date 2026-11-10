@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from app.db.connection import get_db, check_db_health
+from app.services.normalizer import canonicalize_url
 
 logger = logging.getLogger("easyfineprint.repository")
 
@@ -62,13 +63,40 @@ class PolicyRepository:
             doc = await get_db()["policies"].find_one({
                 "$or": [
                     {"canonical_url": {"$in": candidates}},
+                    {"raw_url": {"$in": candidates}},
                     {"url": {"$in": candidates}},
                 ]
             })
-            return _normalize_doc(doc)
+            if doc:
+                return _normalize_doc(doc)
         for p in self._mem_policies.values():
-            if p.get("canonical_url") in candidates or p.get("url") in candidates:
+            if (
+                p.get("canonical_url") in candidates
+                or p.get("raw_url") in candidates
+                or p.get("url") in candidates
+            ):
                 return _normalize_doc(p)
+        return None
+
+    async def find_system_policy_by_canonical(self, canonical_url_str: str) -> Optional[dict]:
+        """Find an existing policy matching canonical URL variants that is system-maintained."""
+        if not canonical_url_str:
+            return None
+        # Check in-memory store
+        for p in self._mem_policies.values():
+            if p.get("provenance") != "user_pasted":
+                p_canon = canonicalize_url(p.get("canonical_url", ""))
+                p_raw = canonicalize_url(p.get("raw_url", "") or p.get("url", ""))
+                if canonical_url_str in (p_canon, p_raw):
+                    return _normalize_doc(p)
+
+        if await self._use_mongo():
+            cursor = get_db()["policies"].find({"provenance": {"$ne": "user_pasted"}})
+            async for doc in cursor:
+                p_canon = canonicalize_url(doc.get("canonical_url", ""))
+                p_raw = canonicalize_url(doc.get("raw_url", "") or doc.get("url", ""))
+                if canonical_url_str in (p_canon, p_raw):
+                    return _normalize_doc(doc)
         return None
 
     async def get_policy_by_id(self, policy_id: str) -> Optional[dict]:
@@ -96,7 +124,13 @@ class PolicyRepository:
         )
         return [_normalize_doc(x) for x in items[:limit]]
 
-    async def create_policy(self, url: str, canonical_url: str, title: str) -> dict:
+    async def create_policy(
+        self,
+        url: str,
+        canonical_url: str,
+        title: str,
+        provenance: str = "live",
+    ) -> dict:
         now = datetime.now(timezone.utc)
         policy_id = f"pol_{uuid.uuid4().hex[:12]}"
         doc = {
@@ -106,6 +140,7 @@ class PolicyRepository:
             "canonical_url": canonical_url,
             "title": title,
             "status": "active",
+            "provenance": provenance,
             "created_at": now,
             "last_checked_at": now,
             "latest_snapshot_id": None,
@@ -155,6 +190,8 @@ class PolicyRepository:
         extraction_status: str,
         source_status_code: int,
         title: str,
+        provenance: str = "live",
+        warnings: Optional[List[str]] = None,
     ) -> dict:
         now = datetime.now(timezone.utc)
         snap_id = f"snp_{uuid.uuid4().hex[:12]}"
@@ -169,6 +206,8 @@ class PolicyRepository:
             "extraction_status": extraction_status,
             "source_status_code": source_status_code,
             "title": title,
+            "provenance": provenance,
+            "warnings": warnings or [],
         }
         if await self._use_mongo():
             await get_db()["snapshots"].insert_one(doc)
@@ -241,6 +280,8 @@ class PolicyRepository:
         old_snapshot_id: Optional[str] = None,
         risk_score: Optional[int] = None,
         risk_level: Optional[str] = None,
+        provenance: str = "live",
+        warnings: Optional[List[str]] = None,
     ) -> dict:
         now = datetime.now(timezone.utc)
         ana_id = f"ana_{uuid.uuid4().hex[:12]}"
@@ -259,6 +300,8 @@ class PolicyRepository:
             "model_id": model_id,
             "created_at": now,
             "validation_status": validation_status,
+            "provenance": provenance,
+            "warnings": warnings or [],
         }
         if await self._use_mongo():
             await get_db()["analyses"].insert_one(doc)

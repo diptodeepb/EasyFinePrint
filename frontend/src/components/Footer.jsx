@@ -8,7 +8,20 @@ export default function Footer() {
     "https://github.com/diptodeepb/EasyFinePrint/blob/main/LICENSE";
 
   return (
-    <footer className="border-t border-zinc-800/80 bg-[#09090b] text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto">
+    <footer className="relative bg-[#09090b] text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto">
+      {/* Architectural Top Divider Line */}
+      <div
+        className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
+        aria-hidden="true"
+      >
+        {/* Subtle base gradient line fading to screen edges */}
+        <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
+        {/* Luminous center shimmer */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-zinc-600/50 to-transparent" />
+        {/* Delicate centered highlight accent */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/25 to-transparent blur-[0.5px]" />
+      </div>
+
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-10">
         {/* Main Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-10">
@@ -68,6 +81,14 @@ export default function Footer() {
                 Resources
               </div>
               <ul className="space-y-2 text-[11px]">
+                <li>
+                  <Link
+                    to="/features"
+                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
+                  >
+                    <span>Features &amp; Auditing</span>
+                  </Link>
+                </li>
                 <li>
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint"
@@ -170,12 +191,28 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar: Copyright & Rights */}
-        <div className="border-t border-zinc-800/80 pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[11px] text-zinc-400">
+        <div className="relative pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[11px] text-zinc-400">
+          {/* Subtle gradient divider line */}
+          <div
+            className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
+            aria-hidden="true"
+          >
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/2 h-full bg-gradient-to-r from-transparent via-zinc-700/40 to-transparent" />
+          </div>
+
           <div>
             &copy; {currentYear} EasyFinePrint. All rights reserved.
           </div>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-2.5 sm:gap-x-3 gap-y-1">
+            <Link
+              to="/features"
+              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+            >
+              Features
+            </Link>
+            <span className="text-zinc-700 hidden sm:inline">&middot;</span>
             <Link
               to="/terms"
               className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"

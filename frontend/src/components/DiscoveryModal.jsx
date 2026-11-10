@@ -52,7 +52,13 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
         setError('No candidate policy links found. Try entering the URL directly or verify the company name.');
       }
     } catch (err) {
-      setError(err.message || 'Discovery search failed.');
+      let msg = err?.message || 'Discovery search failed.';
+      if (/failed to fetch/i.test(msg) || /unable to connect/i.test(msg) || /network/i.test(msg) || /load failed/i.test(msg)) {
+        msg = 'Unable to connect to the policy discovery service. Please check your connection or enter the URL directly.';
+      } else {
+        msg = msg.replace(/https?:\/\/[^\s/$.?#].[^\s]*/gi, '').trim();
+      }
+      setError(msg || 'Discovery search failed. Please try entering the URL directly.');
     } finally {
       setLoading(false);
     }
@@ -111,7 +117,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
             <span>Company Policy Directory &amp; Auto-Discovery</span>
           </h3>
           <p className="text-xs text-zinc-400">
-            Search 200+ verified platforms or auto-find policies dynamically for any company
+            Search 249+ verified platforms (500+ legal documents) or auto-find policies dynamically for any company
           </p>
         </div>
 

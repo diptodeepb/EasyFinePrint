@@ -80,6 +80,17 @@ export default function Header() {
             </Link>
 
             <Link
+              to="/features"
+              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
+                isCurrent("/features")
+                  ? "text-zinc-100 bg-zinc-900 border border-zinc-800 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40"
+              }`}
+            >
+              Features
+            </Link>
+
+            <Link
               to="/terms"
               className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
                 isCurrent("/terms")
@@ -161,6 +172,19 @@ export default function Header() {
                 }`}
               >
                 <span>Dashboard</span>
+                <ArrowRight className="w-3.5 h-3.5 text-zinc-600" />
+              </Link>
+
+              <Link
+                to="/features"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-3 py-2.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
+                  isCurrent("/features")
+                    ? "bg-zinc-900 text-white font-semibold border border-zinc-800"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-900/50"
+                }`}
+              >
+                <span>Features</span>
                 <ArrowRight className="w-3.5 h-3.5 text-zinc-600" />
               </Link>
 

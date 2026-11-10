@@ -69,7 +69,7 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
   - `gemma.py`: Cloudflare Workers AI REST adapter for Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) with strict safety prompts isolating untrusted text inside `<UNTRUSTED_DOCUMENT_CONTENT>` tags. Computes an evidence-based consumer risk score (10 to 100) using diminishing-returns severity weighting and calibrated risk tiers: Low (0-30, Emerald), Moderate (31-55, Yellow), Elevated (56-74, Amber), and High (75-100, Rose) with specialized hazard multipliers for mandatory arbitration, court waivers, and bodily harm disclaimers.
   - `validator.py`: Server-side evidence checker. Ensures every quotation returned by the LLM is present verbatim in the source text.
   - `known_directory.py` & `discovery.py`: Expansive legal policy discovery service featuring an audited directory of **249+ leading platforms** (covering AI, SaaS, Cloud, Fintech, E-Commerce, Quick-Commerce, Rideshare, Streaming, Gaming, Hardware, and Telecom) with **501+ verified policy documents** and comprehensive alias resolution (`fb`, `yt`, `amzn`, `chatgpt`, `spacex`, `xfinity`, etc.). For unlisted companies, an automated multi-tier discovery pipeline probes candidate TLDs (`.com`, `.io`, `.ai`, `.app`, `.org`, `.dev`), inspects homepage DOM legal footers, probes canonical endpoints (`/terms`, `/privacy`, `/legal`), and executes privacy-preserving search engine fallback under strict multi-hop SSRF validation. The frontend modal includes a realistic stage-based progress bar and 5-per-page pagination for companies with extensive policy resources.
-  - `policies.py`: Manages policy ingestion, single-pass clause risk scoring, Myers diff generation, self-policy intercept, exact-match baseline upgrade, and `DELETE /api/policies/{id}` cascade deletion.
+  - `policies.py`: Manages the 4-Tier Hybrid Policy Ingestion & Diff Engine, single-pass clause risk scoring, Myers diff generation, self-policy intercept, exact-match baseline upgrade, and `DELETE /api/policies/{id}` cascade deletion.
   - `health.py`: Anti-reconnaissance health check endpoint returning minimal status (`status: healthy`) without leaking internal AI models, provider names, environment modes, or database topologies to external scanners.
   - `security.py`: HTTP security middleware enforcing HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and request body size caps.
   - `sentry_tunnel` (`/api/tunnel`): Same-origin Sentry envelope proxy that validates DSN target hostnames and routes client telemetry server-to-server, preventing Brave Shields and adblockers from misclassifying error monitoring as advertising trackers. HTTP client logging (`httpx`/`httpcore`) is silenced to `WARNING` to prevent telemetry URL leakage.
@@ -91,25 +91,102 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 
 ## 3. Data Flow
 
-### Journey A: Initial Policy Analysis
+### Journey A: Policy Ingestion & Analysis
 
-1. User submits a public policy URL (or selects a candidate from the Company Lookup modal).
-2. `url_guard` validates scheme (http/https only), authority (no credentials), and resolves DNS to ensure all target IPs are public.
-3. `extractor` streams the HTML body, capping bytes at 5 MB.
+1. User submits a policy URL via direct link or pastes raw agreement text in **"Paste Text"** mode.
+2. **SSRF Guard First**: `url_guard` validates scheme (`http`/`https` only), authority (no inline credentials), port (`80`/`443`), and resolves target hostnames. Private, loopback, or cloud metadata IPs are rejected immediately with HTTP 400 Bad Request, aborting before any external network connection or archive lookup.
+3. **Ingestion Tier Resolution**:
+   - **Tier 3 (User-Provided Direct Ingestion)**: If `raw_text` is supplied, validates minimum length ($\ge 100$ characters). Ingests with `extractor="user_pasted"`, `provenance="user_pasted"`, and attaches an explicit audit warning.
+   - **Tier 1 (High-Fidelity Live Fetch)**: Streams HTML with anti-tarpit timeouts and desktop Chrome headers. Parses Trafilatura text, container DOM, and SPA hydration state. Ingests with `provenance="live"`.
+   - **Tier 2 (Wayback Machine Auto-Fallback)**: If live fetch fails or is blocked by an origin WAF (<100 characters extracted), queries the Internet Archive Wayback Machine Availability API (`https://archive.org/wayback/available?url=...`). Cleans archive chrome headers and ingests with `provenance="archive"` plus timestamp warnings.
+   - **Tier 4 (Zero-Drift Baseline Database Cache)**: If both live fetch and archive lookup are unavailable, retrieves existing database baseline snapshot with `reanalysis_status="cached_fallback"`.
 4. `normalizer` cleans whitespace and calculates SHA-256 hash.
-5. If new, baseline snapshot is persisted in MongoDB.
-6. `gemma` evaluates high-risk clauses (disputes/arbitration, liability, human harm, renewal, privacy) using isolated JSON prompting with Gemma 4 on Cloudflare Workers AI.
-7. `validator` validates all quoted excerpts against the snapshot. Unsupported findings are dropped.
-8. Frontend renders executive summary, finding cards, and source quotes.
+5. If text matches the existing baseline identically, redundant model inference is skipped, serving cached risk scores in <100ms.
+6. If novel, baseline snapshot is persisted in MongoDB with immutable `provenance` and `warnings`.
+7. `gemma` evaluates high-risk clauses (disputes/arbitration, liability, human harm, renewal, privacy) using isolated JSON prompting with Gemma 4 on Cloudflare Workers AI.
+8. `validator` validates all quoted excerpts against the snapshot. Unsupported findings are dropped.
+9. Frontend renders executive summary, finding cards, provenance warning banners, and verified source quotes.
 
 ### Journey B: Recheck Tracked Policy
 
-1. User clicks "Check for Updates".
-2. `extractor` fetches the current live webpage.
-   - _If fetch fails_: Status is set to `extraction_failed`; the previous baseline snapshot remains completely intact and immutable.
-3. `normalizer` calculates current SHA-256 hash.
-   - _If hash matches_: Status is set to `unchanged`. The model call is skipped entirely (preserving zero-cost quota and preventing false score drift).
-   - _If hash differs_: `diff_engine` calculates exact paragraph additions, removals, and modifications.
-4. `gemma` explains the bounded differences.
+1. User clicks "Check for Updates" on a tracked policy.
+2. `extractor` attempts a live fetch of the target policy URL.
+   - _If live fetch blocks (e.g., origin CDN/WAF challenge)_: The engine automatically queries Tier 2 (Wayback Machine Availability API) for the latest public snapshot. If a newer archive record is available, it is ingested for diff analysis.
+   - _If both live fetch and archive fail_: Check event is recorded as `extraction_failed`; the previous baseline snapshot remains completely intact and immutable.
+3. `normalizer` calculates the retrieved content's SHA-256 hash.
+   - _If hash matches_: Status is set to `unchanged`. Model execution is skipped entirely (preserving zero-cost quota and preventing score drift).
+   - _If hash differs_: `diff_engine` calculates exact paragraph additions, removals, and modifications using Myers diff algorithms.
+4. `gemma` explains the legal implications of the bounded changes.
 5. `validator` verifies quotes against the respective old/new snapshots.
-6. Frontend displays side-by-side / unified diffs and AI implications.
+6. Frontend displays side-by-side / unified diffs and AI delta explanations with appropriate provenance badges.
+
+---
+
+## 4. 4-Tier Hybrid Policy Ingestion & Provenance Architecture
+
+```
+                                 [ Incoming Request ]
+                                          │
+                                 ┌────────┴────────┐
+                                 │   SSRF Guard    │──(Private/Metadata IP)──> [ HTTP 400 Bad Request ]
+                                 └────────┬────────┘
+                                          │ (Public Safe IP)
+                                          ▼
+                                 ┌─────────────────┐
+                       ┌─────────┤ Raw Text Paste? ├─────────┐
+                       │ (Yes)   └─────────────────┘   (No)  │
+                       ▼                                     ▼
+             ┌───────────────────┐                 ┌───────────────────┐
+             │      Tier 3       │                 │      Tier 1       │
+             │   User-Provided   │                 │    Live Fetch     │
+             │   Text Ingestion  │                 │   & SPA Extract   │
+             │ (Length bounds &  │                 └─────────┬─────────┘
+             │  Deduplication)   │                           │
+             └─────────┬─────────┘                (Firewall Block or <100 chars)
+                       │                                     ▼
+                       │                           ┌───────────────────┐
+                       │                           │      Tier 2       │
+                       │                           │  Wayback Machine  │
+                       │                           │  Archive Fallback │
+                       │                           └─────────┬─────────┘
+                       │                                     │
+                       │                           (Archive Unavailable)
+                       │                                     ▼
+                       │                           ┌───────────────────┐
+                       │                           │      Tier 4       │
+                       │                           │ Baseline Database │
+                       │                           │   Cached Lookup   │
+                       │                           └─────────┬─────────┘
+                       │                                     │
+                       └──────────────────┬──────────────────┘
+                                          ▼
+                             ┌─────────────────────────┐
+                             │    Provenance Stamped   │
+                             │ (live / archive / user) │
+                             └────────────┬────────────┘
+                                          ▼
+                             ┌─────────────────────────┐
+                             │ Normalizer & Hash Match │
+                             └─────────────────────────┘
+```
+
+### 4.1 Anti-Spam Bounds & Canonical Deduplication
+
+1. **Character Length Bounds (Universal Web Standards)**:
+   - **Policy URL**: Maximum 2,048 characters (aligned with RFC 7230 and cross-browser URL limits).
+   - **Document Title**: Maximum 200 characters (accommodating descriptive legal titles while preventing payload inflation). Auto-derived from the URL domain and path if omitted.
+   - **Text Body**: Minimum 100 characters (ensuring substantive legal prose for evaluation) and maximum 500,000 characters (~100,000 words, protecting server memory).
+2. **Canonical URL Deduplication Guard**:
+   - To prevent evasion or duplication of system-maintained agreements, user paste submissions are verified against the system repository using canonicalized URLs.
+   - Normalization resolves trailing slashes, root slashes, protocol schemes (`http`/`https`), default ports (`:80`/`:443`), `www.` prefixes, query parameters (`?utm=...`), hash fragments (`#tos`), and case differences. Duplicate submissions return HTTP 400 Bad Request.
+3. **Dashboard Segmentation**:
+   - Monitored agreements are cleanly partitioned into "System Maintained" and "User Maintained" segmented tabs with independent counters and responsive desktop/mobile layouts.
+
+### 4.2 Provenance Tracking Guarantees
+
+| Provenance Key | Trigger Condition | UI Representation | Audit Guarantee |
+| :--- | :--- | :--- | :--- |
+| `live` | Direct successful live HTTP fetch & DOM/SPA extraction | Standard verified status | Fully autonomous, independently verified live crawl. |
+| `archive` | Live site blocked by origin firewall; fetched via Wayback Machine | Blue `Public Web Archive Record` notice & timestamp banner | Verified public historical record from the Internet Archive; independent of datacenter IP blocks. |
+| `user_pasted` | Direct user text submission via "Paste Text" mode | Segmented `User Maintained` tab & amber disclaimer notice banner | Explicitly flags that findings reflect user-submitted text and may not represent the complete official agreement. |
+| `cached_fallback`| Both live site and archive unavailable; database fallback | Gray fallback note | Historical baseline snapshot preserved without destructive overwrites. |

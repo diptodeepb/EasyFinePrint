@@ -25,12 +25,12 @@
 - [The Core Problem](#the-core-problem)
 - [Architectural Guarantee: Facts vs. Interpretation](#architectural-guarantee-facts-vs-interpretation)
 - [Core Capabilities](#core-capabilities)
+  - [4-Tier Hybrid Policy Ingestion & Diff Engine](#4-tier-hybrid-policy-ingestion--diff-engine)
   - [Single-Pass Gemma 4 Risk Scoring](#single-pass-gemma-4-risk-scoring)
   - [High-Impact Clause Prioritization (Disputes, Arbitration &amp; Safety)](#high-impact-clause-prioritization-disputes-arbitration--safety)
   - [Character-for-Character Verification &amp; Cache](#character-for-character-verification--cache)
   - [Server-Side Verbatim Quotation Validation](#server-side-verbatim-quotation-validation)
   - [Deterministic Paragraph Diffing Engine](#deterministic-paragraph-diffing-engine)
-  - [Fail-Safe Baseline Snapshot Protection](#fail-safe-baseline-snapshot-protection)
   - [Strict Multi-Layer SSRF Guard](#strict-multi-layer-ssrf-guard)
   - [Zero-Cost Company Policy Discovery Engine](#zero-cost-company-policy-discovery-engine)
   - [NoSQL &amp; Network Hardening (Security Headers &amp; Prompt Isolation)](#nosql--network-hardening-security-headers--prompt-isolation)
@@ -136,23 +136,41 @@ Powered by Python's `difflib.SequenceMatcher`:
 - Changes are presented side-by-side with color-coded additions (emerald) and removals (rose).
 - Gemma 4 is prompted specifically to evaluate the practical implications of only the deterministic diff blocks.
 
-### Fail-Safe Baseline Snapshot Protection
+### 4-Tier Hybrid Policy Ingestion & Diff Engine
 
-### Multi-Tier Content Extraction & JavaScript Hydration
+Modern web properties increasingly deploy edge Web Application Firewalls (WAFs), bot mitigation networks, or client-side single-page applications that restrict or tarpit traditional automated crawlers. To ensure uninterrupted legal monitoring without requiring brittle browser extensions or costly residential proxy networks, EasyFinePrint implements an autonomous 4-Tier Hybrid Ingestion & Diff Engine:
 
-To reliably extract terms across both traditional static websites and modern single-page applications (SPAs):
+1. **Tier 1 (High-Fidelity Live Fetch & Client Hydration)**:
+   - Employs standard desktop Chrome browser profiles (`User-Agent`, `Sec-Ch-Ua`, `Sec-Fetch-*`) with dedicated connect (10s) and read timeouts (20s) to prevent firewall bot-tarpitting.
+   - High-precision text extraction via `trafilatura` and container DOM parsing.
+   - For Single-Page Applications (Next.js, Nuxt, Redux), parses inline JSON hydration payloads (`__NEXT_DATA__`, `window.__INITIAL_STATE__`, `window.__pageData__`) and runs isolated Node.js V8 sandboxed script evaluation (`node:vm`).
+   - Ingested snapshots are stamped with `provenance="live"`.
+2. **Tier 2 (Wayback Machine Public Web Archive Fallback)**:
+   - When an origin server returns an access restriction, challenge, or empty payload (<100 characters), the engine automatically queries the public Internet Archive Wayback Machine Availability API (`https://archive.org/wayback/available?url=...`).
+   - Retrieves the most recent public archive snapshot, strips Wayback navigation headers (`wm-ipp`, `donato`), and extracts the policy document.
+   - Enables continuous diff tracking during scheduled rechecks without datacenter IP blocks.
+   - Ingested snapshots are stamped with `provenance="archive"` and display an explicit public archive timestamp banner.
+3. **Tier 3 (User-Provided Direct Document Ingestion with Audit Provenance)**:
+   - When an agreement is shielded behind interactive authentication, intranet portals, or strict origin challenges, users can switch to the **"Paste Text"** ingestion mode on the dashboard.
+   - **Input Validation & Anti-Spam Bounds**: Enforces strict industry standards to prevent payload bloat and spam:
+     - Policy URL: $\le 2,048$ characters (universal RFC 7230 / browser maximum standard URL length).
+     - Agreement Title: $\le 200$ characters (with smart auto-derivation from domain/path if omitted).
+     - Text Body: $\ge 100$ characters minimum for clause evaluation, capped at $\le 500,000$ characters (~100,000 words).
+   - **Anti-Bypass Canonical URL Deduplication**: Direct user paste is blocked if the URL already exists as a system-maintained policy. Robust canonicalization catches evasion tricks across trailing slashes, root slashes, protocol schemes (`http`/`https`), default ports (`:80`/`:443`), `www.` subdomains, query parameters, hash fragments, and casing.
+   - **Audit Integrity Protection**: To prevent unverified user submissions from spoofing official live audits, all user-submitted snapshots and analyses are permanently stamped with `extractor="user_pasted"`, `provenance="user_pasted"`, and display an unambiguous disclaimer notice:
+     > *"User-Provided Text: This policy snapshot was submitted via direct manual text paste. Findings and diffs reflect user-submitted content and may not represent the complete official agreement."*
+   - Successive user pastes against the same policy URL compute full Myers diffs, enabling users to track revisions on internally hosted or gated policies.
+4. **Tier 4 (Zero-Drift Baseline Database Cache)**:
+   - If an origin server experiences downtime or connection failure during an audit, EasyFinePrint gracefully falls back to the existing database baseline snapshot.
+   - Preserves historical risk scores without overwriting healthy snapshots or generating false diffs.
+   - Ingested snapshots are stamped with `provenance="cached_fallback"`.
 
-- **High-Fidelity Browser Profiles**: Employs standard desktop Chrome headers (`User-Agent`, `Sec-Ch-Ua`, `Sec-Fetch-*`, `Accept-Language`, etc.) with dedicated connect ($10$s) and read timeouts ($20$s) to prevent WAF bot-tarpitting and connection timeouts on enterprise sites (such as Akamai or Cloudflare edge networks).
-- **4-Tier Extraction Pipeline**:
-  1. *Trafilatura*: High-precision extraction of article and body legal text.
-  2. *BeautifulSoup DOM Fallback*: Cleans navigation/header/footer boilerplate and extracts main container elements.
-  3. *Client-Side JavaScript Hydration Engine*: Parses inline application JSON scripts (`__NEXT_DATA__`, JSON-LD), React/Redux SSR states (`window.__INITIAL_STATE__`, `window.__PRELOADED_STATE__`), and custom SPA stores (such as `window.__pageData__` or `window["__static_page_data__"]`).
-  4. *Sandboxed Node.js VM Evaluation*: Evaluates dynamic inline JavaScript in an isolated `node:vm` sandbox with a strict 2-second timeout, supported by Node.js native HTTP/2 fallback network fetching.
+### Switchable Policy Segmentation ("System Maintained" vs. "User Maintained")
 
-If an external server returns HTTP 500, encounters a timeout, or triggers an anti-bot challenge:
-
-- EasyFinePrint records an `extraction_failed` check event.
-- The previous healthy baseline snapshot is **never overwritten** and never falsely reported as "unchanged".
+The dashboard clearly partitions monitored agreements into switchable, responsive segmented tabs:
+- **System Maintained**: Public platforms continuously fetched and audited via autonomous live crawls and web archive records.
+- **User Maintained**: User-ingested documents and manual baselines stamped with explicit audit disclaimers.
+- Features dedicated header lines, responsive desktop/mobile alignment, and fuzzy search across both collections.
 
 ### Strict Multi-Layer SSRF Guard
 
@@ -299,19 +317,19 @@ python3 start.py
 
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated test suite of **61 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, 4-tier content extraction (including client-side JavaScript hydration and sandboxed Node.js VM evaluation), deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
+EasyFinePrint includes an automated test suite of **77 tests (76 passed, 1 skipped)** (100% offline pass rate) covering Cloudflare Workers AI integration, 4-tier hybrid policy ingestion, SSRF multi-hop validation, client-side JavaScript hydration and sandboxed Node.js VM evaluation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, anti-spam length bounds, canonical URL deduplication, and self-hosted policy analysis:
 
 ```bash
 # Run tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 61 passed in 90.24s ========================
+# Output: ======================== 76 passed, 1 skipped in 33.97s ========================
 ```
 
 ### CI Pipeline
 
 A GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) automatically runs on every push and pull request:
 
-- **Backend Job**: Sets up Python, caches pip dependencies, runs linting, and executes the complete 50-test pytest suite.
+- **Backend Job**: Sets up Python, caches pip dependencies, runs linting, and executes the complete pytest suite.
 - **Frontend Job**: Sets up Node.js, installs dependencies, and runs `npm run build` to verify production bundling.
 
 ---

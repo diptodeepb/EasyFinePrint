@@ -109,7 +109,7 @@ Global security headers middleware injects protective headers into every HTTP re
 ## 7. Threat: Public Endpoint Information Disclosure & Reconnaissance
 
 ### 7.1 Attack Vector
-Attackers scrape `/api/health`, error tracebacks, or development logs to identify backend AI models, provider versions, internal server architectures, database topology, or environment keys for targeted zero-day exploits.
+Attackers probe `/api/health`, error tracebacks, or development logs to identify backend AI models, provider versions, internal server architectures, database topology, or environment keys for targeted zero-day exploits.
 
 ### 7.2 Implemented Mitigations
 1. **Sanitized `/api/health` Endpoint**:
@@ -143,4 +143,36 @@ Attackers scrape `/api/health`, error tracebacks, or development logs to identif
 5. **Client-Side Module Name Hardening (`PolicyDoc.jsx`)**:
    - Browser adblocker rulesets (such as EasyPrivacy and Brave Shields tracking lists) intercept network requests matching `*/privacypolicy.*` or `/PrivacyPolicy.*` under the false assumption that they are third-party tracking or consent management scripts.
    - The Privacy Policy view component is structured as `PolicyDoc.jsx` (imported in `App.jsx` and mounted on the `/privacy` route). This eliminates false-positive `net::ERR_BLOCKED_BY_CLIENT` script abortions while keeping the public route canonical and clean.
+
+---
+
+## 9. Threat: Untrusted User-Provided Text Ingestion & Audit Spoofing
+
+### 9.1 Attack Vector
+A malicious or careless actor uses the direct text paste ingestion pipeline to submit arbitrary, falsified, truncated, or malicious text under a legitimate company's URL, seeking to generate misleading risk scores, fabricate evidence of non-existent consumer violations, or misrepresent compliance.
+
+### 9.2 Implemented Mitigations
+1. **Minimum Length Validation**:
+   - The `/api/policies/analyze` endpoint enforces a strict minimum content length of $\ge 100$ characters for manual text submissions. Frivolous, single-word, or micro-snippets are rejected with HTTP 422 Unprocessable Entity.
+2. **Mandatory Canonical URL & SSRF Validation**:
+   - Even when pasting raw text, the user must specify a valid target URL.
+   - The supplied URL is processed through `url_guard`'s full multi-hop SSRF validation suite (blocking loopback, private RFC 1918 networks, and cloud metadata IPs) before ingestion proceeds.
+3. **Immutable Provenance Stamping**:
+   - Snapshots ingested via manual text are permanently tagged with `extractor="user_pasted"` and `provenance="user_pasted"`.
+   - Resulting risk analyses inherit `provenance="user_pasted"` and include explicit audit warnings in their stored metadata.
+4. **Persistent Audit Disclaimers & Provenance Badges**:
+   - The user interface renders a prominent amber provenance badge (`User-Provided Ingestion`) and displays an unambiguous audit disclaimer banner across policy detail views:
+     > *"User-Provided Text: This policy snapshot was submitted via direct manual text paste. Findings and diffs reflect user-submitted content and may not represent the complete official agreement."*
+   - This ensures third parties inspecting the dashboard or API responses can never mistake user-submitted excerpts for independently verified live crawls.
+5. **Exact Quote Enforcement Preserved**:
+   - Server-side quotation validation (`validator.py`) continues to verify that any LLM finding exists character-for-character within the submitted text, preventing LLM hallucinations even on user-provided corpora.
+6. **Isolated Prompt Sandboxing**:
+   - User-provided text is sandboxed within `<UNTRUSTED_DOCUMENT_CONTENT>` boundary tags to prevent indirect prompt injection.
+7. **Strict Input Length Caps (Anti-Spam & DoS Prevention)**:
+   - Policy URL: Enforced at $\le 2,048$ characters (aligned with RFC 7230 and browser standards).
+   - Document Title: Enforced at $\le 200$ characters to prevent title bloating.
+   - Text Payload: Capped at $\le 500,000$ characters (~100,000 words) to protect against memory exhaustion and payload stuffing attacks.
+8. **Anti-Bypass Canonical URL Deduplication**:
+   - Direct user paste is rejected if the target URL matches an existing system-maintained policy.
+   - Robust URL canonicalization resolves evasive variants (trailing slashes, root slashes, `http`/`https` protocols, `:80`/`:443` default ports, `www.` subdomains, query parameters, hash fragments, and casing) to prevent duplicate spoofing or bypassing system crawls. Submissions trigger HTTP 400 Bad Request.
 

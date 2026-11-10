@@ -15,8 +15,17 @@ from app.schemas.policy import (
     FindingSchema,
     DiffChangeSchema,
 )
-from app.services.extractor import safe_fetch_page, extract_policy_content, ExtractionError
-from app.services.normalizer import normalize_policy_text, compute_content_hash
+from app.services.extractor import (
+    safe_fetch_page,
+    extract_policy_content,
+    fetch_wayback_snapshot,
+    ExtractionError,
+)
+from app.services.normalizer import (
+    normalize_policy_text,
+    compute_content_hash,
+    canonicalize_url,
+)
 from app.services.diff_engine import compute_policy_diff
 from app.services.gemma import analyze_policy_risk, explain_policy_changes, is_ai_configured
 from app.legal import get_self_policy, SELF_POLICIES
@@ -27,6 +36,41 @@ router = APIRouter(prefix="/policies", tags=["policies"])
 
 POLICY_ID_PATTERN = r"^pol_[a-zA-Z0-9_-]{4,32}$"
 SNAPSHOT_ID_PATTERN = r"^snp_[a-zA-Z0-9_-]{4,32}$"
+
+
+def derive_title_from_url(url: str) -> str:
+    """Derive a human-readable policy title from domain and path when not supplied."""
+    if not url:
+        return "Policy Agreement"
+    try:
+        from urllib.parse import urlparse
+        clean = url.strip()
+        if clean.startswith("/"):
+            seg = clean.strip("/").split("/")[0] or "Terms"
+            return seg.capitalize()
+        parsed = urlparse(clean if "://" in clean else f"https://{clean}")
+        host = parsed.netloc.replace("www.", "")
+        parts = host.split(".")
+        brand = parts[-2].capitalize() if len(parts) >= 2 else (parts[0].capitalize() if parts else "")
+        path = parsed.path.lower()
+        if "privacy" in path:
+            doc_type = "Privacy Policy"
+        elif "cookie" in path:
+            doc_type = "Cookie Policy"
+        elif "security" in path:
+            doc_type = "Security Policy"
+        elif "user-agreement" in path or "user_agreement" in path:
+            doc_type = "User Agreement"
+        elif "acceptable" in path or "aup" in path:
+            doc_type = "Acceptable Use Policy"
+        elif "terms" in path or "tos" in path or "legal" in path:
+            doc_type = "Terms of Service"
+        else:
+            doc_type = "Policy Agreement"
+        derived = f"{brand} {doc_type}".strip() if brand else doc_type
+        return derived[:200]
+    except Exception:
+        return "Policy Agreement"
 
 
 def _format_analysis_response(analysis_doc: dict) -> AnalysisResponse:
@@ -46,6 +90,8 @@ def _format_analysis_response(analysis_doc: dict) -> AnalysisResponse:
         model_id=analysis_doc["model_id"],
         created_at=analysis_doc["created_at"],
         validation_status=analysis_doc["validation_status"],
+        provenance=analysis_doc.get("provenance", "live"),
+        warnings=analysis_doc.get("warnings", []),
     )
 
 
@@ -55,10 +101,14 @@ async def _process_policy_ingestion(
     title: str,
     extracted_text: str,
     status_code: int = 200,
+    extractor: str = "http",
+    provenance: str = "live",
+    warnings: Optional[List[str]] = None,
 ) -> PolicyResponse:
     """Core deterministic ingestion and risk analysis pipeline."""
     normalized_text = normalize_policy_text(extracted_text)
     content_hash = compute_content_hash(normalized_text)
+    warnings_list = list(warnings or [])
 
     # 1. Look up policy by canonical_url or raw_url
     policy = await repo.get_policy_by_url(canonical_url)
@@ -89,16 +139,7 @@ async def _process_policy_ingestion(
     # 4. IF EXACT MATCH: REUSE BASELINE IMMEDIATELY (0 AI calls, instant response, consistent score)
     if is_exact_match and policy and latest_snap:
         latest_analysis = await repo.get_latest_analysis_for_policy(policy["id"])
-        should_upgrade = (
-            is_ai_configured()
-            and (
-                latest_analysis is None
-                or latest_analysis.get("model_id") == "deterministic-fallback"
-                or latest_analysis.get("risk_score") is None
-                or latest_analysis.get("risk_level") is None
-            )
-        )
-        if latest_analysis and not should_upgrade:
+        if latest_analysis:
             logger.info(
                 "Exact character-for-character match for %s. Reusing baseline analysis instantly.",
                 policy.get("canonical_url"),
@@ -126,6 +167,8 @@ async def _process_policy_ingestion(
                 latest_snapshot_id=latest_snap["id"],
                 latest_analysis=_format_analysis_response(latest_analysis),
                 reanalysis_status="skipped_unchanged",
+                provenance=latest_analysis.get("provenance", "live") if latest_analysis else "live",
+                warnings=latest_analysis.get("warnings", []) if latest_analysis else [],
             )
 
         if should_upgrade:
@@ -145,6 +188,8 @@ async def _process_policy_ingestion(
                 changes=[],
                 model_id=ai_res["model_id"],
                 validation_status=ai_res["validation_status"],
+                provenance=provenance,
+                warnings=warnings_list,
             )
             await repo.record_check_event(
                 policy_id=policy["id"],
@@ -168,6 +213,8 @@ async def _process_policy_ingestion(
                 latest_snapshot_id=latest_snap["id"],
                 latest_analysis=_format_analysis_response(analysis_doc),
                 reanalysis_status="upgraded",
+                provenance=provenance,
+                warnings=warnings_list,
             )
 
     # 5. NEW POLICY OR GENUINE TEXT CHANGE:
@@ -182,10 +229,12 @@ async def _process_policy_ingestion(
         policy_id=policy["id"],
         content_hash=content_hash,
         extracted_text=normalized_text,
-        extractor="http",
-        extraction_status="success",
+        extractor=extractor,
+        extraction_status="success" if extractor != "user_pasted" else "user_pasted",
         source_status_code=status_code,
         title=title,
+        provenance=provenance,
+        warnings=warnings_list,
     )
 
     if is_new_policy or not latest_snap:
@@ -202,6 +251,8 @@ async def _process_policy_ingestion(
             changes=[],
             model_id=ai_res["model_id"],
             validation_status=ai_res["validation_status"],
+            provenance=provenance,
+            warnings=warnings_list,
         )
         await repo.record_check_event(
             policy_id=policy["id"],
@@ -230,6 +281,8 @@ async def _process_policy_ingestion(
             changes=ai_res["changes"],
             model_id=ai_res["model_id"],
             validation_status=ai_res["validation_status"],
+            provenance=provenance,
+            warnings=warnings_list,
         )
         await repo.record_check_event(
             policy_id=policy["id"],
@@ -243,6 +296,7 @@ async def _process_policy_ingestion(
         "latest_snapshot_id": new_snapshot["id"],
         "last_checked_at": datetime.now(timezone.utc),
         "title": title,
+        "provenance": provenance,
     })
 
     return PolicyResponse(
@@ -255,48 +309,189 @@ async def _process_policy_ingestion(
         last_checked_at=datetime.now(timezone.utc),
         latest_snapshot_id=new_snapshot["id"],
         latest_analysis=_format_analysis_response(analysis_doc),
+        provenance=provenance,
+        warnings=warnings_list,
     )
 
 
 @router.post("/analyze", response_model=PolicyResponse)
 async def analyze_policy(req: PolicyAnalyzeRequest):
     """
-    Analyze a public Terms of Service or Privacy Policy URL.
-    Enforces SSRF guards, extracts text, stores baseline snapshot, and analyzes potential concerns.
-    Automatically handles self-policies (/terms, /privacy, easyfineprint://) without network hops.
+    4-Tier Hybrid Policy Ingestion, Analysis, and Diff Pipeline:
+    - Tier 1: Direct Safe Scrape & Client JavaScript Hydration Extraction
+    - Tier 2: Public Web Archive Auto-Fallback (Internet Archive / Wayback Machine)
+    - Tier 3: User-Provided Direct Document / Text Ingestion (Manual Paste Fallback)
+    - Tier 4: Zero-Drift Baseline Database Cache
     """
     raw_url = req.url.strip()
 
     # Self-policy intercept (dogfooding / testing our own terms)
     self_doc = get_self_policy(raw_url)
     if self_doc:
+        if req.raw_text and req.raw_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"The URL '{raw_url}' is a system-maintained policy. "
+                    "User text paste is reserved for policies that cannot be retrieved automatically by the system."
+                ),
+            )
         return await _process_policy_ingestion(
             raw_url=self_doc["url"],
             canonical_url=self_doc["canonical_url"],
             title=self_doc["title"],
             extracted_text=self_doc["text"],
             status_code=200,
+            extractor="self",
+            provenance="self",
         )
 
+    # -------------------------------------------------------------
+    # TIER 3: USER-PROVIDED DIRECT TEXT INGESTION
+    # -------------------------------------------------------------
+    if req.raw_text and req.raw_text.strip():
+        cleaned_text = req.raw_text.strip()
+        if len(cleaned_text) < 100:
+            raise HTTPException(
+                status_code=422,
+                detail="Pasted policy text is suspiciously short (<100 characters). Please paste the complete agreement body.",
+            )
+
+        canon_raw = canonicalize_url(raw_url)
+
+        # 1. Reject if matching our internal self policies
+        for self_path in ("/terms", "/privacy"):
+            if canon_raw == canonicalize_url(self_path):
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"The URL '{raw_url}' is a system-maintained policy. "
+                        "User text paste is reserved for policies that cannot be retrieved automatically by the system."
+                    ),
+                )
+
+        # 2. Reject if URL already exists as a system-maintained policy in DB
+        system_match = await repo.find_system_policy_by_canonical(canon_raw)
+        if system_match:
+            sys_title = system_match.get("title", "System Policy")
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"The URL '{raw_url}' already exists as a system-maintained policy ('{sys_title}'). "
+                    "User text paste is reserved for policies that cannot be retrieved automatically by the system."
+                ),
+            )
+
+        if req.title and req.title.strip() and req.title.strip() != "User-Submitted Agreement":
+            title = req.title.strip()
+        else:
+            title = derive_title_from_url(raw_url)
+        user_warnings = [
+            "User-Provided Text: This policy snapshot was submitted via direct manual text paste. Findings and diffs reflect user-submitted content and may not represent the complete official agreement."
+        ]
+        return await _process_policy_ingestion(
+            raw_url=raw_url,
+            canonical_url=raw_url,
+            title=title,
+            extracted_text=cleaned_text,
+            status_code=200,
+            extractor="user_pasted",
+            provenance="user_pasted",
+            warnings=user_warnings,
+        )
+
+    # -------------------------------------------------------------
+    # TIER 1: HIGH-FIDELITY LIVE SCRAPING & CLIENT HYDRATION EXTRACTION
+    # -------------------------------------------------------------
+    tier1_error: Optional[str] = None
     try:
         html, canonical_url, status_code = await safe_fetch_page(raw_url)
-    except ExtractionError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
-        logger.error("Unexpected fetch failure for %s: %s", raw_url, exc)
-        raise HTTPException(status_code=500, detail=f"Failed to fetch policy page: {exc}")
-
-    try:
         title, extracted_text, warnings = extract_policy_content(html)
+        if len(extracted_text.strip()) >= 100:
+            return await _process_policy_ingestion(
+                raw_url=raw_url,
+                canonical_url=canonical_url,
+                title=title,
+                extracted_text=extracted_text,
+                status_code=status_code,
+                extractor="http",
+                provenance="live",
+                warnings=warnings,
+            )
     except ExtractionError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
+        err_msg = str(exc).lower()
+        # Immediately reject SSRF, invalid protocols, and prohibited private IPs with HTTP 400
+        if any(kw in err_msg for kw in ("prohibited", "invalid", "ssrf", "blocked", "forbidden", "loopback", "private", "redirect hops")):
+            raise HTTPException(status_code=400, detail=str(exc))
+        tier1_error = str(exc)
+        logger.info("Tier 1 live scrape blocked for %s: %s. Initiating Tier 2 Wayback Machine fallback...", raw_url, exc)
+    except Exception as exc:
+        tier1_error = str(exc)
+        logger.warning("Tier 1 unexpected scrape failure for %s: %s", raw_url, exc)
 
-    return await _process_policy_ingestion(
-        raw_url=raw_url,
-        canonical_url=canonical_url,
-        title=title,
-        extracted_text=extracted_text,
-        status_code=status_code,
+    # -------------------------------------------------------------
+    # TIER 2: PUBLIC WEB ARCHIVE AUTO-FALLBACK (WAYBACK MACHINE)
+    # -------------------------------------------------------------
+    logger.info("Initiating Tier 2 public archive lookup for %s...", raw_url)
+    wb_result = await fetch_wayback_snapshot(raw_url)
+    if wb_result:
+        wb_html, wb_archive_url, wb_timestamp = wb_result
+        try:
+            wb_title, wb_text, wb_warnings = extract_policy_content(wb_html)
+            if len(wb_text.strip()) >= 100:
+                logger.info("Successfully extracted policy via Tier 2 Wayback snapshot (%s) for %s", wb_timestamp, raw_url)
+                formatted_ts = (
+                    f"{wb_timestamp[:4]}-{wb_timestamp[4:6]}-{wb_timestamp[6:8]}"
+                    if len(wb_timestamp) >= 8
+                    else wb_timestamp
+                )
+                archive_warnings = [
+                    f"Live scrape restricted by origin firewall; analyzed verified public snapshot from Internet Archive (timestamp: {formatted_ts})."
+                ] + wb_warnings
+                return await _process_policy_ingestion(
+                    raw_url=raw_url,
+                    canonical_url=raw_url,
+                    title=wb_title,
+                    extracted_text=wb_text,
+                    status_code=200,
+                    extractor="archive",
+                    provenance="archive",
+                    warnings=archive_warnings,
+                )
+        except Exception as wb_exc:
+            logger.debug("Wayback extraction parsing error for %s: %s", raw_url, wb_exc)
+
+    # -------------------------------------------------------------
+    # TIER 4: ZERO-DRIFT BASELINE CACHE (DB FALLBACK)
+    # -------------------------------------------------------------
+    existing_policy = await repo.get_policy_by_url(raw_url) or await repo.get_policy_by_url(raw_url.rstrip("/"))
+    if existing_policy:
+        latest_snap = await repo.get_latest_snapshot_for_policy(existing_policy["id"])
+        latest_analysis = await repo.get_latest_analysis_for_policy(existing_policy["id"])
+        if latest_snap and latest_analysis:
+            logger.info("Serving existing verified baseline %s from DB for %s", existing_policy["id"], raw_url)
+            fallback_warnings = ["Live scrape and archive lookup were blocked; served verified existing baseline from database."]
+            return PolicyResponse(
+                id=existing_policy["id"],
+                url=existing_policy["url"],
+                canonical_url=existing_policy["canonical_url"],
+                title=existing_policy["title"],
+                status=existing_policy["status"],
+                created_at=existing_policy["created_at"],
+                last_checked_at=existing_policy.get("last_checked_at", datetime.now(timezone.utc)),
+                latest_snapshot_id=latest_snap["id"],
+                latest_analysis=_format_analysis_response(latest_analysis),
+                reanalysis_status="cached_fallback",
+                provenance="cached_fallback",
+                warnings=fallback_warnings,
+            )
+
+    # -------------------------------------------------------------
+    # ALL TIERS EXHAUSTED: PROMPT USER FOR TIER 3 PASTE
+    # -------------------------------------------------------------
+    raise HTTPException(
+        status_code=422,
+        detail=f"Unable to analyze policy: The origin server prevented automated retrieval ({tier1_error or 'origin challenge'}) and no public archive was available. Please switch to the 'Paste Text' tab to audit this agreement directly.",
     )
 
 
@@ -350,6 +545,13 @@ async def list_policies(limit: int = Query(50, ge=1, le=100)):
     res = []
     for p in policies:
         latest_analysis = await repo.get_latest_analysis_for_policy(p["id"])
+        latest_snap = await repo.get_snapshot_by_id(p.get("latest_snapshot_id")) if p.get("latest_snapshot_id") else None
+        provenance = (
+            p.get("provenance")
+            or (latest_analysis.get("provenance") if latest_analysis else None)
+            or (latest_snap.get("provenance") if latest_snap else None)
+            or "live"
+        )
         res.append(
             PolicyResponse(
                 id=p["id"],
@@ -361,6 +563,8 @@ async def list_policies(limit: int = Query(50, ge=1, le=100)):
                 last_checked_at=p.get("last_checked_at"),
                 latest_snapshot_id=p.get("latest_snapshot_id"),
                 latest_analysis=_format_analysis_response(latest_analysis) if latest_analysis else None,
+                provenance=provenance,
+                warnings=latest_analysis.get("warnings", []) if latest_analysis else [],
             )
         )
     return res
@@ -376,6 +580,13 @@ async def get_policy(
         raise HTTPException(status_code=404, detail="Policy not found")
 
     latest_analysis = await repo.get_latest_analysis_for_policy(policy_id)
+    latest_snap = await repo.get_snapshot_by_id(policy.get("latest_snapshot_id")) if policy.get("latest_snapshot_id") else None
+    provenance = (
+        policy.get("provenance")
+        or (latest_analysis.get("provenance") if latest_analysis else None)
+        or (latest_snap.get("provenance") if latest_snap else None)
+        or "live"
+    )
     return PolicyResponse(
         id=policy["id"],
         url=policy["url"],
@@ -386,6 +597,8 @@ async def get_policy(
         last_checked_at=policy.get("last_checked_at"),
         latest_snapshot_id=policy.get("latest_snapshot_id"),
         latest_analysis=_format_analysis_response(latest_analysis) if latest_analysis else None,
+        provenance=provenance,
+        warnings=latest_analysis.get("warnings", []) if latest_analysis else [],
     )
 
 
@@ -413,24 +626,56 @@ async def check_policy_for_updates(
         canonical_url = self_doc["canonical_url"]
         status_code = 200
     else:
-        # Fetch page
+        # Fetch page with Tier 1 live scrape + Tier 2 archive fallback
+        provenance = "live"
+        warnings = []
         try:
             html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
             title, extracted_text, warnings = extract_policy_content(html)
         except ExtractionError as exc:
-            # Record failure event, preserve old baseline!
-            await repo.record_check_event(
-                policy_id=policy_id,
-                status="extraction_failed",
-                message=str(exc),
-                old_snapshot_id=latest_snap["id"],
-            )
-            return CheckResponse(
-                status="extraction_failed",
-                policy_id=policy_id,
-                message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
-                old_snapshot_id=latest_snap["id"],
-            )
+            # Attempt Tier 2 Wayback Machine lookup
+            wb_res = await fetch_wayback_snapshot(policy["canonical_url"])
+            if wb_res:
+                wb_html, wb_url, wb_ts = wb_res
+                try:
+                    wb_title, wb_text, wb_warns = extract_policy_content(wb_html)
+                    if len(wb_text.strip()) >= 100:
+                        title = wb_title
+                        extracted_text = wb_text
+                        canonical_url = policy["canonical_url"]
+                        status_code = 200
+                        provenance = "archive"
+                        warnings = [f"Origin server WAF active; checked against newest public snapshot from Internet Archive ({wb_ts})."] + wb_warns
+                    else:
+                        raise exc
+                except Exception:
+                    # Record failure event, preserve old baseline!
+                    await repo.record_check_event(
+                        policy_id=policy_id,
+                        status="extraction_failed",
+                        message=str(exc),
+                        old_snapshot_id=latest_snap["id"],
+                    )
+                    return CheckResponse(
+                        status="extraction_failed",
+                        policy_id=policy_id,
+                        message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
+                        old_snapshot_id=latest_snap["id"],
+                    )
+            else:
+                # Record failure event, preserve old baseline!
+                await repo.record_check_event(
+                    policy_id=policy_id,
+                    status="extraction_failed",
+                    message=str(exc),
+                    old_snapshot_id=latest_snap["id"],
+                )
+                return CheckResponse(
+                    status="extraction_failed",
+                    policy_id=policy_id,
+                    message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
+                    old_snapshot_id=latest_snap["id"],
+                )
         except Exception as exc:
             logger.error("Recheck unexpected error: %s", exc)
             await repo.record_check_event(
@@ -476,10 +721,12 @@ async def check_policy_for_updates(
         policy_id=policy_id,
         content_hash=content_hash,
         extracted_text=normalized_text,
-        extractor="http",
+        extractor=extractor if "extractor" in locals() else ("archive" if provenance == "archive" else "http"),
         extraction_status="success",
         source_status_code=status_code,
         title=title,
+        provenance=provenance,
+        warnings=warnings,
     )
 
     ai_res = await explain_policy_changes(
@@ -498,6 +745,8 @@ async def check_policy_for_updates(
         changes=ai_res["changes"],
         model_id=ai_res["model_id"],
         validation_status=ai_res["validation_status"],
+        provenance=provenance,
+        warnings=warnings,
     )
 
     await repo.record_check_event(
@@ -566,6 +815,8 @@ async def get_snapshot(
         extraction_status=snap.get("extraction_status", "success"),
         source_status_code=snap.get("source_status_code", 200),
         title=snap.get("title"),
+        provenance=snap.get("provenance", "live"),
+        warnings=snap.get("warnings", []),
     )
 
 
@@ -621,19 +872,9 @@ async def reanalyze_policy(
 
     # 2. Check if a valid previous analysis exists for this snapshot
     latest_analysis = await repo.get_latest_analysis_for_policy(policy_id)
-    should_upgrade = (
-        is_ai_configured()
-        and (
-            latest_analysis is None
-            or latest_analysis.get("model_id") == "deterministic-fallback"
-            or latest_analysis.get("risk_score") is None
-            or latest_analysis.get("risk_level") is None
-        )
-    )
     has_valid_previous_analysis = (
         latest_analysis is not None
         and latest_analysis.get("new_snapshot_id") == snap_id
-        and not should_upgrade
     )
 
     # 3. Industry standard: If live fetched text matches DB snapshot character-for-character,

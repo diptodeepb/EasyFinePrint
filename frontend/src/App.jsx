@@ -4,7 +4,9 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import ScrollToTop from './components/ScrollToTop';
+import ErrorBoundary from './components/ErrorBoundary';
 import Home from './pages/Home';
+import Features from './pages/Features';
 import PolicyDetail from './pages/PolicyDetail';
 import TermsOfUse from './pages/TermsOfUse';
 import PrivacyPolicy from './pages/PolicyDoc';
@@ -17,13 +19,16 @@ export default function App() {
         <Header />
 
         <main className="flex-1 w-full">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/policies/:id" element={<PolicyDetail />} />
-            <Route path="/terms" element={<TermsOfUse />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/policies/:id" element={<PolicyDetail />} />
+              <Route path="/terms" element={<TermsOfUse />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </ErrorBoundary>
         </main>
 
         <BackToTop />
