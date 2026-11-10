@@ -28,5 +28,6 @@ async def search_policy_urls(req: DiscoverySearchRequest):
     return DiscoveryResponse(
         query=req.query,
         candidates=candidates,
+        total=result.get("total", len(candidates)),
         cached=result.get("cached", False),
     )

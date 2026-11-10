@@ -99,23 +99,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS configuration
-origins = [
-    settings.frontend_origin,
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
-# Avoid duplicates
-origins = list(set([o.rstrip("/") for o in origins if o]))
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
-
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
@@ -140,6 +123,40 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload"
     response.headers["Content-Security-Policy"] = "frame-ancestors 'none'; object-src 'none';"
     return response
+
+
+# CORS configuration supporting localhost, production, and Vercel preview branch deployments
+raw_origins = [
+    settings.frontend_origin,
+    "https://easyfineprint.vercel.app",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:4173",
+    "http://127.0.0.1:4173",
+]
+parsed_origins = []
+for entry in raw_origins:
+    if entry:
+        for o in entry.split(","):
+            cleaned = o.strip().rstrip("/")
+            if cleaned:
+                parsed_origins.append(cleaned)
+
+origins = sorted(list(set(parsed_origins)))
+
+# CORSMiddleware must wrap outermost to handle all OPTIONS preflights and attach CORS headers to all responses
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,
+)
 
 
 @app.exception_handler(RequestValidationError)

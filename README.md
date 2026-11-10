@@ -138,7 +138,18 @@ Powered by Python's `difflib.SequenceMatcher`:
 
 ### Fail-Safe Baseline Snapshot Protection
 
-If an external server returns HTTP 500, encounters a timeout, or triggers a bot challenge:
+### Multi-Tier Content Extraction & JavaScript Hydration
+
+To reliably extract terms across both traditional static websites and modern single-page applications (SPAs):
+
+- **High-Fidelity Browser Profiles**: Employs standard desktop Chrome headers (`User-Agent`, `Sec-Ch-Ua`, `Sec-Fetch-*`, `Accept-Language`, etc.) with dedicated connect ($10$s) and read timeouts ($20$s) to prevent WAF bot-tarpitting and connection timeouts on enterprise sites (such as Akamai or Cloudflare edge networks).
+- **4-Tier Extraction Pipeline**:
+  1. *Trafilatura*: High-precision extraction of article and body legal text.
+  2. *BeautifulSoup DOM Fallback*: Cleans navigation/header/footer boilerplate and extracts main container elements.
+  3. *Client-Side JavaScript Hydration Engine*: Parses inline application JSON scripts (`__NEXT_DATA__`, JSON-LD), React/Redux SSR states (`window.__INITIAL_STATE__`, `window.__PRELOADED_STATE__`), and custom SPA stores (such as `window.__pageData__` or `window["__static_page_data__"]`).
+  4. *Sandboxed Node.js VM Evaluation*: Evaluates dynamic inline JavaScript in an isolated `node:vm` sandbox with a strict 2-second timeout, supported by Node.js native HTTP/2 fallback network fetching.
+
+If an external server returns HTTP 500, encounters a timeout, or triggers an anti-bot challenge:
 
 - EasyFinePrint records an `extraction_failed` check event.
 - The previous healthy baseline snapshot is **never overwritten** and never falsely reported as "unchanged".
@@ -158,8 +169,9 @@ Every outbound fetch is guarded by a comprehensive defense-in-depth security lay
 
 Instant policy discovery without third-party search APIs or quota caps:
 
-- **Authoritative Directory**: Curated index of 30+ top platforms (Discord, Spotify, Roblox, GitHub, OpenAI, Google, Apple, Microsoft, Amazon, Meta, Twitter/X, Uber, Airbnb, Stripe, PayPal, Twitch, TikTok, LinkedIn, Steam, Slack, Zoom, Dropbox, Notion, Figma, Anthropic, Vercel, Cloudflare, etc.).
-- **SSRF-Safe Direct Website Inspector**: For unindexed companies, safely inspects the corporate homepage under strict multi-hop SSRF validation to discover verified legal links (`terms`, `privacy`, `legal`).
+- **Authoritative Directory**: Curated index of **249+ top platforms** (Discord, Spotify, Roblox, GitHub, OpenAI, Google, Apple, Microsoft, Amazon, Meta, Twitter/X, Uber, Airbnb, Stripe, PayPal, Twitch, TikTok, LinkedIn, Steam, Slack, Zoom, Dropbox, Notion, Figma, Anthropic, Vercel, Cloudflare, Netflix, Flipkart, Swiggy, etc.) spanning AI, SaaS, Cloud, Fintech, E-Commerce, Quick-Commerce, Rideshare, Streaming, Gaming, Hardware, and Telecom with **501+ verified policy URLs** and comprehensive alias resolution (`fb`, `yt`, `amzn`, `chatgpt`, `spacex`, `xfinity`, etc.).
+- **Multi-Tier Auto-Discovery**: For unlisted companies, automatically guesses candidate TLDs (`.com`, `.io`, `.ai`, `.app`, `.org`, `.dev`), inspects homepage DOM legal footers, probes canonical endpoints (`/terms`, `/privacy`, `/legal`), and executes privacy-preserving search engine fallback under strict multi-hop SSRF validation.
+- **Modal Pagination & Realistic Progress Bar**: Supports 5-per-page pagination for companies with extensive policy resources and displays a realistic stage-based progress bar matching the Gemma analysis flow with real-time elapsed seconds.
 - **In-Memory Cache**: Transparently caches lookup results to eliminate duplicate outbound requests.
 
 ### NoSQL & Network Hardening (Security Headers & Prompt Isolation)
@@ -178,10 +190,10 @@ Instant policy discovery without third-party search APIs or quota caps:
 | **Styling & Icons**    | Vanilla CSS + Tailwind CSS v4, Lucide React                               | Sleek dark-mode aesthetic with custom themed scrollbars & responsive grid   |
 | **Backend API**        | FastAPI (Python 3.12+)                                                    | Asynchronous REST endpoints with Pydantic validation                        |
 | **AI Inference**       | Cloudflare Workers AI REST API, Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) | Single-pass structured reasoning and clause extraction                      |
-| **Content Extraction** | Trafilatura, BeautifulSoup4                                               | Robust HTML parsing and boilerplate removal                                 |
+| **Content Extraction** | Trafilatura, BeautifulSoup4, Node.js VM & Hydration Parser | 4-tier legal document extraction with SPA hydration & sandboxed evaluation  |
 | **Diff & Hashing**     | Python `difflib`, `hashlib.sha256`                                        | Deterministic paragraph diffing and content hashes                          |
 | **Database**           | MongoDB Atlas (Motor AsyncIO driver)                                      | Resilient document persistence with in-memory test fallback                 |
-| **Company Discovery**  | Authoritative Directory + Direct Website Inspector                        | Zero-cost legal policy discovery                                            |
+| **Company Discovery**  | Authoritative Directory (249+ services) + Multi-Tier Auto-Discovery       | Zero-cost legal policy lookup with modal pagination & realistic stage timer |
 | **Deployment**         | Vercel Serverless Functions                                               | Production serverless API and edge static frontend                          |
 
 ---
@@ -287,12 +299,12 @@ python3 start.py
 
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated test suite of **52 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
+EasyFinePrint includes an automated test suite of **61 comprehensive tests** (100% pass rate) covering Cloudflare Workers AI integration, single-pass clause extraction, SSRF multi-hop validation, 4-tier content extraction (including client-side JavaScript hydration and sandboxed Node.js VM evaluation), deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, and self-hosted policy analysis:
 
 ```bash
 # Run tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 52 passed in 90.24s ========================
+# Output: ======================== 61 passed in 90.24s ========================
 ```
 
 ### CI Pipeline

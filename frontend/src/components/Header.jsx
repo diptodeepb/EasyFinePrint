@@ -45,7 +45,7 @@ export default function Header() {
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-50 w-full border-b border-zinc-800/80 bg-[#09090b]/90 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] transition-all"
+        className="sticky top-0 z-50 w-full bg-[#09090b]/85 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] transition-all relative"
       >
         <div className="max-w-6xl mx-auto px-3.5 sm:px-6 h-15 flex items-center justify-between gap-3">
           {/* Left: Brand Logo & Title */}
@@ -60,14 +60,9 @@ export default function Header() {
                 alt="EasyFinePrint Logo"
                 className="w-7 h-7 rounded-lg border border-zinc-700/80 shadow-sm transition-transform duration-200 group-hover:scale-105"
               />
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-semibold text-sm sm:text-base text-zinc-100 tracking-tight group-hover:text-white transition-colors">
-                  EasyFinePrint
-                </span>
-                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
-                  v1.0
-                </span>
-              </div>
+              <span className="font-semibold text-sm sm:text-base text-zinc-100 tracking-tight group-hover:text-white transition-colors">
+                EasyFinePrint
+              </span>
             </Link>
           </div>
 
@@ -141,7 +136,20 @@ export default function Header() {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-zinc-800/80 bg-[#09090b]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150">
+          <div className="md:hidden relative bg-[#09090b]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150">
+            {/* Architectural Top Divider Line for Mobile Menu */}
+            <div
+              className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
+              aria-hidden="true"
+            >
+              {/* Subtle base gradient line fading to screen edges */}
+              <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/90 to-transparent" />
+              {/* Luminous center shimmer */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 w-4/5 h-full bg-gradient-to-r from-transparent via-zinc-600/50 to-transparent" />
+              {/* Delicate centered highlight accent */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2/5 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent blur-[0.5px]" />
+            </div>
+
             <nav className="flex flex-col space-y-1">
               <Link
                 to="/"
@@ -184,7 +192,7 @@ export default function Header() {
             </nav>
 
             {/* Star on GitHub */}
-            <div className="flex items-center justify-start pt-2 border-t border-zinc-800 text-xs font-mono text-zinc-400">
+            <div className="flex items-center justify-start pt-2 border-t border-zinc-800/80 text-xs font-mono text-zinc-400">
               <a
                 href="https://github.com/diptodeepb/EasyFinePrint"
                 target="_blank"
@@ -197,6 +205,21 @@ export default function Header() {
                 <span>Star on GitHub</span>
               </a>
             </div>
+          </div>
+        )}
+
+        {/* Architectural Bottom Divider Line (Desktop and Mobile collapsed navbar) */}
+        {!mobileMenuOpen && (
+          <div
+            className="absolute inset-x-0 bottom-0 h-[1px] pointer-events-none select-none overflow-hidden"
+            aria-hidden="true"
+          >
+            {/* Subtle base gradient line fading to screen edges */}
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
+            {/* Luminous center shimmer */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-zinc-600/50 to-transparent" />
+            {/* Delicate centered highlight accent */}
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/25 to-transparent blur-[0.5px]" />
           </div>
         )}
       </header>

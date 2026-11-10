@@ -83,8 +83,22 @@ export default function UrlForm({ onAnalyze, loading, onOpenDiscovery }) {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full pl-10 pr-3 py-3 sm:py-2.5 rounded-lg bg-zinc-950 border border-zinc-300 hover:border-zinc-200 text-zinc-100 placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white/40 transition-colors disabled:opacity-50 font-mono min-h-[44px] shadow-sm"
+                className="w-full pl-10 pr-10 py-3 sm:py-2.5 rounded-lg bg-zinc-950 border border-zinc-300 hover:border-zinc-200 text-zinc-100 placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-white focus:ring-1 focus:ring-white/40 transition-colors disabled:opacity-50 font-mono min-h-[44px] shadow-sm"
               />
+              {url && !loading && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUrl('');
+                    if (error) setError('');
+                  }}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
+                  title="Clear URL input"
+                  aria-label="Clear URL input"
+                >
+                  <X className="w-4 h-4 shrink-0" />
+                </button>
+              )}
             </div>
 
             <button

@@ -23,9 +23,6 @@ export default function Footer() {
               <span className="font-semibold text-sm text-zinc-100 tracking-tight">
                 EasyFinePrint
               </span>
-              <span className="text-[10px] text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded">
-                v1.0
-              </span>
             </div>
             <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
               Automated clause risk analysis and revision tracking for public

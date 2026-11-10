@@ -53,9 +53,10 @@ A user supplies a massive 100 MB HTML file or a streaming connection that hangs 
 
 ### 3.2 Implemented Mitigations
 1. **Streaming Byte Cap**: Responses are read in chunks with a hard cap of 5,000,000 bytes (5 MB). If exceeded, connection terminates immediately.
-2. **Timeout Enforcement**: A 20-second total timeout (and 8s connect timeout) is enforced on all HTTP client calls.
+2. **Timeout Enforcement**: A 20-second total read timeout (and 10s connect timeout) is enforced on all HTTP client calls.
 3. **Content-Type Filter**: Only `text/html`, `application/xhtml+xml`, or `text/plain` are accepted. Binary payloads (images, video, ZIP) are rejected before download completion.
-4. **Request Body Size Limit**: Global middleware rejects any inbound JSON request payload exceeding 10 MB with HTTP 413.
+4. **Sandboxed JavaScript Execution**: When executing dynamic script evaluations for client-side SPAs, scripts run exclusively within an isolated Node.js V8 virtual machine (`node:vm`) with a strict 2-second timeout, mock sandbox objects (`window`, `document`), zero access to file system I/O, and zero network sockets.
+5. **Request Body Size Limit**: Global middleware rejects any inbound JSON request payload exceeding 10 MB with HTTP 413.
 
 ---
 
@@ -65,10 +66,11 @@ A user supplies a massive 100 MB HTML file or a streaming connection that hangs 
 Adversaries use `/api/discovery/search` to probe internal networks or force backend servers to visit unverified target hosts.
 
 ### 4.2 Implemented Mitigations
-1. **Zero External Search Dependencies**: The discovery engine operates entirely without third-party search APIs, eliminating API token theft and quota exhaustion vectors.
-2. **Authoritative Directory Precedence**: High-profile companies are resolved instantly from an audited, hardcoded directory of official policy URLs.
-3. **SSRF Guard on Direct Website Inspection**: When falling back to direct homepage inspection, candidate domains undergo full `resolve_and_verify_hostname` validation before any HTTP request is issued.
-4. **In-Memory Query Cache**: Search results are cached in-memory by trimmed query to eliminate redundant outbound HTTP traffic.
+1. **Zero External Search Dependencies**: The discovery engine operates independently without third-party commercial search APIs, eliminating API token theft and quota exhaustion vectors.
+2. **Authoritative Directory Precedence**: 249+ high-profile companies (Google, Apple, Microsoft, Amazon, Meta, Netflix, Spotify, Discord, etc.) are resolved instantly from an audited, hardcoded directory of official policy URLs with zero network hops.
+3. **SSRF Guard on Direct Website Inspection & Probes**: When falling back to direct domain inspection, candidate TLD domains and canonical path probes undergo full `resolve_and_verify_hostname` validation before any outbound socket connection is opened.
+4. **Candidate Result Capping**: Auto-discovered policy candidates are hard-capped to a maximum of 15 documents per query, preventing runaway memory allocations or response flooding.
+5. **In-Memory Query Cache**: Search results are cached in-memory by trimmed query to eliminate redundant outbound HTTP traffic.
 
 ---
 
