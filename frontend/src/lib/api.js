@@ -49,7 +49,15 @@ async function fetchJson(endpoint, options = {}, timeoutMs = 90000) {
     if (err.name === 'AbortError') {
       throw new Error('Request timed out. The server took longer than 90 seconds to respond.');
     }
-    throw err;
+    let msg = err.message || 'Request failed';
+    if (API_BASE_URL) {
+      msg = msg.replaceAll(API_BASE_URL, '');
+    }
+    if (/failed to fetch/i.test(msg) || /networkerror/i.test(msg) || /load failed/i.test(msg)) {
+      throw new Error('Unable to connect to the server. Please check your network connection.');
+    }
+    msg = msg.replace(/https?:\/\/[^\s/$.?#].[^\s]*/gi, '').trim();
+    throw new Error(msg || 'Request failed');
   }
 }
 
@@ -58,11 +66,13 @@ export const api = {
   getHealth: () => fetchJson('/api/health'),
 
   // Policies
-  analyzePolicy: (url) =>
-    fetchJson('/api/policies/analyze', {
+  analyzePolicy: (payload) => {
+    const body = typeof payload === 'string' ? { url: payload } : payload;
+    return fetchJson('/api/policies/analyze', {
       method: 'POST',
-      body: JSON.stringify({ url }),
-    }),
+      body: JSON.stringify(body),
+    });
+  },
 
   listPolicies: (limit = 50) => fetchJson(`/api/policies?limit=${limit}`),
 

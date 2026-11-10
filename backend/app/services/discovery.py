@@ -312,7 +312,7 @@ async def discover_policy_urls(query: str, max_candidates: int = MAX_DISCOVERY_C
     """
     Discover candidate official Terms of Service, Privacy Policy, and User Agreement URLs for a company.
     1. Checks in-memory cache.
-    2. Searches the authoritative known directory (covering 200+ major companies and services).
+    2. Searches the authoritative known directory (covering 249+ major companies with 501+ verified documents).
     3. If unknown or insufficient candidates found: dynamically auto-finds policies via:
        - Multi-TLD domain guessing & homepage DOM crawling.
        - Direct canonical legal path probing (/terms, /privacy).

@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
-  GitCompare,
-  FileCheck,
-  Scale,
   ExternalLink,
   ChevronRight,
   ChevronLeft,
@@ -123,6 +120,30 @@ export default function Home() {
   // Search & Pagination State
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [policyTab, setPolicyTab] = useState("system"); // "system" | "user"
+
+  const isUserMaintained = (pol) => {
+    return (
+      pol?.provenance === "user_pasted" ||
+      pol?.latest_analysis?.provenance === "user_pasted" ||
+      pol?.extractor === "user_pasted"
+    );
+  };
+
+  const systemCount = useMemo(() => {
+    return policies.filter((p) => !isUserMaintained(p)).length;
+  }, [policies]);
+
+  const userCount = useMemo(() => {
+    return policies.filter((p) => isUserMaintained(p)).length;
+  }, [policies]);
+
+  const tabPolicies = useMemo(() => {
+    if (policyTab === "user") {
+      return policies.filter((p) => isUserMaintained(p));
+    }
+    return policies.filter((p) => !isUserMaintained(p));
+  }, [policies, policyTab]);
 
   const fetchTrackedPolicies = useCallback(async () => {
     try {
@@ -143,9 +164,9 @@ export default function Home() {
   // Filtered & Ranked policies via Fuzzy Search
   const filteredPolicies = useMemo(() => {
     if (!searchQuery.trim()) {
-      return policies;
+      return tabPolicies;
     }
-    return policies
+    return tabPolicies
       .map((pol) => {
         const res = fuzzyMatchPolicy(pol, searchQuery);
         return { pol, match: res.match, score: res.score };
@@ -153,7 +174,7 @@ export default function Home() {
       .filter((entry) => entry.match)
       .sort((a, b) => b.score - a.score)
       .map((entry) => entry.pol);
-  }, [policies, searchQuery]);
+  }, [tabPolicies, searchQuery]);
 
   // Pagination calculations (4 per page)
   const totalPages = Math.max(
@@ -182,6 +203,13 @@ export default function Home() {
       pages.push(i);
     }
     return pages;
+  };
+
+  const handleTabChange = (newTab) => {
+    if (newTab !== policyTab) {
+      setPolicyTab(newTab);
+      setCurrentPage(1);
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -217,7 +245,7 @@ export default function Home() {
   return (
     <div className="flex flex-col gap-8 sm:gap-12 pb-14 sm:pb-16 pt-5 sm:pt-8 max-w-5xl mx-auto px-3.5 sm:px-6">
       {/* Hero Header */}
-      <section className="order-1 space-y-4">
+      <section className="space-y-4">
         <div className="space-y-2">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight leading-snug sm:leading-tight">
             Public Legal Agreements Auditor
@@ -257,75 +285,70 @@ export default function Home() {
           onAnalyze={handleAnalyze}
           loading={analyzing}
           onOpenDiscovery={() => setIsDiscoveryOpen(true)}
+          trackedPolicies={policies}
         />
       </section>
 
-      {/* Highlighted Features Section (Below Tracked Policies on mobile, above on desktop) */}
-      <section className="order-3 sm:order-2 space-y-3">
+      {/* Tracked Policies Section */}
+      <section className="space-y-3.5 sm:space-y-3">
+        {/* Dedicated Line: Section Title & Description */}
         <div>
-          <h2 className="text-sm font-semibold text-zinc-200 tracking-tight">
-            Highlighted Features
+          <h2 className="text-sm font-semibold text-zinc-200 tracking-tight flex items-center gap-1.5">
+            <span>Tracked Policies</span>
+            {policies.length > 0 && (
+              <span className="font-mono text-xs font-normal text-zinc-400">
+                ({policies.length})
+              </span>
+            )}
           </h2>
           <p className="text-xs text-zinc-500">
-            Core verification guarantees and auditing capabilities
+            Monitored documents and baseline status
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="panel rounded-xl p-4 border space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-              <Scale className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>Clause Risk Auditing</span>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Identifies mandatory arbitration, class-action waivers, unilateral
-              modifications, and liability disclaimers with calibrated risk
-              ratings.
-            </p>
+        {/* Dedicated Line: Left-aligned Tabs and Right-aligned Search/Refresh on PC */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
+          {/* Switchable Ingestion Tabs (Left-aligned) */}
+          <div className="h-[34px] inline-flex items-center p-0.5 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] font-mono self-start">
+            <button
+              type="button"
+              onClick={() => handleTabChange("system")}
+              className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
+                policyTab === "system"
+                  ? "bg-zinc-800 text-zinc-100 font-medium shadow-xs border border-zinc-700/60"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              <span>System Maintained</span>
+              <span
+                className={`text-[10px] ${
+                  policyTab === "system" ? "text-zinc-300" : "text-zinc-500"
+                }`}
+              >
+                ({systemCount})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange("user")}
+              className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
+                policyTab === "user"
+                  ? "bg-zinc-800 text-zinc-100 font-medium shadow-xs border border-zinc-700/60"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+            >
+              <span>User Maintained</span>
+              <span
+                className={`text-[10px] ${
+                  policyTab === "user" ? "text-zinc-300" : "text-zinc-500"
+                }`}
+              >
+                ({userCount})
+              </span>
+            </button>
           </div>
 
-          <div className="panel rounded-xl p-4 border space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-              <FileCheck className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>Verbatim Source Citations</span>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Every flagged concern is anchored to an exact, unedited quotation
-              from the source text, ensuring transparent verification without AI
-              hallucinations.
-            </p>
-          </div>
-
-          <div className="panel rounded-xl p-4 border space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-              <GitCompare className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span>Revision &amp; Change Tracking</span>
-            </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Preserves baseline snapshots across legal agreements, highlighting
-              word-for-word additions and removals whenever policies are updated.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Tracked Policies Section (Order 2 on mobile, Order 3 on desktop) */}
-      <section className="order-2 sm:order-3 space-y-3.5 sm:space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-          <div>
-            <h2 className="text-sm font-semibold text-zinc-200 tracking-tight flex items-center gap-1.5">
-              <span>Tracked Policies</span>
-              {policies.length > 0 && (
-                <span className="font-mono text-xs font-normal text-zinc-400">
-                  ({policies.length})
-                </span>
-              )}
-            </h2>
-            <p className="text-xs text-zinc-500">
-              Monitored documents and baseline status
-            </p>
-          </div>
-
+          {/* Search Input & Refresh Button (Right-aligned on PC, full-width on mobile) */}
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {/* Fuzzy Search Input */}
             <div className="relative flex-1 sm:w-64 md:w-72">
@@ -341,7 +364,7 @@ export default function Home() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300/30 transition-colors disabled:opacity-50"
+                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300/30 transition-colors disabled:opacity-50 h-[34px]"
               />
               {searchQuery && !loadingPolicies && (
                 <button
@@ -359,7 +382,7 @@ export default function Home() {
             <button
               onClick={fetchTrackedPolicies}
               disabled={loadingPolicies}
-              className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer border border-zinc-800 active:scale-95 shrink-0 min-h-[34px]"
+              className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer border border-zinc-800 active:scale-95 shrink-0 h-[34px]"
               title="Refresh tracked policies"
             >
               <RefreshCw
@@ -385,6 +408,20 @@ export default function Home() {
               Submit a public URL above to create your first version baseline.
             </p>
           </div>
+        ) : tabPolicies.length === 0 ? (
+          <div className="p-8 text-center rounded-xl panel border space-y-2 font-mono">
+            <Database className="w-6 h-6 text-zinc-600 mx-auto mb-1" />
+            <p className="text-xs text-zinc-300">
+              {policyTab === "user"
+                ? "No user-maintained policies tracked yet"
+                : "No system-maintained policies tracked yet"}
+            </p>
+            <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+              {policyTab === "user"
+                ? "Use the 'Paste Text' tab above to audit an internal agreement or bypass strict bot challenges."
+                : "Submit a public URL above or discover verified company policies to begin tracking."}
+            </p>
+          </div>
         ) : filteredPolicies.length === 0 ? (
           <div className="p-8 text-center rounded-xl panel border border-zinc-800 space-y-3 font-mono">
             <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
@@ -392,7 +429,7 @@ export default function Home() {
             </div>
             <div className="space-y-1">
               <p className="text-xs text-zinc-300">
-                No tracked policies match &ldquo;{searchQuery}&rdquo;
+                No {policyTab === "user" ? "user-maintained" : "system-maintained"} policies match &ldquo;{searchQuery}&rdquo;
               </p>
               <p className="text-[11px] text-zinc-500">
                 Try searching by company name, URL, or agreement type.
@@ -447,13 +484,20 @@ export default function Home() {
                           className="hover:bg-zinc-900/50 transition-colors"
                         >
                           <td className="py-3.5 pl-4 pr-3 text-left">
-                            <Link
-                              to={`/policies/${pol.id}`}
-                              className="font-medium text-zinc-100 hover:text-white transition-colors block text-xs line-clamp-2"
-                              title={pol.title || "Policy Document"}
-                            >
-                              {pol.title || "Policy Document"}
-                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Link
+                                to={`/policies/${pol.id}`}
+                                className="font-medium text-zinc-100 hover:text-white transition-colors block text-xs line-clamp-2"
+                                title={pol.title || "Policy Document"}
+                              >
+                                {pol.title || "Policy Document"}
+                              </Link>
+                              {pol.provenance === "archive" ? (
+                                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-950/40 border border-blue-800/60 text-blue-300">
+                                  Archive
+                                </span>
+                              ) : null}
+                            </div>
                           </td>
                           <td className="py-3.5 px-3 text-zinc-500 text-left max-w-[180px] lg:max-w-xs truncate">
                             {pol.canonical_url?.startsWith("/") ? (
@@ -558,13 +602,20 @@ export default function Home() {
                     {/* Top: Title & URL */}
                     <div className="space-y-1.5 min-w-0">
                       <div className="flex items-start justify-between gap-1.5">
-                        <Link
-                          to={`/policies/${pol.id}`}
-                          className="font-semibold text-zinc-100 hover:text-white transition-colors text-[13px] sm:text-sm leading-snug break-words"
-                          title={pol.title || "Policy Document"}
-                        >
-                          {pol.title || "Policy Document"}
-                        </Link>
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <Link
+                            to={`/policies/${pol.id}`}
+                            className="font-semibold text-zinc-100 hover:text-white transition-colors text-[13px] sm:text-sm leading-snug break-words block"
+                            title={pol.title || "Policy Document"}
+                          >
+                            {pol.title || "Policy Document"}
+                          </Link>
+                          {pol.provenance === "archive" ? (
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-950/40 border border-blue-800/60 text-blue-300">
+                              Public Archive
+                            </span>
+                          ) : null}
+                        </div>
                         <Link
                           to={`/policies/${pol.id}`}
                           className="text-zinc-500 hover:text-zinc-300 p-0.5 shrink-0 mt-0.5"

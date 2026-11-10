@@ -45,7 +45,9 @@ class DiffChangeSchema(BaseModel):
 
 
 class PolicyAnalyzeRequest(BaseModel):
-    url: str = Field(..., description="Target public policy URL")
+    url: str = Field(..., min_length=1, max_length=2048, description="Target public policy URL")
+    raw_text: Optional[str] = Field(None, max_length=500_000, description="Directly pasted legal policy text for user-provided ingestion")
+    title: Optional[str] = Field(None, max_length=200, description="Optional title for the policy document")
 
 
 class PolicySelfAnalyzeRequest(BaseModel):
@@ -66,6 +68,8 @@ class AnalysisResponse(BaseModel):
     model_id: str
     created_at: datetime
     validation_status: ValidationStatus
+    provenance: Optional[str] = Field("live", description="Data provenance: live, archive, user_pasted, or cached_fallback")
+    warnings: List[str] = []
 
 
 class PolicyResponse(BaseModel):
@@ -79,6 +83,8 @@ class PolicyResponse(BaseModel):
     latest_snapshot_id: Optional[str] = None
     latest_analysis: Optional[AnalysisResponse] = None
     reanalysis_status: Optional[str] = None
+    provenance: Optional[str] = Field("live", description="Data provenance: live, archive, user_pasted, or cached_fallback")
+    warnings: List[str] = []
 
 
 class SnapshotResponse(BaseModel):
@@ -91,6 +97,8 @@ class SnapshotResponse(BaseModel):
     extraction_status: str
     source_status_code: int
     title: Optional[str] = None
+    provenance: Optional[str] = Field("live", description="Data provenance: live, archive, user_pasted, or cached_fallback")
+    warnings: List[str] = []
 
 
 class CheckEventResponse(BaseModel):
