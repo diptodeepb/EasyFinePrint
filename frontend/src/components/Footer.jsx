@@ -8,18 +8,18 @@ export default function Footer() {
     "https://github.com/diptodeepb/EasyFinePrint/blob/main/LICENSE";
 
   return (
-    <footer className="relative bg-[#09090b] text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto">
+    <footer className="relative bg-[#e5ddcf] dark:bg-[#09090b] text-[#5c5549] dark:text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto border-t border-[#d5cbba] dark:border-zinc-800/80 transition-colors">
       {/* Architectural Top Divider Line */}
       <div
         className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
         aria-hidden="true"
       >
         {/* Subtle base gradient line fading to screen edges */}
-        <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
+        <div className="w-full h-full bg-gradient-to-r from-transparent via-[#d5cbba] dark:via-zinc-800/80 to-transparent" />
         {/* Luminous center shimmer */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-zinc-600/50 to-transparent" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-[#bfb4a0]/50 dark:via-zinc-600/50 to-transparent" />
         {/* Delicate centered highlight accent */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/25 to-transparent blur-[0.5px]" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/40 dark:via-white/25 to-transparent blur-[0.5px]" />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-10">
@@ -31,13 +31,13 @@ export default function Footer() {
               <img
                 src="/logo.svg"
                 alt="EasyFinePrint Logo"
-                className="w-5 h-5 rounded border border-zinc-700/80 shrink-0"
+                className="w-5 h-5 rounded border border-[#d5cbba] dark:border-zinc-700/80 shrink-0"
               />
-              <span className="font-semibold text-sm text-zinc-100 tracking-tight">
+              <span className="font-semibold text-sm text-[#1c1917] dark:text-zinc-100 tracking-tight">
                 EasyFinePrint
               </span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed max-w-sm">
+            <p className="text-xs text-[#5c5549] dark:text-zinc-400 leading-relaxed max-w-sm">
               Automated clause risk analysis and revision tracking for public
               terms of service and privacy agreements, grounded strictly in
               verbatim source records.
@@ -48,67 +48,82 @@ export default function Footer() {
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:contents gap-6 sm:gap-8">
             {/* Architecture */}
             <div className="space-y-2.5 sm:space-y-3 text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
+              <h4 className="text-[#1c1917] dark:text-zinc-200 font-semibold text-xs tracking-wider uppercase">
                 Architecture
-              </div>
-              <ul className="space-y-2 text-[11px] text-zinc-400">
-                <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                  <span>Verbatim Quote Validation</span>
+              </h4>
+              <ul className="space-y-2 text-[11px] text-[#5c5549] dark:text-zinc-400">
+                <li>
+                  <Link
+                    to="/features"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
+                  >
+                    4-Tier Hybrid Ingestion
+                  </Link>
                 </li>
-                <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                  <span>Single-Pass Inference</span>
+                <li>
+                  <Link
+                    to="/features"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
+                  >
+                    Verbatim Quote Grounding
+                  </Link>
                 </li>
-                <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                  <span>Deterministic Myers Diff</span>
+                <li>
+                  <Link
+                    to="/features"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
+                  >
+                    Myers Diff Sequence Engine
+                  </Link>
                 </li>
-                <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                  <span>Zero-Drift Baseline Cache</span>
-                </li>
-                <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                  <span>Multi-Hop SSRF Guard</span>
+                <li>
+                  <Link
+                    to="/features"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
+                  >
+                    SSRF &amp; Anti-Spam Bounds
+                  </Link>
                 </li>
               </ul>
             </div>
 
             {/* Resources */}
             <div className="space-y-2.5 sm:space-y-3 text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
+              <h4 className="text-[#1c1917] dark:text-zinc-200 font-semibold text-xs tracking-wider uppercase">
                 Resources
-              </div>
-              <ul className="space-y-2 text-[11px]">
-                <li>
-                  <Link
-                    to="/features"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
-                  >
-                    <span>Features &amp; Auditing</span>
-                  </Link>
-                </li>
+              </h4>
+              <ul className="space-y-2 text-[11px] text-[#5c5549] dark:text-zinc-400">
                 <li>
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
                   >
-                    <span>Source Code</span>
-                    <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
+                    <span>GitHub Repository</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#78716c] dark:text-zinc-500 shrink-0" />
                   </a>
                 </li>
                 <li>
                   <a
-                    href="https://github.com/diptodeepb/EasyFinePrint/blob/main/README.md"
+                    href="https://github.com/diptodeepb/EasyFinePrint/tree/main/docs"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
                   >
-                    <span>Documentation</span>
-                    <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
+                    <span>Documentation &amp; Threat Model</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#78716c] dark:text-zinc-500 shrink-0" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="https://github.com/diptodeepb/EasyFinePrint/actions"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
+                  >
+                    <span>Continuous Integration CI</span>
+                    <ExternalLink className="w-2.5 h-2.5 text-[#78716c] dark:text-zinc-500 shrink-0" />
                   </a>
                 </li>
                 <li>
@@ -116,37 +131,35 @@ export default function Footer() {
                     href="https://github.com/diptodeepb/EasyFinePrint/issues"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 transition-colors inline-flex items-center gap-1 text-zinc-400 group leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
                   >
                     <span>Issue Tracker</span>
-                    <ExternalLink className="w-2.5 h-2.5 text-zinc-500 group-hover:text-zinc-300 shrink-0" />
+                    <ExternalLink className="w-2.5 h-2.5 text-[#78716c] dark:text-zinc-500 shrink-0" />
                   </a>
                 </li>
               </ul>
             </div>
 
-            {/* Compliance & Governance */}
+            {/* Compliance & Trust */}
             <div className="space-y-2.5 sm:space-y-3 text-left">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-200">
-                Compliance
-              </div>
-              <ul className="space-y-2 text-[11px] text-zinc-400">
+              <h4 className="text-[#1c1917] dark:text-zinc-200 font-semibold text-xs tracking-wider uppercase">
+                Trust &amp; Legal
+              </h4>
+              <ul className="space-y-2 text-[11px] text-[#5c5549] dark:text-zinc-400">
                 <li>
                   <Link
                     to="/terms"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                    <span>Terms of Use</span>
+                    Terms of Use
                   </Link>
                 </li>
                 <li>
                   <Link
                     to="/privacy"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
-                    <span>Privacy Policy</span>
+                    Privacy Policy
                   </Link>
                 </li>
                 <li>
@@ -154,18 +167,17 @@ export default function Footer() {
                     href={licenseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-zinc-100 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1.5 text-zinc-300 leading-snug"
+                    className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1"
                   >
-                    <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
                     <span>Apache 2.0 License</span>
                   </a>
                 </li>
                 <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
+                  <span className="w-1 h-1 rounded-full bg-[#78716c] dark:bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>No Personal Data Stored</span>
                 </li>
                 <li className="flex items-start gap-1.5 leading-snug">
-                  <span className="w-1 h-1 rounded-full bg-zinc-600 shrink-0 mt-1.5"></span>
+                  <span className="w-1 h-1 rounded-full bg-[#78716c] dark:bg-zinc-600 shrink-0 mt-1.5"></span>
                   <span>No Legal Advice</span>
                 </li>
               </ul>
@@ -174,10 +186,10 @@ export default function Footer() {
         </div>
 
         {/* Legal Disclaimer Box */}
-        <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-950/80 border border-zinc-800/80 text-[11px] text-zinc-400 leading-relaxed space-y-1.5">
-          <div className="flex items-center gap-2 text-zinc-300 font-semibold uppercase tracking-wider text-[10px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-            <span>Legal Disclaimer & Transparency Notice</span>
+        <div className="p-3.5 sm:p-4 rounded-xl bg-[#f5eedf]/90 dark:bg-zinc-950/80 border border-[#d5cbba] dark:border-zinc-800/80 text-[11px] text-[#5c5549] dark:text-zinc-400 leading-relaxed space-y-1.5">
+          <div className="flex items-center gap-2 text-[#1c1917] dark:text-zinc-300 font-semibold uppercase tracking-wider text-[10px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#5c5549] dark:text-zinc-400 shrink-0" />
+            <span>Legal Disclaimer &amp; Transparency Notice</span>
           </div>
           <p>
             EasyFinePrint is an automated legal agreement monitoring tool and
@@ -191,14 +203,14 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar: Copyright & Rights */}
-        <div className="relative pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[11px] text-zinc-400">
+        <div className="relative pt-5 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left text-[11px] text-[#5c5549] dark:text-zinc-400">
           {/* Subtle gradient divider line */}
           <div
             className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
             aria-hidden="true"
           >
-            <div className="w-full h-full bg-gradient-to-r from-transparent via-zinc-800/80 to-transparent" />
-            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/2 h-full bg-gradient-to-r from-transparent via-zinc-700/40 to-transparent" />
+            <div className="w-full h-full bg-gradient-to-r from-transparent via-[#d5cbba] dark:via-zinc-800/80 to-transparent" />
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/2 h-full bg-gradient-to-r from-transparent via-[#bfb4a0]/40 dark:via-zinc-700/40 to-transparent" />
           </div>
 
           <div>
@@ -208,33 +220,33 @@ export default function Footer() {
           <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-2.5 sm:gap-x-3 gap-y-1">
             <Link
               to="/features"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+              className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400"
             >
               Features
             </Link>
-            <span className="text-zinc-700 hidden sm:inline">&middot;</span>
+            <span className="text-[#bfb4a0] dark:text-zinc-700 hidden sm:inline">&middot;</span>
             <Link
               to="/terms"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+              className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400"
             >
               Terms of Use
             </Link>
-            <span className="text-zinc-700 hidden sm:inline">&middot;</span>
+            <span className="text-[#bfb4a0] dark:text-zinc-700 hidden sm:inline">&middot;</span>
             <Link
               to="/privacy"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+              className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors underline underline-offset-4 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400"
             >
               Privacy Policy
             </Link>
-            <span className="text-zinc-700 hidden sm:inline">&middot;</span>
+            <span className="text-[#bfb4a0] dark:text-zinc-700 hidden sm:inline">&middot;</span>
             <a
               href={licenseUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-zinc-400 hover:text-zinc-200 transition-colors inline-flex items-center gap-1 underline underline-offset-4 decoration-zinc-700 hover:decoration-zinc-400"
+              className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1 underline underline-offset-4 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400"
             >
               <span>Apache 2.0 License</span>
-              <ExternalLink className="w-2.5 h-2.5 text-zinc-500 shrink-0" />
+              <ExternalLink className="w-2.5 h-2.5 text-[#78716c] dark:text-zinc-500 shrink-0" />
             </a>
           </div>
         </div>

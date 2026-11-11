@@ -120,6 +120,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_f
 | **Zero-Spend Adherence**                   | 100% $0 operation                                                    | Uses free static hosting, free Vercel serverless tier, free Atlas M0, and Cloudflare Workers AI free tier                 |
 | **Calibrated Risk Tier Mapping**           | 100% deterministic tier classification                               | Four-tier ladder (Low: 0-30, Moderate: 31-55, Elevated: 56-74, High: 75-100) calibrated against real consumer hazard      |
 | **Extraction Failure Safety**              | Previous snapshot preserved intact                                   | Extraction errors never report false "unchanged" status                                                                   |
+| **Mobile & Modal Interaction Safety**      | 100% ghost-click prevention & backdrop isolation                     | W3C `touchend` `preventDefault()` eliminates click-through; backdrop drag-out protection, scroll lock, and Escape handling |
 
 ---
 

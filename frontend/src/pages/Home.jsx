@@ -247,10 +247,10 @@ export default function Home() {
       {/* Hero Header */}
       <section className="space-y-4">
         <div className="space-y-2">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-zinc-100 tracking-tight leading-snug sm:leading-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-black dark:text-zinc-100 tracking-tight leading-snug sm:leading-tight">
             Public Legal Agreements Auditor
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-black dark:text-zinc-400 max-w-2xl leading-relaxed">
             Audit public legal agreements for mandatory arbitration, broad data
             sharing, and unilateral terms. Grounded in verbatim citations with
             automated revision tracking.
@@ -259,11 +259,11 @@ export default function Home() {
 
         {/* Global Error Banner */}
         {analyzeError && (
-          <div className="p-3.5 rounded-lg bg-rose-950/40 border border-rose-900/60 text-rose-300 text-xs font-mono flex items-start justify-between gap-3 break-words">
+          <div className="p-3.5 rounded-lg bg-rose-500/10 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-900/60 text-rose-800 dark:text-rose-300 text-xs font-mono flex items-start justify-between gap-3 break-words">
             <div className="flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" />
               <div>
-                <span className="font-semibold text-rose-200">
+                <span className="font-semibold text-rose-900 dark:text-rose-200">
                   Unable to analyze policy:{" "}
                 </span>
                 <span>{analyzeError}</span>
@@ -271,7 +271,7 @@ export default function Home() {
             </div>
             <button
               onClick={() => setAnalyzeError("")}
-              className="text-rose-400 hover:text-rose-200 cursor-pointer p-1.5 -mr-1 -mt-1 rounded-md hover:bg-rose-900/40 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center active:scale-95"
+              className="text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-200 cursor-pointer p-1.5 -mr-1 -mt-1 rounded-md hover:bg-rose-500/20 dark:hover:bg-rose-900/40 shrink-0 min-w-[32px] min-h-[32px] flex items-center justify-center active:scale-95"
               title="Dismiss error"
               aria-label="Dismiss error"
             >
@@ -293,15 +293,15 @@ export default function Home() {
       <section className="space-y-3.5 sm:space-y-3">
         {/* Dedicated Line: Section Title & Description */}
         <div>
-          <h2 className="text-sm font-semibold text-zinc-200 tracking-tight flex items-center gap-1.5">
+          <h2 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-200 tracking-tight flex items-center gap-1.5">
             <span>Tracked Policies</span>
             {policies.length > 0 && (
-              <span className="font-mono text-xs font-normal text-zinc-400">
+              <span className="font-mono text-xs font-normal text-[#78716c] dark:text-zinc-400">
                 ({policies.length})
               </span>
             )}
           </h2>
-          <p className="text-xs text-zinc-500">
+          <p className="text-xs text-[#5c5549] dark:text-zinc-500">
             Monitored documents and baseline status
           </p>
         </div>
@@ -309,20 +309,20 @@ export default function Home() {
         {/* Dedicated Line: Left-aligned Tabs and Right-aligned Search/Refresh on PC */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
           {/* Switchable Ingestion Tabs (Left-aligned) */}
-          <div className="h-[34px] inline-flex items-center p-0.5 rounded-lg bg-zinc-950 border border-zinc-800 text-[11px] font-mono self-start">
+          <div className="h-[34px] inline-flex items-center p-0.5 rounded-lg bg-[#e5ddcf] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-[11px] font-mono self-start shadow-xs">
             <button
               type="button"
               onClick={() => handleTabChange("system")}
               className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
                 policyTab === "system"
-                  ? "bg-zinc-800 text-zinc-100 font-medium shadow-xs border border-zinc-700/60"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                  : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200"
               }`}
             >
               <span>System Maintained</span>
               <span
                 className={`text-[10px] ${
-                  policyTab === "system" ? "text-zinc-300" : "text-zinc-500"
+                  policyTab === "system" ? "text-[#78716c] dark:text-zinc-300" : "text-[#78716c] dark:text-zinc-500"
                 }`}
               >
                 ({systemCount})
@@ -333,14 +333,14 @@ export default function Home() {
               onClick={() => handleTabChange("user")}
               className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
                 policyTab === "user"
-                  ? "bg-zinc-800 text-zinc-100 font-medium shadow-xs border border-zinc-700/60"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                  : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200"
               }`}
             >
               <span>User Maintained</span>
               <span
                 className={`text-[10px] ${
-                  policyTab === "user" ? "text-zinc-300" : "text-zinc-500"
+                  policyTab === "user" ? "text-[#78716c] dark:text-zinc-300" : "text-[#78716c] dark:text-zinc-500"
                 }`}
               >
                 ({userCount})
@@ -352,7 +352,7 @@ export default function Home() {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             {/* Fuzzy Search Input */}
             <div className="relative flex-1 sm:w-64 md:w-72">
-              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-zinc-500">
+              <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#78716c] dark:text-zinc-500">
                 <Search className="w-3.5 h-3.5 shrink-0" />
               </div>
               <input
@@ -364,13 +364,13 @@ export default function Home() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-100 placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-zinc-300 focus:ring-1 focus:ring-zinc-300/30 transition-colors disabled:opacity-50 h-[34px]"
+                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-[#5c5549] dark:focus:border-zinc-300 focus:ring-1 focus:ring-[#5c5549]/30 dark:focus:ring-zinc-300/30 transition-colors disabled:opacity-50 h-[34px] shadow-xs"
               />
               {searchQuery && !loadingPolicies && (
                 <button
                   type="button"
                   onClick={handleClearSearch}
-                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#78716c] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer"
                   title="Clear search"
                   aria-label="Clear search"
                 >
@@ -382,7 +382,7 @@ export default function Home() {
             <button
               onClick={fetchTrackedPolicies}
               disabled={loadingPolicies}
-              className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer border border-zinc-800 active:scale-95 shrink-0 h-[34px]"
+              className="px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer border border-[#d5cbba] dark:border-zinc-800 active:scale-95 shrink-0 h-[34px] shadow-xs"
               title="Refresh tracked policies"
             >
               <RefreshCw
@@ -394,51 +394,51 @@ export default function Home() {
         </div>
 
         {loadingPolicies ? (
-          <div className="p-8 text-center rounded-xl panel border text-zinc-400 text-xs font-mono">
-            <Loader2 className="w-5 h-5 animate-spin text-zinc-400 mx-auto mb-2" />
+          <div className="p-8 text-center rounded-xl panel border text-[#5c5549] dark:text-zinc-400 text-xs font-mono">
+            <Loader2 className="w-5 h-5 animate-spin text-[#5c5549] dark:text-zinc-400 mx-auto mb-2" />
             <span>Loading tracked policies...</span>
           </div>
         ) : policies.length === 0 ? (
           <div className="p-8 text-center rounded-xl panel border space-y-2">
-            <Database className="w-6 h-6 text-zinc-600 mx-auto" />
-            <p className="text-xs text-zinc-400 font-mono">
+            <Database className="w-6 h-6 text-[#78716c] dark:text-zinc-600 mx-auto" />
+            <p className="text-xs text-[#5c5549] dark:text-zinc-400 font-mono">
               No policies tracked yet
             </p>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-[#78716c] dark:text-zinc-500">
               Submit a public URL above to create your first version baseline.
             </p>
           </div>
         ) : tabPolicies.length === 0 ? (
           <div className="p-8 text-center rounded-xl panel border space-y-2 font-mono">
-            <Database className="w-6 h-6 text-zinc-600 mx-auto mb-1" />
-            <p className="text-xs text-zinc-300">
+            <Database className="w-6 h-6 text-[#78716c] dark:text-zinc-600 mx-auto mb-1" />
+            <p className="text-xs text-[#1c1917] dark:text-zinc-300">
               {policyTab === "user"
                 ? "No user-maintained policies tracked yet"
                 : "No system-maintained policies tracked yet"}
             </p>
-            <p className="text-[11px] text-zinc-500 max-w-sm mx-auto">
+            <p className="text-[11px] text-[#78716c] dark:text-zinc-500 max-w-sm mx-auto">
               {policyTab === "user"
                 ? "Use the 'Paste Text' tab above to audit an internal agreement or bypass strict bot challenges."
                 : "Submit a public URL above or discover verified company policies to begin tracking."}
             </p>
           </div>
         ) : filteredPolicies.length === 0 ? (
-          <div className="p-8 text-center rounded-xl panel border border-zinc-800 space-y-3 font-mono">
-            <div className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-500">
+          <div className="p-8 text-center rounded-xl panel border border-[#d5cbba] dark:border-zinc-800 space-y-3 font-mono">
+            <div className="w-10 h-10 rounded-full bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center mx-auto text-[#78716c] dark:text-zinc-500">
               <Search className="w-4 h-4" />
             </div>
             <div className="space-y-1">
-              <p className="text-xs text-zinc-300">
+              <p className="text-xs text-[#1c1917] dark:text-zinc-300">
                 No {policyTab === "user" ? "user-maintained" : "system-maintained"} policies match &ldquo;{searchQuery}&rdquo;
               </p>
-              <p className="text-[11px] text-zinc-500">
+              <p className="text-[11px] text-[#78716c] dark:text-zinc-500">
                 Try searching by company name, URL, or agreement type.
               </p>
             </div>
             <button
               type="button"
               onClick={handleClearSearch}
-              className="px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 border border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95"
+              className="px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95 shadow-2xs"
             >
               Clear search filter
             </button>
@@ -449,7 +449,7 @@ export default function Home() {
             <div className="hidden md:block panel rounded-xl border overflow-hidden">
               <div className="w-full overflow-hidden">
                 <table className="w-full text-xs font-mono">
-                  <thead className="bg-zinc-950 border-b border-zinc-800 text-zinc-400 uppercase tracking-wider text-[11px]">
+                  <thead className="bg-[#e5ddcf] dark:bg-zinc-950 border-b border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-400 uppercase tracking-wider text-[11px]">
                     <tr>
                       <th className="py-3 px-4 text-center w-[44%]">
                         Policy Document
@@ -468,7 +468,7 @@ export default function Home() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/80">
+                  <tbody className="divide-y divide-[#d5cbba]/60 dark:divide-zinc-800/80">
                     {paginatedPolicies.map((pol) => {
                       const formattedDate = formatLocalDate(
                         pol.last_checked_at,
@@ -481,29 +481,29 @@ export default function Home() {
                       return (
                         <tr
                           key={pol.id}
-                          className="hover:bg-zinc-900/50 transition-colors"
+                          className="hover:bg-[#e5ddcf]/50 dark:hover:bg-zinc-900/50 transition-colors"
                         >
                           <td className="py-3.5 pl-4 pr-3 text-left">
                             <div className="flex items-center gap-2">
                               <Link
                                 to={`/policies/${pol.id}`}
-                                className="font-medium text-zinc-100 hover:text-white transition-colors block text-xs line-clamp-2"
+                                className="font-medium text-[#1c1917] dark:text-zinc-100 hover:text-black dark:hover:text-white transition-colors block text-xs line-clamp-2"
                                 title={pol.title || "Policy Document"}
                               >
                                 {pol.title || "Policy Document"}
                               </Link>
                               {pol.provenance === "archive" ? (
-                                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-950/40 border border-blue-800/60 text-blue-300">
+                                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800/60 text-blue-800 dark:text-blue-300">
                                   Archive
                                 </span>
                               ) : null}
                             </div>
                           </td>
-                          <td className="py-3.5 px-3 text-zinc-500 text-left max-w-[180px] lg:max-w-xs truncate">
+                          <td className="py-3.5 px-3 text-[#78716c] dark:text-zinc-500 text-left max-w-[180px] lg:max-w-xs truncate">
                             {pol.canonical_url?.startsWith("/") ? (
                               <Link
                                 to={pol.canonical_url}
-                                className="hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
+                                className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
                                 title={pol.canonical_url}
                               >
                                 <span className="truncate">
@@ -515,7 +515,7 @@ export default function Home() {
                                 href={pol.canonical_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
+                                className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
                                 title={pol.canonical_url}
                               >
                                 <span className="truncate">
@@ -530,19 +530,19 @@ export default function Home() {
                               <span
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium tracking-wide whitespace-nowrap ${
                                   level === "high"
-                                    ? "bg-rose-950/50 border border-rose-800/80 text-rose-300"
+                                    ? "bg-rose-500/10 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800/80 text-rose-800 dark:text-rose-300"
                                     : level === "elevated"
-                                      ? "bg-amber-950/50 border border-amber-800/80 text-amber-300"
+                                      ? "bg-amber-500/10 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800/80 text-amber-800 dark:text-amber-300"
                                       : level === "moderate"
-                                        ? "bg-yellow-950/40 border border-yellow-800/70 text-yellow-300"
-                                        : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
+                                        ? "bg-yellow-500/10 dark:bg-yellow-950/40 border border-yellow-300 dark:border-yellow-800/70 text-yellow-800 dark:text-yellow-300"
+                                        : "bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/70 text-emerald-800 dark:text-emerald-300"
                                 }`}
                               >
                                 <span className="font-semibold">{score}</span>
-                                <span className="text-[10px] text-zinc-500 font-normal">
+                                <span className="text-[10px] text-[#78716c] dark:text-zinc-500 font-normal">
                                   /100
                                 </span>
-                                <span className="text-zinc-600 font-normal">
+                                <span className="text-[#bfb4a0] dark:text-zinc-600 font-normal">
                                   ·
                                 </span>
                                 <span className="capitalize">
@@ -550,21 +550,21 @@ export default function Home() {
                                 </span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 whitespace-nowrap">
                                 <span>{isFb ? "Fallback" : "Pending"}</span>
                               </span>
                             )}
                           </td>
-                          <td className="py-3.5 px-3 text-zinc-400 whitespace-nowrap text-left">
+                          <td className="py-3.5 px-3 text-[#5c5549] dark:text-zinc-400 whitespace-nowrap text-left">
                             {formattedDate}
                           </td>
                           <td className="py-3.5 pr-4 pl-2 text-right whitespace-nowrap">
                             <Link
                               to={`/policies/${pol.id}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 hover:border-zinc-700 transition-colors text-xs active:scale-95"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors text-xs active:scale-95 shadow-2xs"
                             >
                               <span>Inspect</span>
-                              <ChevronRight className="w-3.5 h-3.5 text-zinc-500" />
+                              <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-500" />
                             </Link>
                           </td>
                         </tr>
@@ -605,31 +605,31 @@ export default function Home() {
                         <div className="space-y-1 min-w-0 flex-1">
                           <Link
                             to={`/policies/${pol.id}`}
-                            className="font-semibold text-zinc-100 hover:text-white transition-colors text-[13px] sm:text-sm leading-snug break-words block"
+                            className="font-semibold text-[#1c1917] dark:text-zinc-100 hover:text-black dark:hover:text-white transition-colors text-[13px] sm:text-sm leading-snug break-words block"
                             title={pol.title || "Policy Document"}
                           >
                             {pol.title || "Policy Document"}
                           </Link>
                           {pol.provenance === "archive" ? (
-                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-950/40 border border-blue-800/60 text-blue-300">
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono bg-blue-500/10 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800/60 text-blue-800 dark:text-blue-300">
                               Public Archive
                             </span>
                           ) : null}
                         </div>
                         <Link
                           to={`/policies/${pol.id}`}
-                          className="text-zinc-500 hover:text-zinc-300 p-0.5 shrink-0 mt-0.5"
+                          className="text-[#78716c] dark:text-zinc-500 hover:text-[#1c1917] dark:hover:text-zinc-300 p-0.5 shrink-0 mt-0.5"
                           aria-label="Inspect policy"
                         >
                           <ChevronRight className="w-3.5 h-3.5" />
                         </Link>
                       </div>
 
-                      <div className="text-zinc-500 font-mono text-[11px] truncate">
+                      <div className="text-[#78716c] dark:text-zinc-500 font-mono text-[11px] truncate">
                         {pol.canonical_url?.startsWith("/") ? (
                           <Link
                             to={pol.canonical_url}
-                            className="truncate hover:text-zinc-300 transition-colors block"
+                            className="truncate hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors block"
                             title={pol.canonical_url}
                           >
                             {pol.canonical_url}
@@ -639,7 +639,7 @@ export default function Home() {
                             href={pol.canonical_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="truncate hover:text-zinc-300 transition-colors inline-flex items-center gap-1 max-w-full"
+                            className="truncate hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1 max-w-full"
                             title={pol.canonical_url}
                           >
                             <span className="truncate">{pol.canonical_url}</span>
@@ -650,44 +650,44 @@ export default function Home() {
                     </div>
 
                     {/* Bottom: Score pill + Date + Action Button */}
-                    <div className="pt-3 mt-3 border-t border-zinc-800/80 space-y-2.5">
+                    <div className="pt-3 mt-3 border-t border-[#d5cbba]/60 dark:border-zinc-800/80 space-y-2.5">
                       <div className="flex items-center justify-between gap-1">
                         {score !== null && score !== undefined ? (
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
                               level === "high"
-                                ? "bg-rose-950/50 border border-rose-800/80 text-rose-300"
+                                ? "bg-rose-500/10 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800/80 text-rose-800 dark:text-rose-300"
                                 : level === "elevated"
-                                  ? "bg-amber-950/50 border border-amber-800/80 text-amber-300"
+                                  ? "bg-amber-500/10 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800/80 text-amber-800 dark:text-amber-300"
                                   : level === "moderate"
-                                    ? "bg-yellow-950/40 border border-yellow-800/70 text-yellow-300"
-                                    : "bg-emerald-950/40 border border-emerald-800/70 text-emerald-300"
+                                    ? "bg-yellow-500/10 dark:bg-yellow-950/40 border border-yellow-300 dark:border-yellow-800/70 text-yellow-800 dark:text-yellow-300"
+                                    : "bg-emerald-500/10 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/70 text-emerald-800 dark:text-emerald-300"
                             }`}
                           >
                             <span>{score}</span>
-                            <span className="text-zinc-500 font-normal">/100</span>
+                            <span className="text-[#78716c] dark:text-zinc-500 font-normal">/100</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800">
                             <span>{isFb ? "Fallback" : "Pending"}</span>
                           </span>
                         )}
 
                         <span
-                          className="text-[11px] font-mono text-zinc-500 flex items-center gap-1"
+                          className="text-[11px] font-mono text-[#78716c] dark:text-zinc-500 flex items-center gap-1"
                           title={formattedDate}
                         >
-                          <Clock className="w-3 h-3 text-zinc-600 shrink-0" />
+                          <Clock className="w-3 h-3 text-[#78716c] dark:text-zinc-600 shrink-0" />
                           <span>{shortDate}</span>
                         </span>
                       </div>
 
                       <Link
                         to={`/policies/${pol.id}`}
-                        className="w-full py-2 px-3 rounded-lg bg-zinc-900 hover:bg-zinc-850 active:bg-zinc-800 border border-zinc-800 text-zinc-200 text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all"
+                        className="w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-200 text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
                       >
                         <span>Inspect</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
+                        <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-400" />
                       </Link>
                     </div>
                   </div>
@@ -698,26 +698,26 @@ export default function Home() {
             {/* Pagination Controls - Centered cleanly without an outside box */}
             {filteredPolicies.length > 0 && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 pt-3 pb-1 text-xs font-mono">
-                <div className="text-zinc-500 text-center sm:text-left">
+                <div className="text-[#5c5549] dark:text-zinc-500 text-center sm:text-left">
                   <span>
                     Showing{" "}
                     {startIndex + 1 === endIndex ? (
-                      <span className="text-zinc-300 font-semibold">{endIndex}</span>
+                      <span className="text-[#1c1917] dark:text-zinc-300 font-semibold">{endIndex}</span>
                     ) : (
                       <>
-                        <span className="text-zinc-300 font-semibold">{startIndex + 1}</span>
+                        <span className="text-[#1c1917] dark:text-zinc-300 font-semibold">{startIndex + 1}</span>
                         &ndash;
-                        <span className="text-zinc-300 font-semibold">{endIndex}</span>
+                        <span className="text-[#1c1917] dark:text-zinc-300 font-semibold">{endIndex}</span>
                       </>
                     )}{" "}
                     of{" "}
-                    <span className="text-zinc-300 font-semibold">
+                    <span className="text-[#1c1917] dark:text-zinc-300 font-semibold">
                       {filteredPolicies.length}
                     </span>{" "}
                     {filteredPolicies.length === 1 ? "policy" : "policies"}
                   </span>
                   {searchQuery && (
-                    <span className="text-zinc-500 text-[11px] block sm:inline sm:ml-1.5">
+                    <span className="text-[#78716c] dark:text-zinc-500 text-[11px] block sm:inline sm:ml-1.5">
                       (filtered from {policies.length} total)
                     </span>
                   )}
@@ -728,7 +728,7 @@ export default function Home() {
                     type="button"
                     onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
                     disabled={safeCurrentPage <= 1}
-                    className="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-850 active:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Previous page"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -743,8 +743,8 @@ export default function Home() {
                         onClick={() => handlePageChange(page)}
                         className={`min-w-[30px] h-[28px] rounded-md text-xs font-mono transition-colors cursor-pointer active:scale-95 flex items-center justify-center ${
                           page === safeCurrentPage
-                            ? "bg-zinc-100 text-zinc-950 font-bold shadow-xs"
-                            : "bg-zinc-900 hover:bg-zinc-850 text-zinc-400 hover:text-zinc-200 border border-zinc-800"
+                            ? "bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs border border-[#1c1917] dark:border-transparent"
+                            : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 shadow-2xs"
                         }`}
                         aria-label={`Page ${page}`}
                         aria-current={
@@ -762,7 +762,7 @@ export default function Home() {
                       handlePageChange(Math.min(totalPages, safeCurrentPage + 1))
                     }
                     disabled={safeCurrentPage >= totalPages}
-                    className="px-2.5 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-850 active:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Next page"
                   >
                     <span>Next</span>

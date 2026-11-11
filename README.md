@@ -198,6 +198,21 @@ Instant policy discovery without third-party search APIs or quota caps:
 - **Prompt Isolation**: Legal document text is enclosed inside `<UNTRUSTED_DOCUMENT_CONTENT>` boundary tags to prevent indirect prompt injection.
 - **Security Headers**: Injects HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and 10 MB payload caps.
 
+### Adaptive Theming & Interaction Ergonomics
+
+- **Dark, Light & System Themes**: Built-in theme engine supporting Light, Dark, and System modes. Automatically adopts the operating system's active color scheme (`prefers-color-scheme`) on initial visit, with persistent user preference saved to `localStorage`.
+- **Eye-Comfort Warm Beige Light Palette**: The light theme avoids stark white backgrounds in favor of an ergonomic warm beige palette (`#ece5d8` page background, `#f5eedf` surface panels, `#faf5ec` elevated input fields, `#d5cbba` borders, and `#1c1917` deep charcoal text) that minimizes eye strain during extended legal audits.
+- **Radial Outward Curve View Transition**: Smooth theme switching powered by the CSS View Transitions API (`::view-transition-new(root)`), projecting an expanding circular mask anchored to the theme toggle button. Uses device-calibrated bezier curves (`cubic-bezier(0.4, 0, 0.2, 1)` on mobile; `cubic-bezier(0.5, 0, 1, 1)` on desktop) and `flushSync` DOM batching for smooth, artifact-free transitions.
+- **Mobile Navbar Auto-Close & Ghost-Click Elimination**:
+  - Interacting with or selecting options from the mobile theme toggle automatically closes the navigation drawer.
+  - The mobile drawer's blurred backdrop consumes `onTouchEnd` and `onClick` with `preventDefault()` and `stopPropagation()`, safely dismissing the drawer without click-through / ghost-click execution on underlying inputs, sample buttons, or policy rows.
+  - Automatically locks background page scrolling (`overflow: hidden`) while the mobile drawer is open.
+- **Company Discovery Modal Ergonomics**:
+  - Full-screen blurred backdrop dismissal across PC and mobile with drag-out protection (`isBackdropMouseDown` / `isBackdropTouchStart`) preventing accidental closure during text selection.
+  - Click propagation isolation on the modal dialog (`stopPropagation`) ensures search inputs, candidate selections, and pagination controls never dismiss the modal inadvertently.
+  - Native `Escape` key dismissal and body scroll locking.
+- **Inline Field Reset Controls**: URL and text input fields include embedded, rectangular "clear" buttons inside the inputs for instantaneous field clearing.
+
 ---
 
 ## 🛠️ Technology Stack
@@ -205,7 +220,7 @@ Instant policy discovery without third-party search APIs or quota caps:
 | Component              | Technology                                                                | Description                                                                 |
 | ---------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | **Frontend Framework** | React 19 + Vite 8                                                         | Ultra-fast client-side SPA with React Router & automatic scroll restoration |
-| **Styling & Icons**    | Vanilla CSS + Tailwind CSS v4, Lucide React                               | Sleek dark-mode aesthetic with custom themed scrollbars & responsive grid   |
+| **Styling & Theming**  | Vanilla CSS + Tailwind CSS v4, Lucide React, View Transitions API         | Adaptive Dark/Light/System theme with warm beige palette, radial view transitions & custom scrollbars |
 | **Backend API**        | FastAPI (Python 3.12+)                                                    | Asynchronous REST endpoints with Pydantic validation                        |
 | **AI Inference**       | Cloudflare Workers AI REST API, Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) | Single-pass structured reasoning and clause extraction                      |
 | **Content Extraction** | Trafilatura, BeautifulSoup4, Node.js VM & Hydration Parser | 4-tier legal document extraction with SPA hydration & sandboxed evaluation  |
