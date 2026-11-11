@@ -25,7 +25,7 @@ function formatInline(text) {
           href={match[3]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-200 underline underline-offset-4 decoration-zinc-600 hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
+          className="text-[#1c1917] dark:text-zinc-200 underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
         >
           {match[2]}
         </a>
@@ -38,7 +38,7 @@ function formatInline(text) {
           href={match[4]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-zinc-200 underline underline-offset-4 decoration-zinc-600 hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
+          className="text-[#1c1917] dark:text-zinc-200 underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
         >
           {match[4]}
         </a>
@@ -48,7 +48,7 @@ function formatInline(text) {
       parts.push(
         <code
           key={match.index}
-          className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 font-mono text-xs break-all"
+          className="px-1.5 py-0.5 rounded bg-[#ece5d8] border border-[#d5cbba] text-[#1c1917] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 font-mono text-xs break-all"
         >
           {match[5]}
         </code>
@@ -56,7 +56,7 @@ function formatInline(text) {
     } else if (match[6]) {
       // Bold: **bold**
       parts.push(
-        <strong key={match.index} className="font-semibold text-zinc-100">
+        <strong key={match.index} className="font-semibold text-[#1c1917] dark:text-zinc-100">
           {match[6]}
         </strong>
       );
@@ -140,12 +140,12 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
   return (
     <article
       id={id}
-      className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-4 sm:p-8 space-y-8 text-sm text-zinc-300 leading-relaxed font-sans break-words [overflow-wrap:anywhere] max-w-full overflow-hidden"
+      className="rounded-lg border border-[#d5cbba] bg-[#f5eedf] dark:border-zinc-800 dark:bg-zinc-950/40 p-4 sm:p-8 space-y-8 text-sm text-[#292524] dark:text-zinc-300 leading-relaxed font-sans break-words [overflow-wrap:anywhere] max-w-full overflow-hidden"
     >
       {sections.map((section, sIdx) => (
         <section key={sIdx} className="space-y-3 min-w-0">
           {section.heading && (
-            <h2 className="text-base font-semibold text-zinc-100 break-words">
+            <h2 className="text-base font-semibold text-[#1c1917] dark:text-zinc-100 break-words">
               {section.heading}
             </h2>
           )}
@@ -155,7 +155,7 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
               return (
                 <div
                   key={bIdx}
-                  className="p-4 rounded-lg bg-zinc-900/60 border border-zinc-800 text-xs font-mono text-zinc-300 leading-relaxed space-y-1 break-words [overflow-wrap:anywhere]"
+                  className="p-4 rounded-lg bg-[#faf5ec] border border-[#d5cbba] dark:bg-zinc-900/60 dark:border-zinc-800 text-xs font-mono text-[#292524] dark:text-zinc-300 leading-relaxed space-y-1 break-words [overflow-wrap:anywhere]"
                 >
                   {block.text.split('\n').map((line, lIdx) => (
                     <div key={lIdx} className="break-words [overflow-wrap:anywhere]">
@@ -168,7 +168,7 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
 
             if (block.type === 'ol') {
               return (
-                <ol key={bIdx} className="list-decimal pl-5 space-y-2 text-zinc-400 break-words [overflow-wrap:anywhere]">
+                <ol key={bIdx} className="list-decimal pl-5 space-y-2 text-[#5c5549] dark:text-zinc-400 break-words [overflow-wrap:anywhere]">
                   {block.items.map((item, iIdx) => (
                     <li key={iIdx} className="break-words [overflow-wrap:anywhere]">
                       {formatInline(item)}
@@ -180,7 +180,7 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
 
             if (block.type === 'ul') {
               return (
-                <ul key={bIdx} className="list-disc pl-5 space-y-2 text-zinc-400 break-words [overflow-wrap:anywhere]">
+                <ul key={bIdx} className="list-disc pl-5 space-y-2 text-[#5c5549] dark:text-zinc-400 break-words [overflow-wrap:anywhere]">
                   {block.items.map((item, iIdx) => (
                     <li key={iIdx} className="break-words [overflow-wrap:anywhere]">
                       {formatInline(item)}
@@ -191,7 +191,7 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
             }
 
             return (
-              <p key={bIdx} className="text-zinc-300 leading-relaxed break-words [overflow-wrap:anywhere]">
+              <p key={bIdx} className="text-[#292524] dark:text-zinc-300 leading-relaxed break-words [overflow-wrap:anywhere]">
                 {formatInline(block.text)}
               </p>
             );

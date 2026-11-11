@@ -15,7 +15,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ScrollToTop />
-      <div className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden flex flex-col bg-[#09090b] text-zinc-100 selection:bg-zinc-800 selection:text-white">
+      <div className="min-h-screen min-h-[100dvh] w-full overflow-x-hidden flex flex-col bg-[#ece5d8] dark:bg-[#09090b] text-[#1c1917] dark:text-zinc-100 selection:bg-[#ded6c6] dark:selection:bg-zinc-800 selection:text-[#1c1917] dark:selection:text-white">
         <Header />
 
         <main className="flex-1 w-full">

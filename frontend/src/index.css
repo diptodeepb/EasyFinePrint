@@ -1,12 +1,33 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
+    /* Light Theme (CSI-UEMK inspired warm beige) */
+    --bg-base: #ece5d8;
+    --bg-surface: #f5eedf;
+    --bg-surface-elevated: #faf5ec;
+    --border-subtle: #d5cbba;
+    --border-muted: #ded6c6;
+    --border-strong: #bfb4a0;
+    --text-high: #1c1917;
+    --text-medium: #5c5549;
+    --text-low: #78716c;
+    --color-green: #059669;
+    --color-red: #e11d48;
+    --color-amber: #d97706;
+    --color-blue: #2563eb;
+  }
+
+  .dark {
+    /* Dark Theme */
     --bg-base: #09090b;
     --bg-surface: #121215;
     --bg-surface-elevated: #18181b;
     --border-subtle: #27272a;
     --border-muted: #3f3f46;
+    --border-strong: #52525b;
     --text-high: #fafafa;
     --text-medium: #a1a1aa;
     --text-low: #71717a;
@@ -59,10 +80,39 @@
   }
 }
 
+/* View Transitions for Dark Mode Toggle (Corner/Radial Animation) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+  will-change: clip-path;
+  transform: translateZ(0);
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Mobile GPU optimization: eliminate expensive backdrop-filter and competing CSS transitions during active view transition */
+@media (max-width: 768px) {
+  html.is-theme-transitioning *,
+  html.is-theme-transitioning *::before,
+  html.is-theme-transitioning *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    transition: none !important;
+  }
+}
+
 /* Minimalist panel utility */
 .panel {
-  background-color: #121215;
-  border: 1px solid #27272a;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-high);
 }
 
 .panel-hover {
@@ -70,13 +120,13 @@
 }
 
 .panel-hover:hover {
-  border-color: #3f3f46;
-  background-color: #151519;
+  border-color: var(--border-strong);
+  background-color: var(--bg-surface-elevated);
 }
 
 /* Touch active state for mobile feedback */
 .panel-hover:active {
-  background-color: #16161b;
+  background-color: var(--bg-surface-elevated);
 }
 
 /* Custom Themed Scrollbar for PC and Mobile */
@@ -85,7 +135,7 @@ body,
 #root,
 * {
   scrollbar-width: thin;
-  scrollbar-color: #27272a #09090b;
+  scrollbar-color: var(--border-subtle) var(--bg-base);
 }
 
 /* WebKit & Blink Browsers (Chrome, Safari, Edge, Opera, iOS/Android WebKit) */
@@ -97,29 +147,29 @@ body,
 
 ::-webkit-scrollbar-track,
 *::-webkit-scrollbar-track {
-  background: #09090b;
+  background: var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: var(--border-subtle);
   border-radius: 9999px;
-  border: 1px solid #09090b;
+  border: 1px solid var(--bg-base);
 }
 
 ::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: var(--border-strong);
 }
 
 ::-webkit-scrollbar-thumb:active,
 *::-webkit-scrollbar-thumb:active {
-  background: #52525b;
+  background: var(--text-low);
 }
 
 ::-webkit-scrollbar-corner,
 *::-webkit-scrollbar-corner {
-  background: #09090b;
+  background: var(--bg-base);
 }
 
 /* Hide scrollbar for smooth mobile horizontal swipe tabs when explicitly needed */
@@ -131,4 +181,3 @@ body,
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
-
