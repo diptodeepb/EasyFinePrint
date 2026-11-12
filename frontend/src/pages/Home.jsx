@@ -11,6 +11,7 @@ import {
   Database,
   Clock,
   X,
+  ShieldCheck,
 } from "lucide-react";
 import { api } from "../lib/api";
 import { formatLocalDate } from "../lib/dateUtils";
@@ -503,7 +504,7 @@ export default function Home() {
                             {pol.canonical_url?.startsWith("/") ? (
                               <Link
                                 to={pol.canonical_url}
-                                className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
+                                className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
                                 title={pol.canonical_url}
                               >
                                 <span className="truncate">
@@ -515,13 +516,13 @@ export default function Home() {
                                 href={pol.canonical_url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
+                                className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate group"
                                 title={pol.canonical_url}
                               >
                                 <span className="truncate">
                                   {pol.canonical_url}
                                 </span>
-                                <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60" />
+                                <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
                               </a>
                             )}
                           </td>
@@ -629,7 +630,7 @@ export default function Home() {
                         {pol.canonical_url?.startsWith("/") ? (
                           <Link
                             to={pol.canonical_url}
-                            className="truncate hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors block"
+                            className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors block"
                             title={pol.canonical_url}
                           >
                             {pol.canonical_url}
@@ -639,11 +640,11 @@ export default function Home() {
                             href={pol.canonical_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="truncate hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors inline-flex items-center gap-1 max-w-full"
+                            className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
                             title={pol.canonical_url}
                           >
                             <span className="truncate">{pol.canonical_url}</span>
-                            <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60" />
+                            <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
                           </a>
                         )}
                       </div>
@@ -684,7 +685,7 @@ export default function Home() {
 
                       <Link
                         to={`/policies/${pol.id}`}
-                        className="w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-200 text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
+                        className="w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-200 text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
                       >
                         <span>Inspect</span>
                         <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-400" />
@@ -728,7 +729,7 @@ export default function Home() {
                     type="button"
                     onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
                     disabled={safeCurrentPage <= 1}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Previous page"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -744,7 +745,7 @@ export default function Home() {
                         className={`min-w-[30px] h-[28px] rounded-md text-xs font-mono transition-colors cursor-pointer active:scale-95 flex items-center justify-center ${
                           page === safeCurrentPage
                             ? "bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs border border-[#1c1917] dark:border-transparent"
-                            : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 shadow-2xs"
+                            : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 shadow-2xs"
                         }`}
                         aria-label={`Page ${page}`}
                         aria-current={
@@ -762,7 +763,7 @@ export default function Home() {
                       handlePageChange(Math.min(totalPages, safeCurrentPage + 1))
                     }
                     disabled={safeCurrentPage >= totalPages}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Next page"
                   >
                     <span>Next</span>
@@ -773,6 +774,26 @@ export default function Home() {
             )}
           </>
         )}
+      </section>
+
+      {/* Legal Disclaimer Box */}
+      <section
+        aria-label="Legal Disclaimer & Transparency Notice"
+        className="p-3.5 sm:p-4 rounded-xl bg-[#f5eedf]/90 dark:bg-zinc-950/80 border border-[#d5cbba] dark:border-zinc-800/80 text-[11px] text-[#5c5549] dark:text-zinc-400 leading-relaxed space-y-1.5 font-mono shadow-xs"
+      >
+        <div className="flex items-center gap-2 text-[#1c1917] dark:text-zinc-300 font-semibold uppercase tracking-wider text-[10px]">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#5c5549] dark:text-zinc-400 shrink-0" />
+          <span>Legal Disclaimer &amp; Transparency Notice</span>
+        </div>
+        <p>
+          EasyFinePrint is an automated legal agreement monitoring tool and
+          does not constitute formal legal counsel, statutory certification,
+          or attorney representation. Risk scores, clause severity
+          classifications, and baseline assessments are computed via
+          deterministic sequence diffing and semantic evaluation grounded
+          strictly in verbatim public source text. Users should consult
+          licensed legal counsel for binding contractual matters.
+        </p>
       </section>
 
       {/* Discovery Modal */}

@@ -3,9 +3,9 @@ import { flushSync } from "react-dom";
 import { Sun, Moon, Monitor, ChevronDown, Check } from "lucide-react";
 
 const THEME_OPTIONS = [
-  { id: "light", label: "Light", icon: Sun, iconColor: "text-amber-500" },
-  { id: "dark", label: "Dark", icon: Moon, iconColor: "text-indigo-400 dark:text-zinc-200" },
-  { id: "system", label: "System", icon: Monitor, iconColor: "text-[#5c5549] dark:text-zinc-400" },
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "system", label: "System", icon: Monitor },
 ];
 
 export default function ThemeToggle({
@@ -184,12 +184,6 @@ export default function ThemeToggle({
   // Determine active icon on the trigger button
   const ActiveIcon =
     theme === "light" ? Sun : theme === "dark" ? Moon : Monitor;
-  const activeIconColor =
-    theme === "light"
-      ? "text-amber-500"
-      : theme === "dark"
-      ? "text-indigo-400 dark:text-zinc-200"
-      : "text-[#5c5549] dark:text-zinc-300";
 
   return (
     <div ref={containerRef} className="relative inline-block text-left">
@@ -211,7 +205,7 @@ export default function ThemeToggle({
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
-        <ActiveIcon className={`w-4 h-4 shrink-0 ${activeIconColor}`} />
+        <ActiveIcon className="w-4 h-4 shrink-0 text-[#5c5549] dark:text-zinc-300" />
         <ChevronDown
           className={`w-3.5 h-3.5 text-[#78716c] dark:text-zinc-400 shrink-0 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -241,7 +235,13 @@ export default function ThemeToggle({
                     : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/60 dark:hover:bg-zinc-900"
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 shrink-0 ${opt.iconColor}`} />
+                <Icon
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    isSelected
+                      ? "text-[#1c1917] dark:text-zinc-100"
+                      : "text-[#78716c] dark:text-zinc-400"
+                  }`}
+                />
                 <span className="capitalize">{opt.label}</span>
                 {isSelected && (
                   <Check className="w-3.5 h-3.5 ml-auto text-emerald-600 dark:text-emerald-400 shrink-0" />

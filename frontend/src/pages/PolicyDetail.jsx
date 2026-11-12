@@ -285,7 +285,7 @@ export default function PolicyDetail() {
             {policy.canonical_url?.startsWith('/') ? (
               <Link
                 to={policy.canonical_url}
-                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1 max-w-full"
+                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full"
               >
                 <span className="truncate break-all">{policy.canonical_url}</span>
               </Link>
@@ -294,10 +294,10 @@ export default function PolicyDetail() {
                 href={policy.canonical_url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors inline-flex items-center gap-1 max-w-full"
+                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
               >
                 <span className="truncate break-all">{policy.canonical_url}</span>
-                <ExternalLink className="w-3 h-3 shrink-0 opacity-70" />
+                <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
               </a>
             )}
           </div>
