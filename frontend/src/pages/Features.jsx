@@ -26,7 +26,7 @@ export default function Features() {
         aria-label="Breadcrumb"
         className="flex items-center gap-2 text-xs font-mono text-[#78716c] dark:text-zinc-500"
       >
-        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors">
+        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-white transition-colors">
           Dashboard
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-[#bfb4a0] dark:text-zinc-700" />
@@ -196,7 +196,7 @@ export default function Features() {
           <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
-                <Globe className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
+                <Globe className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-100">
@@ -217,7 +217,7 @@ export default function Features() {
           <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
-                <Archive className="w-4 h-4 text-sky-700 dark:text-sky-400" />
+                <Archive className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-100">
@@ -238,7 +238,7 @@ export default function Features() {
           <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
-                <FileText className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                <FileText className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-100">
@@ -259,7 +259,7 @@ export default function Features() {
           <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
-                <Database className="w-4 h-4 text-purple-700 dark:text-purple-400" />
+                <Database className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-100">

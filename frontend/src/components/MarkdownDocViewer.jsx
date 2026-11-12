@@ -25,7 +25,7 @@ function formatInline(text) {
           href={match[3]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#1c1917] dark:text-zinc-200 underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
+          className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
         >
           {match[2]}
         </a>
@@ -38,7 +38,7 @@ function formatInline(text) {
           href={match[4]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#1c1917] dark:text-zinc-200 underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-zinc-300 transition-colors break-all [overflow-wrap:anywhere]"
+          className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
         >
           {match[4]}
         </a>

@@ -43,7 +43,7 @@ export default function PrivacyPolicy() {
         aria-label="Breadcrumb"
         className="flex items-center gap-2 text-xs font-mono text-[#78716c] dark:text-zinc-500"
       >
-        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-zinc-300 transition-colors">
+        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-white transition-colors">
           Dashboard
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-700" />
@@ -63,10 +63,10 @@ export default function PrivacyPolicy() {
               href="https://github.com/diptodeepb/EasyFinePrint/blob/main/LICENSE"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#1c1917] dark:text-zinc-300 hover:text-black dark:hover:text-white underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+              className="text-[#1c1917] dark:text-zinc-300 hover:text-black dark:hover:text-white underline underline-offset-2 transition-colors inline-flex items-center gap-1 group"
             >
               <span>Apache License 2.0</span>
-              <ExternalLink className="w-3 h-3 text-[#78716c] dark:text-zinc-500" />
+              <ExternalLink className="w-3 h-3 text-[#78716c] dark:text-zinc-500 group-hover:text-black dark:group-hover:text-white transition-colors" />
             </a>
           </p>
         </div>
@@ -78,16 +78,16 @@ export default function PrivacyPolicy() {
               type="button"
               onClick={handleRunAnalysis}
               disabled={analyzing}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c1917] hover:bg-[#292524] active:bg-[#0c0a09] text-[#faf5ec] dark:bg-zinc-900 dark:hover:bg-zinc-850 dark:active:bg-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100 border border-transparent dark:border-zinc-800 dark:hover:border-zinc-700 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-md bg-[#1c1917] hover:bg-[#292524] active:bg-[#0c0a09] text-[#faf5ec] dark:bg-white dark:hover:bg-zinc-100 dark:active:bg-zinc-200 dark:text-black dark:border-white font-medium border border-[#1c1917] text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-50 shadow-xs"
             >
               {analyzing ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#faf5ec] dark:text-zinc-400" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-current" />
                   <span>Analyzing document...</span>
                 </>
               ) : (
                 <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#faf5ec] dark:text-zinc-400" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-current" />
                   <span>Analyze with EasyFinePrint</span>
                 </>
               )}
@@ -96,11 +96,11 @@ export default function PrivacyPolicy() {
             <button
               type="button"
               onClick={copyPrivacy}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#ece5d8] active:bg-[#ded6c6] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900/60 dark:hover:bg-zinc-850 dark:text-zinc-300 dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] text-[#1c1917] border border-[#d5cbba] hover:border-[#bfb4a0] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-700 text-xs font-mono transition-colors cursor-pointer active:scale-95"
             >
               {copied ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-zinc-300" />
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                   <span>Copied</span>
                 </>
               ) : (
@@ -116,10 +116,10 @@ export default function PrivacyPolicy() {
             href="https://github.com/diptodeepb/EasyFinePrint/blob/main/docs/PRIVACY_POLICY.md"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors group"
           >
             <span>View markdown source</span>
-            <ExternalLink className="w-3 h-3 text-[#78716c] dark:text-zinc-500" />
+            <ExternalLink className="w-3 h-3 text-[#78716c] dark:text-zinc-500 group-hover:text-[#1c1917] dark:group-hover:text-white transition-colors" />
           </a>
         </div>
 
@@ -150,10 +150,10 @@ export default function PrivacyPolicy() {
 
       {/* Footer Navigation */}
       <div className="flex items-center justify-between pt-4 border-t border-[#d5cbba] dark:border-zinc-800 text-xs font-mono text-[#5c5549] dark:text-zinc-400">
-        <Link to="/terms" className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors">
+        <Link to="/terms" className="hover:text-[#1c1917] dark:hover:text-white transition-colors">
           &larr; View Terms of Use
         </Link>
-        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-zinc-200 transition-colors">
+        <Link to="/" className="hover:text-[#1c1917] dark:hover:text-white transition-colors">
           Return to Dashboard &rarr;
         </Link>
       </div>

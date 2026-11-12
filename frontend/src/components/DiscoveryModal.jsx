@@ -307,10 +307,10 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 transition-colors truncate flex items-center gap-1.5 w-fit max-w-full hover:underline underline-offset-2 cursor-pointer group/url"
+                    className="text-[11px] font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors truncate flex items-center gap-1.5 w-fit max-w-full hover:underline underline-offset-2 cursor-pointer group/url"
                     title={`Open ${cand.url} in new tab`}
                   >
-                    <ExternalLink className="w-3 h-3 shrink-0 text-[#78716c] group-hover/url:text-[#1c1917] dark:text-zinc-500 dark:group-hover/url:text-zinc-300 transition-colors" />
+                    <ExternalLink className="w-3 h-3 shrink-0 text-[#78716c] group-hover/url:text-[#1c1917] dark:text-zinc-500 dark:group-hover/url:text-white transition-colors" />
                     <span className="truncate">{cand.url}</span>
                   </a>
                 </div>

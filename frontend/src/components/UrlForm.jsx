@@ -493,7 +493,7 @@ export default function UrlForm({
                   type="button"
                   onClick={() => handleTestSelfPolicy("/terms")}
                   disabled={loading}
-                  className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 underline underline-offset-3 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400 transition-colors cursor-pointer disabled:opacity-50"
+                  className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white underline underline-offset-3 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#1c1917] dark:hover:decoration-white transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Terms of Use
                 </button>
@@ -502,7 +502,7 @@ export default function UrlForm({
                   type="button"
                   onClick={() => handleTestSelfPolicy("/privacy")}
                   disabled={loading}
-                  className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 underline underline-offset-3 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#5c5549] dark:hover:decoration-zinc-400 transition-colors cursor-pointer disabled:opacity-50"
+                  className="text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white underline underline-offset-3 decoration-[#bfb4a0] dark:decoration-zinc-700 hover:decoration-[#1c1917] dark:hover:decoration-white transition-colors cursor-pointer disabled:opacity-50"
                 >
                   Privacy Policy
                 </button>
