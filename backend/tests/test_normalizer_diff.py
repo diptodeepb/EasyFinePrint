@@ -62,3 +62,20 @@ def test_diff_clause_modified():
     assert change["change_type"] == "modification"
     assert "$500" in change["old_text"]
     assert "$10" in change["new_text"]
+
+
+def test_invisible_zero_width_chars_do_not_trigger_diff():
+    clean = (
+        "IMPORTANT NOTE: Disputes are governed by arbitration.\n\n"
+        "Arbitration Rules. Standard rules apply.\n\n"
+        "Opt-out. Email within 30 days."
+    )
+    with_zwj = (
+        "\u200dIMPORTANT NOTE: Disputes are governed by arbitration.\u200d\n\n"
+        "\u200dArbitration\u200b Rules\u00ad. Standard rules apply.\n\n"
+        "\ufeff\u2060Opt-out. Email within 30 days."
+    )
+    assert compute_content_hash(clean) == compute_content_hash(with_zwj)
+    diff = compute_policy_diff(clean, with_zwj)
+    assert diff["has_changes"] is False
+    assert diff["summary"]["total_changes"] == 0
