@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import re
 from typing import List, Tuple, Dict, Any, Optional
-from app.services.normalizer import normalize_policy_text
+from app.services.normalizer import normalize_policy_text, strip_invisible_format_chars
 from app.security.sanitizers import strip_control_chars
 
 logger = logging.getLogger("easyfineprint.validator")
@@ -35,7 +35,8 @@ def normalize_for_quote_search(text: str) -> str:
     """Standardize whitespace and punctuation for resilient quote matching."""
     if not text:
         return ""
-    # Standardize whitespace to single space and lowercase for search
+    # Strip invisible zero-width/format characters and standardize whitespace/quotes for search
+    text = strip_invisible_format_chars(text)
     text = re.sub(r"\s+", " ", text).strip().lower()
     # Normalize fancy quotes and apostrophes
     text = text.replace("“", '"').replace("”", '"').replace("’", "'").replace("‘", "'")

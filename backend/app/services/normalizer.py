@@ -5,6 +5,16 @@ import re
 import unicodedata
 
 
+_RE_INVISIBLE_FORMAT = re.compile(r"[\u00ad\u200b-\u200f\u2060\ufeff]")
+
+
+def strip_invisible_format_chars(text: str) -> str:
+    """Remove invisible zero-width, directional mark, BOM, and soft-hyphen characters."""
+    if not text:
+        return ""
+    return _RE_INVISIBLE_FORMAT.sub("", text)
+
+
 def normalize_policy_text(text: str) -> str:
     """
     Standardize text formatting while strictly preserving legal semantics, numbers,
@@ -12,16 +22,20 @@ def normalize_policy_text(text: str) -> str:
 
     Rules:
     1. Unicode NFKC normalization.
-    2. Convert all line endings to \\n.
-    3. Collapse multiple spaces and horizontal tabs within each line.
-    4. Strip whitespace from line ends.
-    5. Standardize paragraph breaks: collapse 3+ consecutive newlines to 2.
+    2. Strip invisible zero-width and soft-hyphen format characters.
+    3. Convert all line endings to \\n.
+    4. Collapse multiple spaces and horizontal tabs within each line.
+    5. Strip whitespace from line ends.
+    6. Standardize paragraph breaks: collapse 3+ consecutive newlines to 2.
     """
     if not text:
         return ""
 
-    # 1. Unicode NFKC normalization (standardizes characters, ligature accents, quotes)
+    # 1. Unicode NFKC normalization (standardizes characters, ligature accents, compatibility spaces)
     normalized = unicodedata.normalize("NFKC", text)
+
+    # 2. Strip invisible format characters (e.g., &zwj; U+200D, ZWSP U+200B, BOM U+FEFF)
+    normalized = strip_invisible_format_chars(normalized)
 
     # 2. Standardize carriage returns
     normalized = normalized.replace("\r\n", "\n").replace("\r", "\n")

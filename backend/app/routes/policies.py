@@ -101,6 +101,20 @@ def _format_analysis_response(analysis_doc: dict) -> AnalysisResponse:
     )
 
 
+def _snapshot_matches_normalized(
+    snapshot: Optional[Dict[str, Any]],
+    normalized_text: str,
+    content_hash: str,
+) -> bool:
+    """Compare a stored snapshot against normalized text, re-normalizing legacy text if needed."""
+    if not snapshot:
+        return False
+    stored_text = snapshot.get("extracted_text") or ""
+    if snapshot.get("content_hash") == content_hash or stored_text == normalized_text:
+        return True
+    return bool(stored_text) and normalize_policy_text(stored_text) == normalized_text
+
+
 async def _process_policy_ingestion(
     raw_url: str,
     canonical_url: str,
@@ -126,16 +140,13 @@ async def _process_policy_ingestion(
     if policy:
         latest_snap = await repo.get_latest_snapshot_for_policy(policy["id"])
 
-    # 3. Check for exact character-for-character match in DB
-    is_exact_match = False
-    if latest_snap and latest_snap.get("extracted_text"):
-        if latest_snap["extracted_text"] == normalized_text or latest_snap.get("content_hash") == content_hash:
-            is_exact_match = True
+    # 3. Check for exact character-for-character match in DB (re-normalizing legacy snapshots if needed)
+    is_exact_match = _snapshot_matches_normalized(latest_snap, normalized_text, content_hash)
 
     # If policy wasn't resolved by URL, check if ANY snapshot in DB matches exact text & hash
     if not is_exact_match and not policy:
         existing_snap = await repo.get_snapshot_by_hash(content_hash)
-        if existing_snap and (existing_snap.get("extracted_text") == normalized_text or existing_snap.get("content_hash") == content_hash):
+        if _snapshot_matches_normalized(existing_snap, normalized_text, content_hash):
             matched_policy = await repo.get_policy_by_id(existing_snap["policy_id"])
             if matched_policy:
                 policy = matched_policy
@@ -724,8 +735,8 @@ async def check_policy_for_updates(
     normalized_text = normalize_policy_text(extracted_text)
     content_hash = compute_content_hash(normalized_text)
 
-    # Hash and character-for-character comparison
-    if content_hash == latest_snap["content_hash"] or normalized_text == latest_snap.get("extracted_text"):
+    # Hash and character-for-character comparison (including legacy un-stripped snapshots)
+    if _snapshot_matches_normalized(latest_snap, normalized_text, content_hash):
         await repo.record_check_event(
             policy_id=policy_id,
             status="unchanged",
@@ -878,10 +889,7 @@ async def reanalyze_policy(
         extracted_text = self_doc["text"]
         live_norm = normalize_policy_text(extracted_text)
         live_hash = compute_content_hash(live_norm)
-        is_live_identical = (
-            live_hash == snapshot.get("content_hash")
-            or live_norm == snapshot.get("extracted_text")
-        )
+        is_live_identical = _snapshot_matches_normalized(snapshot, live_norm, live_hash)
         if not is_live_identical:
             active_text = live_norm
     else:
@@ -890,10 +898,7 @@ async def reanalyze_policy(
             title, extracted_text, warnings = extract_policy_content(html)
             live_norm = normalize_policy_text(extracted_text)
             live_hash = compute_content_hash(live_norm)
-            is_live_identical = (
-                live_hash == snapshot.get("content_hash")
-                or live_norm == snapshot.get("extracted_text")
-            )
+            is_live_identical = _snapshot_matches_normalized(snapshot, live_norm, live_hash)
             if not is_live_identical:
                 active_text = live_norm
         except Exception as exc:

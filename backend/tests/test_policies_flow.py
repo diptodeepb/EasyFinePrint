@@ -382,5 +382,71 @@ async def test_list_policies_with_details_mongo_aggregation_pipeline():
         assert "$lookup" in stages
 
 
+@pytest.mark.asyncio
+async def test_legacy_snapshot_with_zwj_reports_unchanged_on_check():
+    """Legacy DB snapshots containing U+200D ZWJ characters should not trigger false diffs on check or re-ingest."""
+    import uuid
+    from app.routes import policies as policies_mod
+    from app.db.repositories import repo
+    from app.main import app
+
+    slug = uuid.uuid4().hex[:8]
+    url = f"https://discord-test-{slug}.example/terms"
+    legacy_text = (
+        "\u200dIMPORTANT NOTE: Disputes are governed by arbitration.\u200d\n"
+        "\u200dArbitration Rules. Standard rules apply.\n"
+        "\u200dOpt-out. Email within 30 days."
+    )
+    clean_html = (
+        "<html><head><title>Discord Terms</title></head><body><main>"
+        "<p>IMPORTANT NOTE: Disputes are governed by arbitration.</p>"
+        "<p>Arbitration Rules. Standard rules apply.</p>"
+        "<p>Opt-out. Email within 30 days.</p>"
+        "</main></body></html>"
+    )
+
+    pol = await repo.create_policy(url=url, canonical_url=url, title="Discord Terms")
+    # Simulate a snapshot saved prior to ZWJ stripping (legacy hash + raw text with U+200D)
+    snap = await repo.create_snapshot(
+        policy_id=pol["id"],
+        content_hash="legacy_hash_with_zwj_" + slug,
+        extracted_text=legacy_text,
+        extractor="http",
+        extraction_status="success",
+        source_status_code=200,
+        title="Discord Terms",
+        provenance="live",
+        warnings=[],
+    )
+    await repo.create_analysis(
+        policy_id=pol["id"],
+        analysis_type="initial",
+        new_snapshot_id=snap["id"],
+        summary="Baseline summary",
+        risk_score=40,
+        risk_level="moderate",
+        findings=[],
+        changes=[],
+        model_id="gemma",
+        validation_status="passed",
+        provenance="live",
+        warnings=[],
+    )
+    await repo.update_policy(pol["id"], {"latest_snapshot_id": snap["id"]})
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        with patch("app.routes.policies.safe_fetch_page", return_value=(clean_html, url, 200)), \
+             patch.object(policies_mod, "explain_policy_changes", side_effect=AssertionError("Should not run AI diff")) :
+            check_resp = await client.post(f"/api/policies/{pol['id']}/check")
+            assert check_resp.status_code == 200
+            assert check_resp.json()["status"] == "unchanged"
+
+            reingest_resp = await client.post("/api/policies/analyze", json={"url": url})
+            assert reingest_resp.status_code == 200
+            assert reingest_resp.json()["reanalysis_status"] == "skipped_unchanged"
+
+
+
 
 
