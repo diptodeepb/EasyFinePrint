@@ -1084,6 +1084,792 @@ KNOWN_DIRECTORY: Dict[str, List[Dict[str, str]]] = {
         {"title": "MakeMyTrip User Agreement", "url": "https://www.makemytrip.com/legal/user_agreement.html", "snippet": "Governs flight bookings, hotel reservations, holiday packages, cancellation charges, and refunds."},
         {"title": "MakeMyTrip Privacy Policy", "url": "https://www.makemytrip.com/legal/privacy_policy.html", "snippet": "Details traveler identity passport telemetry, booking preferences, and airline partner data sharing."},
     ],
+
+    # ---------------------------------------------------------
+    # 17. Expanded Gaming Studios, Publishers, Platforms & Engines
+    # ---------------------------------------------------------
+    "rockstargames": [
+        {"title": "Rockstar Games / Take-Two Terms of Service", "url": "https://www.take2games.com/legal/", "snippet": "Governs Grand Theft Auto (GTA), GTA Online, Red Dead Redemption, Rockstar Games, and Take-Two services."},
+        {"title": "Rockstar Games / Take-Two Privacy Policy", "url": "https://www.take2games.com/privacy/", "snippet": "Details Rockstar Games and Take-Two Interactive account telemetry, anti-cheat logs, and privacy rights."},
+    ],
+    "taketwo": [
+        {"title": "Take-Two Interactive Terms of Service", "url": "https://www.take2games.com/legal/", "snippet": "Parent publisher terms covering Rockstar Games, 2K, Zynga, virtual currencies, and user-generated content."},
+        {"title": "Take-Two Interactive Privacy Policy", "url": "https://www.take2games.com/privacy/", "snippet": "Details cross-title player telemetry, anti-cheat enforcement, and marketing disclosures."},
+    ],
+    "2kgames": [
+        {"title": "2K Games Terms of Service", "url": "https://www.take2games.com/legal/", "snippet": "Governs NBA 2K, Civilization, Borderlands, BioShock, and virtual currency (VC) purchases."},
+        {"title": "2K Games Privacy Policy", "url": "https://www.take2games.com/privacy/", "snippet": "Covers player matchmaking telemetry, MyPLAYER profiles, and Take-Two account data."},
+    ],
+    "activision": [
+        {"title": "Activision Terms of Use", "url": "https://www.activision.com/legal/terms-of-use", "snippet": "Governs Call of Duty, Warzone, RICOCHET anti-cheat, COD Points, and multiplayer conduct."},
+        {"title": "Activision Privacy Policy", "url": "https://www.activision.com/legal/privacy-policy", "snippet": "Details gameplay telemetry, voice chat moderation, anti-cheat kernel drivers, and platform linking."},
+    ],
+    "bethesda": [
+        {"title": "ZeniMax / Bethesda Terms of Service", "url": "https://www.zenimax.com/en/legal/terms-of-service", "snippet": "Governs Elder Scrolls, Fallout, Starfield, DOOM, Creation Club mods, and Bethesda.net accounts."},
+        {"title": "ZeniMax / Bethesda Privacy Policy", "url": "https://www.zenimax.com/en/legal/privacy-policy", "snippet": "Details game telemetry, mod marketplace purchases, and Microsoft gaming integration."},
+    ],
+    "cdprojektred": [
+        {"title": "CD PROJEKT RED User Agreement", "url": "https://regulations.cdprojektred.com/en/user_agreement", "snippet": "Governs Cyberpunk 2077, The Witcher series, GWENT, REDmod tools, and fan content guidelines."},
+        {"title": "CD PROJEKT RED Privacy Policy", "url": "https://regulations.cdprojektred.com/en/privacy_policy", "snippet": "Covers crash telemetry, cross-progression cloud saves, and account preferences."},
+    ],
+    "gog": [
+        {"title": "GOG User Agreement", "url": "https://support.gog.com/hc/en-us/articles/212632089-GOG-User-Agreement", "snippet": "Governs DRM-free PC game purchases, GOG Galaxy client, and 30-day refund policies."},
+        {"title": "GOG Privacy Policy", "url": "https://support.gog.com/hc/en-us/articles/212632109-Privacy-Policy", "snippet": "Details store transaction records, GOG Galaxy cross-platform telemetry, and account security."},
+    ],
+    "squareenix": [
+        {"title": "Square Enix Terms of Use", "url": "https://www.square-enix-games.com/en_US/documents/tnc", "snippet": "Governs Final Fantasy XIV, Dragon Quest, Kingdom Hearts, and Square Enix Members accounts."},
+        {"title": "Square Enix Privacy Notice", "url": "https://www.square-enix-games.com/en_US/documents/privacy", "snippet": "Covers MMO subscription records, telemetry, and regional service disclosures."},
+    ],
+    "capcom": [
+        {"title": "Capcom USA Terms of Use", "url": "https://www.capcomusa.com/terms/", "snippet": "Governs Resident Evil, Monster Hunter, Street Fighter, and Capcom online services."},
+        {"title": "Capcom Privacy Policy", "url": "https://www.capcomusa.com/privacy/", "snippet": "Details multiplayer matchmaking logs, telemetry, and global player account records."},
+    ],
+    "bandainamco": [
+        {"title": "Bandai Namco Terms of Service", "url": "https://www.bandainamcoent.com/legal/terms", "snippet": "Governs Elden Ring, Tekken, Dragon Ball games, and Bandai Namco ID online services."},
+        {"title": "Bandai Namco Privacy Policy", "url": "https://www.bandainamcoent.com/legal/privacy", "snippet": "Covers online multiplayer logs, store orders, and customer telemetry."},
+    ],
+    "sega": [
+        {"title": "SEGA Privacy Policy & Games Hub", "url": "https://privacy.sega.com/en/our-games", "snippet": "Covers Sonic, Yakuza / Like a Dragon, Persona / Atlus, Total War, and SEGA accounts."},
+    ],
+    "konami": [
+        {"title": "KONAMI Privacy Policy", "url": "https://legal.konami.com/knm/privacy/en-intl/", "snippet": "Covers eFootball, Yu-Gi-Oh! Master Duel, Metal Gear, Silent Hill, and KONAMI ID telemetry."},
+    ],
+    "xbox": [
+        {"title": "Microsoft Services Agreement (Xbox)", "url": "https://www.microsoft.com/en-us/servicesagreement", "snippet": "Governs Xbox Network, Xbox Game Pass, Xbox Cloud Gaming, and console digital purchases."},
+        {"title": "Xbox & Microsoft Privacy Statement", "url": "https://privacy.microsoft.com/en-us/privacystatement", "snippet": "Covers Xbox Live voice/chat safety logs, achievement telemetry, and cloud save syncing."},
+    ],
+    "krafton": [
+        {"title": "KRAFTON Privacy Policy", "url": "https://www.krafton.com/en/privacy-policy/", "snippet": "Covers PUBG: BATTLEGROUNDS, PUBG Mobile, inZOI, anti-cheat telemetry, and player account security."},
+    ],
+    "supercell": [
+        {"title": "Supercell Terms of Service", "url": "https://supercell.com/en/terms-of-service/", "snippet": "Governs Clash of Clans, Clash Royale, Brawl Stars, and Supercell ID virtual items."},
+        {"title": "Supercell Privacy Policy", "url": "https://supercell.com/en/privacy-policy/", "snippet": "Covers clan chat moderation, device identifiers, and fair-play account enforcement."},
+    ],
+    "minecraft": [
+        {"title": "Minecraft End User License Agreement", "url": "https://www.minecraft.net/en-us/eula", "snippet": "Governs Minecraft Java & Bedrock Editions, Realms subscriptions, Marketplace, and server monetization."},
+        {"title": "Microsoft Privacy Statement (Minecraft)", "url": "https://privacy.microsoft.com/en-us/privacystatement", "snippet": "Covers Xbox/Microsoft account authentication, Realms telemetry, and player safety reporting."},
+    ],
+    "paradox": [
+        {"title": "Paradox Interactive EULA & Terms", "url": "https://legal.paradoxplaza.com/eula", "snippet": "Governs Stellaris, Hearts of Iron, Crusader Kings, Cities: Skylines, and Paradox Mods."},
+        {"title": "Paradox Interactive Privacy Policy", "url": "https://legal.paradoxplaza.com/privacy", "snippet": "Covers launcher telemetry, mod downloads, and multiplayer account records."},
+    ],
+    "larian": [
+        {"title": "Larian Studios Privacy Policy", "url": "https://larian.com/privacy", "snippet": "Covers Baldur's Gate 3 and Divinity crash diagnostics, cross-save telemetry, and analytics."},
+        {"title": "Larian Studios Fan Content Policy", "url": "https://larian.com/fan-content-policy", "snippet": "Governs fan creations, streaming, mods, and community content guidelines."},
+    ],
+    "facepunch": [
+        {"title": "Facepunch Studios Terms of Service", "url": "https://facepunch.com/legal/tos", "snippet": "Governs Rust, Garry's Mod, s&box, Easy Anti-Cheat enforcement, and community servers."},
+        {"title": "Facepunch Studios Privacy Policy", "url": "https://facepunch.com/legal/privacy", "snippet": "Details SteamID linking, server ban logs, and crash reporting."},
+    ],
+    "wargaming": [
+        {"title": "Wargaming End User License Agreement", "url": "https://legal.na.wargaming.net/en/eula", "snippet": "Governs World of Tanks, World of Warships, Wargaming.net ID, and premium vehicles."},
+        {"title": "Wargaming Privacy Policy", "url": "https://legal.na.wargaming.net/en/privacy-policy", "snippet": "Details battle replay telemetry, anti-cheat monitoring, and clan records."},
+    ],
+    "gaijin": [
+        {"title": "Gaijin Entertainment Terms of Use", "url": "https://legal.gaijin.net/termsofservice", "snippet": "Governs War Thunder, Enlisted, Crossout, Gaijin Market, and Golden Eagles."},
+        {"title": "Gaijin Entertainment Privacy Policy", "url": "https://legal.gaijin.net/privacypolicy", "snippet": "Covers battle telemetry, EAC anti-cheat checks, and marketplace transactions."},
+    ],
+    "unrealengine": [
+        {"title": "Unreal Engine End User License Agreement", "url": "https://www.unrealengine.com/en-US/eula/unreal", "snippet": "Governs Unreal Engine 5 commercial royalties, Fab marketplace assets, and Epic developer terms."},
+        {"title": "Epic Games Privacy Policy", "url": "https://www.epicgames.com/site/en-US/privacypolicy", "snippet": "Covers engine crash telemetry, developer account billing, and marketplace metrics."},
+    ],
+    "godot": [
+        {"title": "Godot Engine License & Legal", "url": "https://godotengine.org/license/", "snippet": "MIT open-source licensing for Godot Engine and asset distribution guidelines."},
+        {"title": "Godot Foundation Privacy Policy", "url": "https://godotengine.org/privacy-policy/", "snippet": "Covers Godot Asset Library, website analytics, and contributor account privacy."},
+    ],
+    "itchio": [
+        {"title": "itch.io Terms of Service", "url": "https://itch.io/docs/legal/terms", "snippet": "Governs indie game hosting, pay-what-you-want payouts, game jams, and creator pages."},
+        {"title": "itch.io Privacy Policy", "url": "https://itch.io/docs/legal/privacy-policy", "snippet": "Covers buyer download receipts, creator payout verification, and minimal cookies."},
+    ],
+    "nexusmods": [
+        {"title": "Nexus Mods Terms of Service", "url": "https://help.nexusmods.com/article/18-terms-of-service", "snippet": "Governs PC game mod hosting, Vortex mod manager, Donation Points, and moderation."},
+        {"title": "Nexus Mods Privacy Policy", "url": "https://help.nexusmods.com/article/20-privacy-policy", "snippet": "Details download telemetry, supporter billing, and community forum logs."},
+    ],
+    "curseforge": [
+        {"title": "Overwolf & CurseForge Terms of Service", "url": "https://www.overwolf.com/legal/terms", "snippet": "Governs CurseForge mod repositories (Minecraft, WoW), desktop client, and creator rewards."},
+        {"title": "Overwolf & CurseForge Privacy Policy", "url": "https://www.overwolf.com/legal/privacy", "snippet": "Details mod manager telemetry, in-app ads, and developer analytics."},
+    ],
+    "kick": [
+        {"title": "Kick Terms of Service", "url": "https://kick.com/terms-of-service", "snippet": "Governs live video streaming, 95/5 creator subscription splits, and community guidelines."},
+        {"title": "Kick Privacy Policy", "url": "https://kick.com/privacy-policy", "snippet": "Covers livestream viewership logs, chat messages, and creator payout verification."},
+    ],
+    "chesscom": [
+        {"title": "Chess.com User Agreement", "url": "https://www.chess.com/legal/user-agreement", "snippet": "Governs online chess games, ELO ratings, fair play anti-cheating, and Diamond memberships."},
+        {"title": "Chess.com Privacy Policy", "url": "https://www.chess.com/legal/privacy", "snippet": "Covers game move telemetry, fair-play detection signals, and community messages."},
+    ],
+    "lichess": [
+        {"title": "Lichess Terms of Service", "url": "https://lichess.org/terms-of-service", "snippet": "Non-profit open-source chess server rules, fair play enforcement, and user conduct."},
+        {"title": "Lichess Privacy Policy", "url": "https://lichess.org/privacy", "snippet": "Details ad-free, tracker-free operation and game archive retention."},
+    ],
+    "geforcenow": [
+        {"title": "NVIDIA GeForce NOW Terms of Use", "url": "https://www.nvidia.com/en-us/geforce-now/terms-of-use/", "snippet": "Governs cloud game streaming, session time limits, RTX tier billing, and store linking."},
+        {"title": "NVIDIA Privacy Policy", "url": "https://www.nvidia.com/en-us/about-nvidia/privacy-policy/", "snippet": "Covers cloud GPU stream telemetry, linked Steam/Epic libraries, and latency diagnostics."},
+    ],
+
+    # ---------------------------------------------------------
+    # 18. Expanded AI Labs, Coding Agents & ML Infrastructure
+    # ---------------------------------------------------------
+    "xai": [
+        {"title": "xAI Terms of Service", "url": "https://x.ai/legal/terms-of-service", "snippet": "Governs Grok AI assistant, xAI API endpoints, Aurora image generation, and acceptable use."},
+        {"title": "xAI Privacy Policy", "url": "https://x.ai/legal/privacy-policy", "snippet": "Details prompt/output retention, X platform integration, and model training opt-outs."},
+    ],
+    "deepseek": [
+        {"title": "DeepSeek Terms of Use", "url": "https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html", "snippet": "Governs DeepSeek Chat, DeepSeek-R1/V3 APIs, and open-weight licensing boundaries."},
+        {"title": "DeepSeek Privacy Policy", "url": "https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html", "snippet": "Details conversation storage, keystroke/device telemetry, and cross-border PRC data servers."},
+    ],
+    "qwen": [
+        {"title": "Alibaba Cloud Qwen Terms of Service", "url": "https://www.alibabacloud.com/help/en/legal/latest/alibaba-cloud-international-website-product-terms-of-service", "snippet": "Governs Qwen AI web chat, Model Studio APIs, and commercial cloud inference."},
+        {"title": "Alibaba Cloud Privacy Policy", "url": "https://www.alibabacloud.com/help/en/legal/latest/alibaba-cloud-international-website-privacy-policy", "snippet": "Covers API payload retention, cloud tenant isolation, and international compliance."},
+    ],
+    "inflection": [
+        {"title": "Inflection AI / Pi Terms of Service", "url": "https://inflection.ai/terms-of-service", "snippet": "Governs Pi personal AI companion, voice interactions, and acceptable use."},
+        {"title": "Inflection AI Privacy Policy", "url": "https://inflection.ai/privacy-policy", "snippet": "Covers conversational memory, voice audio handling, and safety moderation."},
+    ],
+    "poe": [
+        {"title": "Poe (Quora) Terms of Service", "url": "https://poe.com/tos", "snippet": "Governs multi-model AI chat subscriptions, custom bot creators, and compute points."},
+        {"title": "Poe Privacy Policy", "url": "https://poe.com/privacy", "snippet": "Details third-party LLM provider routing, chat histories, and creator monetization."},
+    ],
+    "windsurf": [
+        {"title": "Windsurf (Codeium) Terms of Service", "url": "https://windsurf.com/terms-of-service", "snippet": "Governs Windsurf AI IDE, Cascade agentic coding, and enterprise autocomplete seats."},
+        {"title": "Windsurf Privacy Policy", "url": "https://windsurf.com/privacy-policy", "snippet": "Details zero-data-retention modes, codebase indexing telemetry, and snippet encryption."},
+    ],
+    "replit": [
+        {"title": "Replit Terms of Service", "url": "https://replit.com/site/terms", "snippet": "Governs cloud IDEs, Replit Agent app generation, Deployments, and private Repls."},
+        {"title": "Replit Privacy Policy", "url": "https://replit.com/site/privacy", "snippet": "Covers workspace source code visibility, AI training opt-outs, and billing records."},
+    ],
+    "stackblitz": [
+        {"title": "StackBlitz & Bolt.new Terms of Service", "url": "https://stackblitz.com/terms-of-service", "snippet": "Governs WebContainers browser IDEs, Bolt.new AI app builder, and token quotas."},
+        {"title": "StackBlitz Privacy Policy", "url": "https://stackblitz.com/privacy-policy", "snippet": "Details project code privacy, OAuth tokens, and runtime telemetry."},
+    ],
+    "lovable": [
+        {"title": "Lovable Terms of Service", "url": "https://lovable.dev/terms", "snippet": "Governs AI full-stack app generation, GitHub syncing, and generated code ownership."},
+        {"title": "Lovable Privacy Policy", "url": "https://lovable.dev/privacy", "snippet": "Covers prompt retention, Supabase project integrations, and usage telemetry."},
+    ],
+    "cognition": [
+        {"title": "Cognition (Devin) Terms of Service", "url": "https://cognition.ai/terms", "snippet": "Governs Devin autonomous AI software engineer, ACU usage, and enterprise sandboxes."},
+        {"title": "Cognition Privacy Policy", "url": "https://cognition.ai/privacy", "snippet": "Details repository access isolation, agent execution logs, and customer data retention."},
+    ],
+    "sourcegraph": [
+        {"title": "Sourcegraph & Cody Terms of Service", "url": "https://sourcegraph.com/terms", "snippet": "Governs enterprise code search, Cody AI coding assistant, and self-hosted licenses."},
+        {"title": "Sourcegraph Privacy Policy", "url": "https://sourcegraph.com/terms/privacy", "snippet": "Details codebase context transmission, zero-retention LLM routing, and telemetry."},
+    ],
+    "togetherai": [
+        {"title": "Together AI Terms of Service", "url": "https://www.together.ai/terms-of-service", "snippet": "Governs serverless open-model inference, dedicated GPU clusters, and fine-tuning jobs."},
+        {"title": "Together AI Privacy Policy", "url": "https://www.together.ai/privacy", "snippet": "Covers API request retention, fine-tuned weights confidentiality, and SOC 2 controls."},
+    ],
+    "groq": [
+        {"title": "GroqCloud Terms of Service", "url": "https://groq.com/terms-of-use/", "snippet": "Governs LPU ultra-low-latency LLM inference APIs, rate limits, and commercial use."},
+        {"title": "Groq Privacy Policy", "url": "https://groq.com/privacy-policy/", "snippet": "Details API prompt ephemerality, zero-retention guarantees, and diagnostic metrics."},
+    ],
+    "fireworksai": [
+        {"title": "Fireworks AI Terms of Service", "url": "https://fireworks.ai/terms-of-service", "snippet": "Governs FireAttention inference APIs, custom LoRA fine-tuning, and batch processing."},
+        {"title": "Fireworks AI Privacy Policy", "url": "https://fireworks.ai/privacy-policy", "snippet": "Covers enterprise zero-data-retention policies, model deployment logs, and billing."},
+    ],
+    "openrouter": [
+        {"title": "OpenRouter Terms of Service", "url": "https://openrouter.ai/terms", "snippet": "Governs unified LLM API routing, prepaid credits, and upstream model provider terms."},
+        {"title": "OpenRouter Privacy Policy", "url": "https://openrouter.ai/privacy", "snippet": "Details ZDR (Zero Data Retention) routing flags, prompt logging opt-outs, and billing."},
+    ],
+    "falai": [
+        {"title": "fal.ai Terms of Service", "url": "https://fal.ai/terms", "snippet": "Governs serverless generative media APIs (Flux, video/audio models) and GPU billing."},
+        {"title": "fal.ai Privacy Policy", "url": "https://fal.ai/privacy", "snippet": "Covers generated media CDN retention, API payload logs, and account metadata."},
+    ],
+    "modal": [
+        {"title": "Modal Terms of Service", "url": "https://modal.com/legal/terms", "snippet": "Governs serverless Python cloud containers, on-demand GPUs, and compute billing."},
+        {"title": "Modal Privacy Policy", "url": "https://modal.com/legal/privacy-policy", "snippet": "Covers container image storage, function logs, and customer secret encryption."},
+    ],
+    "cerebras": [
+        {"title": "Cerebras Systems Terms of Service", "url": "https://www.cerebras.ai/terms-of-service", "snippet": "Governs Wafer-Scale Engine cloud inference APIs, enterprise clusters, and SLAs."},
+        {"title": "Cerebras Privacy Policy", "url": "https://www.cerebras.ai/privacy-policy", "snippet": "Details inference telemetry, customer dataset security, and compliance standards."},
+    ],
+    "wandb": [
+        {"title": "Weights & Biases Terms of Service", "url": "https://wandb.ai/site/terms", "snippet": "Governs ML experiment tracking, Weave LLM tracing, model registries, and artifacts."},
+        {"title": "Weights & Biases Privacy Policy", "url": "https://wandb.ai/site/privacy", "snippet": "Covers training run telemetry, artifact storage, and enterprise isolation."},
+    ],
+    "scaleai": [
+        {"title": "Scale AI Terms of Service", "url": "https://scale.com/legal/terms", "snippet": "Governs RLHF data annotation, enterprise AI evaluation, and model safety pipelines."},
+        {"title": "Scale AI Privacy Policy", "url": "https://scale.com/legal/privacy", "snippet": "Details contributor workforce verification, client dataset confidentiality, and audits."},
+    ],
+    "suno": [
+        {"title": "Suno Terms of Service", "url": "https://suno.com/terms", "snippet": "Governs AI music generation, commercial song ownership on Pro/Premier plans, and audio uploads."},
+        {"title": "Suno Privacy Policy", "url": "https://suno.com/privacy", "snippet": "Covers prompt lyrics retention, generated audio tracks, and subscription billing."},
+    ],
+    "lumaai": [
+        {"title": "Luma AI Terms of Service", "url": "https://lumalabs.ai/legal/terms-of-service", "snippet": "Governs Dream Machine video generation, 3D NeRF captures, and commercial usage rights."},
+        {"title": "Luma AI Privacy Policy", "url": "https://lumalabs.ai/legal/privacy-policy", "snippet": "Covers uploaded reference frames, 3D scene captures, and rendering telemetry."},
+    ],
+    "heygen": [
+        {"title": "HeyGen Terms of Service", "url": "https://www.heygen.com/terms", "snippet": "Governs AI video avatars, voice cloning consent requirements, and enterprise licenses."},
+        {"title": "HeyGen Privacy Policy", "url": "https://www.heygen.com/privacy", "snippet": "Details biometric likeness consent verification, video assets, and voice recordings."},
+    ],
+    "synthesia": [
+        {"title": "Synthesia User Terms of Service", "url": "https://www.synthesia.io/legal/user-terms-of-service", "snippet": "Governs enterprise AI presenter videos, custom avatar rights, and moderation rules."},
+        {"title": "Synthesia Customer Terms of Service", "url": "https://www.synthesia.io/legal/customer-terms-of-service", "snippet": "Governs commercial organization subscriptions, AI video licensing, and SLAs."},
+        {"title": "Synthesia Privacy Policy", "url": "https://www.synthesia.io/legal/privacy-policy", "snippet": "Covers biometric avatar consent, script retention, and GDPR data processing."},
+    ],
+    "descript": [
+        {"title": "Descript Terms of Service", "url": "https://www.descript.com/terms", "snippet": "Governs text-based audio/video editing, Overdub voice cloning, and cloud transcription."},
+        {"title": "Descript Privacy Policy", "url": "https://www.descript.com/privacy", "snippet": "Details media project storage, AI transcription processing, and voice model consent."},
+    ],
+    "ollama": [
+        {"title": "Ollama Terms of Use", "url": "https://ollama.com/terms", "snippet": "Governs local LLM runner software, model library distribution, and cloud sync."},
+        {"title": "Ollama Privacy Policy", "url": "https://ollama.com/privacy", "snippet": "Details minimal telemetry, local execution privacy, and registry download logs."},
+    ],
+    "pinecone": [
+        {"title": "Pinecone Terms of Service", "url": "https://www.pinecone.io/terms/", "snippet": "Governs serverless vector database indexes, RAG embeddings storage, and usage billing."},
+        {"title": "Pinecone Privacy Policy", "url": "https://www.pinecone.io/privacy/", "snippet": "Covers vector metadata isolation, query latency metrics, and enterprise security."},
+    ],
+    "weaviate": [
+        {"title": "Weaviate Cloud Terms of Service", "url": "https://weaviate.io/service", "snippet": "Governs managed vector database clusters, hybrid search, and open-source licensing."},
+        {"title": "Weaviate Privacy Policy", "url": "https://weaviate.io/privacy", "snippet": "Details cluster usage telemetry, developer accounts, and GDPR compliance."},
+    ],
+    "qdrant": [
+        {"title": "Qdrant Cloud Terms of Service", "url": "https://qdrant.tech/legal/terms_and_conditions/", "snippet": "Governs Rust-based managed vector search clusters, hybrid cloud, and SLAs."},
+        {"title": "Qdrant Privacy Policy", "url": "https://qdrant.tech/legal/privacy-policy/", "snippet": "Covers cloud telemetry, vector cluster security, and European data residency."},
+    ],
+    "langchain": [
+        {"title": "LangChain & LangSmith Terms of Service", "url": "https://www.langchain.com/terms-of-service", "snippet": "Governs LangSmith LLM observability, LangGraph Cloud, and evaluation datasets."},
+        {"title": "LangChain Privacy Policy", "url": "https://www.langchain.com/privacy-policy", "snippet": "Details trace span retention, prompt dataset privacy, and enterprise access logs."},
+    ],
+
+    # ---------------------------------------------------------
+    # 19. Programming Languages, Runtimes, Registries & Foundations
+    # ---------------------------------------------------------
+    "python": [
+        {"title": "Python Software Foundation Terms & PyPI Terms of Use", "url": "https://pypi.org/policy/terms-of-use/", "snippet": "Governs Python Package Index (PyPI) package publishing, PSF trademarks, and acceptable use."},
+        {"title": "Python.org & PyPI Privacy Notice", "url": "https://policies.python.org/pypi.org/Privacy-Notice/", "snippet": "Covers PyPI maintainer accounts, 2FA security logs, and package download telemetry."},
+    ],
+    "nodejs": [
+        {"title": "OpenJS Foundation Terms of Service", "url": "https://openjsf.org/terms", "snippet": "Governs Node.js runtime governance, OpenJS projects, and foundation trademark rules."},
+        {"title": "OpenJS Foundation Privacy Policy", "url": "https://openjsf.org/privacy", "snippet": "Covers contributor records, mailing lists, and foundation website analytics."},
+    ],
+    "npm": [
+        {"title": "npm Terms of Use", "url": "https://docs.npmjs.com/policies/terms", "snippet": "Governs JavaScript/TypeScript package registry publishing, scoped orgs, and takedown rules."},
+        {"title": "npm Privacy Policy", "url": "https://docs.npmjs.com/policies/privacy", "snippet": "Details package maintainer logs, CLI authentication tokens, and GitHub registry integration."},
+    ],
+    "deno": [
+        {"title": "Deno Acceptable Use Policy", "url": "https://docs.deno.com/deploy/acceptable_use_policy/", "snippet": "Governs Deno Deploy serverless isolates, JSR package registry, and acceptable runtime use."},
+        {"title": "Deno Privacy Policy", "url": "https://docs.deno.com/deploy/privacy_policy/", "snippet": "Covers Deno CLI update checks, Deploy edge execution logs, and developer accounts."},
+    ],
+    "typescript": [
+        {"title": "Microsoft Open Source & TypeScript Legal", "url": "https://www.microsoft.com/en-us/legal/terms-of-use", "snippet": "Governs TypeScript Playground, DefinitelyTyped ecosystem portals, and Apache-2.0 software."},
+        {"title": "Microsoft Privacy Statement (TypeScript)", "url": "https://privacy.microsoft.com/en-us/privacystatement", "snippet": "Covers TypeScript language service telemetry and documentation portal cookies."},
+    ],
+    "rustlang": [
+        {"title": "Rust Foundation Privacy Policy", "url": "https://rustfoundation.org/policy/privacy-policy/", "snippet": "Official Rust Foundation privacy policy governing rust-lang.org, static.rust-lang.org, and crates.io."},
+        {"title": "Rust Internals & Community Terms of Service", "url": "https://internals.rust-lang.org/tos", "snippet": "Governs Rust community forums, user accounts, and acceptable conduct."},
+    ],
+    "golang": [
+        {"title": "Go (golang) Terms of Service", "url": "https://go.dev/tos", "snippet": "Governs go.dev, Go module proxy (proxy.golang.org), checksum database, and pkg.go.dev index."},
+        {"title": "Go Module Mirror & Privacy Policy", "url": "https://proxy.golang.org/privacy", "snippet": "Details Go module proxy logging minimization, checksum transparency, and telemetry."},
+        {"title": "Google Privacy Policy (Go)", "url": "https://policies.google.com/privacy", "snippet": "Covers go.dev website telemetry and documentation analytics."},
+    ],
+    "java": [
+        {"title": "Oracle Java & JDK License Terms", "url": "https://www.oracle.com/downloads/licenses/no-fee-license.html", "snippet": "Governs Oracle JDK No-Fee Terms and Conditions (NFTC) and commercial Java SE subscriptions."},
+        {"title": "Oracle Privacy Policy", "url": "https://www.oracle.com/legal/privacy/", "snippet": "Covers JDK download records, Java updater telemetry, and enterprise support."},
+    ],
+    "dotnet": [
+        {"title": ".NET Foundation & NuGet Terms of Use", "url": "https://www.nuget.org/policies/Terms", "snippet": "Governs .NET / C# NuGet package gallery, Microsoft open-source governance, and symbols."},
+        {"title": "Microsoft Privacy Statement (.NET / NuGet)", "url": "https://www.nuget.org/policies/Privacy", "snippet": "Covers .NET CLI opt-out telemetry, NuGet publisher accounts, and crash diagnostics."},
+    ],
+    "cpp": [
+        {"title": "Standard C++ Foundation (isocpp.org) Terms of Use", "url": "https://isocpp.org/home/terms-of-use", "snippet": "Governs C++ standards committee resources, WG21 papers, and C++ FAQ publishing."},
+        {"title": "Standard C++ Foundation Privacy Policy", "url": "https://isocpp.org/home/privacy-policy", "snippet": "Covers community portal logs, mailing list records, and website analytics."},
+    ],
+    "swift": [
+        {"title": "Swift.org Terms & Open Source Licensing", "url": "https://www.swift.org/LICENSE.txt", "snippet": "Apache 2.0 open-source license and Swift package/compiler ecosystem governance."},
+        {"title": "Apple / Swift.org Privacy Policy", "url": "https://www.apple.com/legal/privacy/", "snippet": "Covers Swift.org forums, bug tracker accounts, and toolchain download logs."},
+    ],
+    "kotlin": [
+        {"title": "Kotlin Foundation & JetBrains Terms", "url": "https://kotlinfoundation.org/guidelines/", "snippet": "Governs Kotlin language trademarks, Apache-2.0 compiler, and Kotlin Multiplatform tools."},
+        {"title": "JetBrains Privacy Policy (Kotlin)", "url": "https://www.jetbrains.com/legal/docs/privacy/privacy/", "snippet": "Covers Kotlin Playground execution, compiler telemetry, and community forums."},
+    ],
+    "ruby": [
+        {"title": "RubyGems.org Terms of Service", "url": "https://rubygems.org/policies/terms-of-service", "snippet": "Governs Ruby gem package hosting, gem ownership transfers, and namespace policies."},
+        {"title": "RubyGems.org Privacy Policy", "url": "https://rubygems.org/policies/privacy", "snippet": "Details maintainer MFA logs, gem download statistics, and security notifications."},
+    ],
+    "php": [
+        {"title": "PHP.net Privacy Policy", "url": "https://www.php.net/privacy.php", "snippet": "Covers PHP language website logs, documentation mirrors, and contributor privacy."},
+    ],
+    "flutter": [
+        {"title": "Flutter Terms of Service", "url": "https://docs.flutter.dev/tos", "snippet": "Governs Dart pub.dev package repository, Flutter SDK tools, and Google developer policies."},
+        {"title": "Flutter & Dart Privacy Policy", "url": "https://policies.google.com/privacy", "snippet": "Covers Flutter CLI diagnostic telemetry (`--suppress-analytics`) and pub.dev accounts."},
+    ],
+    "elixir": [
+        {"title": "Hex.pm (Elixir / Erlang) Code of Conduct", "url": "https://hex.pm/policies/codeofconduct", "snippet": "Governs Elixir and Erlang package registry community conduct and moderation."},
+        {"title": "Hex.pm (Elixir / Erlang) Privacy Policy", "url": "https://hex.pm/policies/privacy", "snippet": "Covers package publisher logs, API token access, and minimal billing records."},
+    ],
+    "julia": [
+        {"title": "The Julia Language Privacy Notice", "url": "https://julialang.org/privacy/", "snippet": "Covers Julia Pkg server telemetry, Discourse community forums, and CI build logs."},
+        {"title": "JuliaHub Privacy Policy", "url": "https://juliahub.com/legal/privacy-policy", "snippet": "Covers JuliaHub cloud compute workspaces and enterprise package registries."},
+    ],
+    "linuxfoundation": [
+        {"title": "The Linux Foundation Terms of Use", "url": "https://www.linuxfoundation.org/legal/terms", "snippet": "Governs Linux kernel trademarks, CNCF, LF Training certifications, and open-source projects."},
+        {"title": "The Linux Foundation Privacy Policy", "url": "https://www.linuxfoundation.org/legal/privacy-policy", "snippet": "Details LFID developer accounts, contributor CLA records, and event registrations."},
+    ],
+    "canonical": [
+        {"title": "Canonical / Ubuntu Legal & Terms", "url": "https://ubuntu.com/legal/terms-and-policies", "snippet": "Governs Ubuntu Linux, Snapcraft Store, Ubuntu Pro subscriptions, and MAAS/Juju."},
+        {"title": "Canonical Privacy Notice", "url": "https://ubuntu.com/legal/data-privacy", "snippet": "Details Ubuntu crash reporting (Apport), Snap update checks, and enterprise support."},
+    ],
+    "redhat": [
+        {"title": "Red Hat Enterprise Agreement & Terms", "url": "https://www.redhat.com/en/about/agreements", "snippet": "Governs Red Hat Enterprise Linux (RHEL), OpenShift, Ansible, and developer subscriptions."},
+        {"title": "Red Hat Privacy Statement", "url": "https://www.redhat.com/en/about/privacy-policy", "snippet": "Covers Red Hat Insights telemetry, subscription manager logs, and IBM data sharing."},
+    ],
+    "archlinux": [
+        {"title": "Arch Linux Terms of Service", "url": "https://terms.archlinux.org/docs/terms-of-service/", "snippet": "Governs Arch User Repository (AUR), Arch Wiki, bug tracker, and mirror infrastructure."},
+        {"title": "Arch Linux Privacy Policy", "url": "https://terms.archlinux.org/docs/privacy-policy/", "snippet": "Details AUR maintainer accounts, forum logs, and minimal package mirror telemetry."},
+    ],
+    "homebrew": [
+        {"title": "Homebrew Anonymous Analytics Policy", "url": "https://docs.brew.sh/Analytics", "snippet": "Details InfluxDB anonymous formula install telemetry and `HOMEBREW_NO_ANALYTICS` opt-out."},
+    ],
+
+    # ---------------------------------------------------------
+    # 20. Expanded Software Dev Tools, Cloud, DBs, Auth & Observability
+    # ---------------------------------------------------------
+    "aws": [
+        {"title": "AWS Site Terms", "url": "https://aws.amazon.com/terms/", "snippet": "Governs Amazon Web Services EC2, S3, Lambda, Bedrock AI, and cloud portal usage."},
+        {"title": "AWS Customer Agreement", "url": "https://aws.amazon.com/agreement/", "snippet": "Governs enterprise AWS cloud infrastructure, compute instances, and SLAs."},
+        {"title": "AWS Privacy Notice", "url": "https://aws.amazon.com/privacy/", "snippet": "Covers enterprise cloud data residency, IAM audit logs, and billing telemetry."},
+    ],
+    "googlecloud": [
+        {"title": "Google Cloud Platform Terms of Service", "url": "https://cloud.google.com/terms/", "snippet": "Governs GCP compute, BigQuery, Vertex AI, GKE, and Cloud Run enterprise contracts."},
+        {"title": "Google Cloud Privacy Notice", "url": "https://cloud.google.com/terms/cloud-privacy-notice", "snippet": "Details customer data ownership, zero-training commitments on Vertex AI, and telemetry."},
+    ],
+    "azure": [
+        {"title": "Microsoft Azure Online Services Terms", "url": "https://www.microsoft.com/licensing/terms/product/ForOnlineServices/all", "snippet": "Governs Azure cloud VMs, Azure OpenAI Service, AKS, and enterprise compliance."},
+        {"title": "Microsoft Privacy Statement (Azure)", "url": "https://privacy.microsoft.com/en-us/privacystatement", "snippet": "Covers enterprise tenant data isolation, Defender logs, and regional data residency."},
+    ],
+    "hashicorp": [
+        {"title": "HashiCorp Terms of Service", "url": "https://www.hashicorp.com/terms-of-service", "snippet": "Governs Terraform Cloud, Vault, Consul, Nomad, and BSL source-available licenses."},
+        {"title": "HashiCorp Privacy Policy", "url": "https://www.hashicorp.com/privacy", "snippet": "Details Terraform state storage, CLI checkpoint telemetry, and enterprise billing."},
+    ],
+    "pulumi": [
+        {"title": "Pulumi Legal & Terms Hub", "url": "https://www.pulumi.com/legal/", "snippet": "Governs Infrastructure-as-Code SDKs, Pulumi Cloud state backends, and ESC secrets."},
+        {"title": "Pulumi Privacy Policy", "url": "https://www.pulumi.com/privacy/", "snippet": "Covers deployment state metadata, CLI telemetry, and enterprise SSO logs."},
+    ],
+    "circleci": [
+        {"title": "CircleCI Terms of Service", "url": "https://circleci.com/legal/terms-of-service/", "snippet": "Governs cloud CI/CD build runners, Docker layer caching, orbs, and compute credits."},
+        {"title": "CircleCI Privacy Policy", "url": "https://circleci.com/legal/privacy/", "snippet": "Details build log retention, environment secret encryption, and VCS webhooks."},
+    ],
+    "vultr": [
+        {"title": "Vultr Terms of Service", "url": "https://www.vultr.com/legal/tos/", "snippet": "Governs bare metal, cloud GPU instances, Kubernetes, and global VPS bandwidth."},
+        {"title": "Vultr Privacy Policy", "url": "https://www.vultr.com/legal/privacy/", "snippet": "Covers anti-abuse verification, server provisioning logs, and billing records."},
+    ],
+    "hetzner": [
+        {"title": "Hetzner Online Terms and Conditions", "url": "https://www.hetzner.com/legal/terms-and-conditions/", "snippet": "Governs German/European dedicated servers, Hetzner Cloud VPS, and Storage Boxes."},
+        {"title": "Hetzner Online Privacy Policy", "url": "https://www.hetzner.com/legal/privacy-policy/", "snippet": "Details strict German GDPR data protection, KYC verification, and server logs."},
+    ],
+    "ovhcloud": [
+        {"title": "OVHcloud Terms of Service", "url": "https://us.ovhcloud.com/legal/terms-of-service/", "snippet": "Governs European sovereign cloud, bare-metal servers, and Public Cloud instances."},
+        {"title": "OVHcloud Privacy Policy", "url": "https://us.ovhcloud.com/legal/privacy-policy/", "snippet": "Covers EU data sovereignty, support ticket audits, and network telemetry."},
+    ],
+    "firebase": [
+        {"title": "Firebase Terms of Service", "url": "https://firebase.google.com/terms", "snippet": "Governs Firestore, Firebase Auth, Realtime Database, Cloud Messaging, and Crashlytics."},
+        {"title": "Google Privacy Policy (Firebase)", "url": "https://firebase.google.com/support/privacy", "snippet": "Details mobile SDK analytics, Crashlytics stack traces, and app user telemetry."},
+    ],
+    "neon": [
+        {"title": "Neon Serverless Postgres Terms", "url": "https://neon.com/platform-terms", "snippet": "Governs serverless PostgreSQL branching, autoscaling compute, and storage quotas."},
+        {"title": "Neon / Databricks Privacy Notice", "url": "https://www.databricks.com/legal/privacynotice", "snippet": "Covers database connection logs, developer telemetry, and subprocessor security."},
+    ],
+    "planetscale": [
+        {"title": "PlanetScale Terms of Service", "url": "https://planetscale.com/legal/siteterms", "snippet": "Governs Vitess-powered serverless MySQL databases, deploy requests, and Insights."},
+        {"title": "PlanetScale Privacy Policy", "url": "https://planetscale.com/legal/privacy", "snippet": "Details query performance metrics, schema metadata, and SOC 2 compliance."},
+    ],
+    "turso": [
+        {"title": "Turso (libSQL) Terms of Service", "url": "https://turso.tech/terms-of-use", "snippet": "Governs edge-replicated libSQL/SQLite databases, multi-tenant DBs, and storage limits."},
+        {"title": "Turso Privacy Policy", "url": "https://turso.tech/privacy-policy", "snippet": "Covers edge replication logs, API token telemetry, and billing records."},
+    ],
+    "upstash": [
+        {"title": "Upstash Privacy Policy", "url": "https://upstash.com/trust/privacy", "snippet": "Covers serverless Redis, QStash, and Vector request logs, encryption-at-rest, and developer billing."},
+    ],
+    "clickhouse": [
+        {"title": "ClickHouse Cloud Terms of Service", "url": "https://clickhouse.com/legal/agreements/terms-of-service", "snippet": "Governs managed OLAP analytical databases, real-time SQL ingestion, and BYOC."},
+        {"title": "ClickHouse Privacy Policy", "url": "https://clickhouse.com/legal/privacy-policy", "snippet": "Details cloud query telemetry, enterprise support access, and GDPR safeguards."},
+    ],
+    "grafana": [
+        {"title": "Grafana Labs Terms of Service", "url": "https://grafana.com/legal/terms/", "snippet": "Governs Grafana Cloud dashboards, Loki logs, Tempo tracing, and Prometheus metrics."},
+        {"title": "Grafana Labs Privacy Policy", "url": "https://grafana.com/legal/privacy-policy/", "snippet": "Covers OSS telemetry opt-outs, cloud observability logs, and user accounts."},
+    ],
+    "pagerduty": [
+        {"title": "PagerDuty Terms of Service", "url": "https://www.pagerduty.com/terms-of-service/", "snippet": "Governs on-call incident response, alert escalations, AIOps, and enterprise SLAs."},
+        {"title": "PagerDuty Privacy Policy", "url": "https://www.pagerduty.com/privacy-policy/", "snippet": "Details SMS/voice paging logs, incident payload metadata, and responder schedules."},
+    ],
+    "posthog": [
+        {"title": "PostHog Terms of Service", "url": "https://posthog.com/terms", "snippet": "Governs open-source product analytics, session replays, feature flags, and A/B tests."},
+        {"title": "PostHog Privacy Policy", "url": "https://posthog.com/privacy", "snippet": "Covers EU/US data residency, session recording masking, and telemetry ingestion."},
+    ],
+    "mixpanel": [
+        {"title": "Mixpanel Terms of Service", "url": "https://mixpanel.com/legal/terms-of-use/", "snippet": "Governs event-based product analytics, funnel tracking, and warehouse connectors."},
+        {"title": "Mixpanel Privacy Policy", "url": "https://mixpanel.com/legal/privacy-policy/", "snippet": "Details end-user behavioral event tracking, session replays, and GDPR deletion APIs."},
+    ],
+    "launchdarkly": [
+        {"title": "LaunchDarkly Terms of Service", "url": "https://launchdarkly.com/terms-of-service/", "snippet": "Governs enterprise feature flags, progressive rollouts, and experimentation SDKs."},
+        {"title": "LaunchDarkly Privacy Policy", "url": "https://launchdarkly.com/privacy/", "snippet": "Details user targeting context attributes, SDK evaluation telemetry, and audits."},
+    ],
+    "auth0": [
+        {"title": "Okta / Auth0 Terms of Service", "url": "https://www.okta.com/agreements/", "snippet": "Governs universal identity authentication, SSO, MFA, OAuth2, and CIAM pipelines."},
+        {"title": "Okta / Auth0 Privacy Policy", "url": "https://www.okta.com/privacy-policy/", "snippet": "Covers login audit logs, device fingerprinting for anomaly detection, and credentials."},
+    ],
+    "clerk": [
+        {"title": "Clerk Terms of Service", "url": "https://clerk.com/legal/terms", "snippet": "Governs drop-in authentication UI, session JWTs, passkeys, and B2B organizations."},
+        {"title": "Clerk Privacy Policy", "url": "https://clerk.com/legal/privacy", "snippet": "Details end-user identity records, OAuth token encryption, and security logs."},
+    ],
+    "algolia": [
+        {"title": "Algolia Terms of Service", "url": "https://www.algolia.com/policies/terms/", "snippet": "Governs instant search APIs, AI neural vector search, and ecommerce merchandising."},
+        {"title": "Algolia Privacy Policy", "url": "https://www.algolia.com/policies/privacy/", "snippet": "Covers search query analytics, click-through conversion tracking, and index data."},
+    ],
+    "cloudinary": [
+        {"title": "Cloudinary Terms of Use", "url": "https://cloudinary.com/tos", "snippet": "Governs cloud image/video transformations, DAM asset hosting, and CDN delivery."},
+        {"title": "Cloudinary Privacy Policy", "url": "https://cloudinary.com/privacy", "snippet": "Details uploaded media asset processing, AI tagging, and bandwidth telemetry."},
+    ],
+    "vscode": [
+        {"title": "Visual Studio Code License & Terms", "url": "https://code.visualstudio.com/License/", "snippet": "Governs Microsoft VS Code binary distribution, Marketplace extensions, and Remote Tunnels."},
+        {"title": "Microsoft Privacy Statement (VS Code)", "url": "https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting", "snippet": "Covers editor crash/usage telemetry (`telemetry.telemetryLevel`) and extension metrics."},
+    ],
+    "zed": [
+        {"title": "Zed Industries Terms of Service", "url": "https://zed.dev/terms-of-service", "snippet": "Governs GPU-accelerated Zed code editor, real-time collaboration channels, and Zed AI."},
+        {"title": "Zed Industries Privacy Policy", "url": "https://zed.dev/privacy-policy", "snippet": "Details local-first editing privacy, opt-out telemetry, and AI assistant context rules."},
+    ],
+    "raycast": [
+        {"title": "Raycast Terms of Service", "url": "https://www.raycast.com/terms-of-service", "snippet": "Governs macOS/Windows productivity launcher, Raycast Pro AI, Cloud Sync, and extensions."},
+        {"title": "Raycast Privacy Policy", "url": "https://www.raycast.com/privacy", "snippet": "Covers encrypted Cloud Sync vaults, extension store logs, and AI query retention."},
+    ],
+    "warp": [
+        {"title": "Warp Terminal Terms of Service", "url": "https://www.warp.dev/legal/terms-of-service", "snippet": "Governs Rust-based modern terminal, Warp Drive team workflows, and AI command search."},
+        {"title": "Warp Privacy Policy", "url": "https://www.warp.dev/legal/privacy-policy", "snippet": "Details terminal telemetry controls, secret redaction, and AI prompt retention."},
+    ],
+    "sonarqube": [
+        {"title": "SonarSource & SonarCloud Terms of Use", "url": "https://www.sonarsource.com/legal/website-terms-of-use/", "snippet": "Governs SonarQube static code analysis, SonarCloud SAST scanning, and code quality gates."},
+        {"title": "SonarSource Privacy Policy", "url": "https://www.sonarsource.com/company/privacy/", "snippet": "Covers repository scan metadata, vulnerability reports, and developer accounts."},
+    ],
+    "devto": [
+        {"title": "DEV Community Terms of Use", "url": "https://dev.to/terms", "snippet": "Governs Forem-powered developer blogging, open-source community code of conduct, and APIs."},
+        {"title": "DEV Community Privacy Policy", "url": "https://dev.to/privacy", "snippet": "Covers developer profile records, reading history, and sponsor disclosure rules."},
+    ],
+    "leetcode": [
+        {"title": "LeetCode Terms of Service", "url": "https://leetcode.com/terms/", "snippet": "Governs coding interview practice, weekly contests, LeetCode Premium, and anti-plagiarism."},
+        {"title": "LeetCode Privacy Policy", "url": "https://leetcode.com/privacy/", "snippet": "Details code submission logs, contest rankings, and interview prep analytics."},
+    ],
+    "hackerrank": [
+        {"title": "HackerRank Terms of Service", "url": "https://www.hackerrank.com/terms-of-service/", "snippet": "Governs developer skill assessments, technical interviews, and proctoring integrity."},
+        {"title": "HackerRank Privacy Policy", "url": "https://www.hackerrank.com/privacy/", "snippet": "Covers candidate code playback, browser proctoring signals, and recruiter sharing."},
+    ],
+
+    # ---------------------------------------------------------
+    # 21. Expanded VPNs, Privacy, Cybersecurity & Browsers
+    # ---------------------------------------------------------
+    "mullvad": [
+        {"title": "Mullvad VPN Terms of Service", "url": "https://mullvad.net/en/help/terms-service", "snippet": "Governs anonymous numbered-account VPN tunnels, WireGuard/OpenVPN, and cash/crypto payments."},
+        {"title": "Mullvad VPN Privacy Policy", "url": "https://mullvad.net/en/help/privacy-policy", "snippet": "Industry-leading zero-log commitment: no email, no activity logs, and RAM-only servers."},
+    ],
+    "privateinternetaccess": [
+        {"title": "Private Internet Access (PIA) Terms of Service", "url": "https://www.privateinternetaccess.com/pages/terms-of-service", "snippet": "Governs open-source VPN clients, MACE ad-blocking, port forwarding, and dedicated IPs."},
+        {"title": "Private Internet Access Privacy Policy", "url": "https://www.privateinternetaccess.com/pages/privacy-policy", "snippet": "Court-proven and audited strict no-logs policy with zero connection or traffic retention."},
+    ],
+    "ivpn": [
+        {"title": "IVPN Terms of Service", "url": "https://www.ivpn.net/en/tos-mobile-app/", "snippet": "Governs multi-hop WireGuard VPN, AntiTracker DNS, and anonymous Monero/cash accounts."},
+        {"title": "IVPN Privacy Policy", "url": "https://www.ivpn.net/en/privacy/", "snippet": "Details zero-email account generation, independent security audits, and strict no-logging."},
+    ],
+    "windscribe": [
+        {"title": "Windscribe Terms of Service", "url": "https://windscribe.com/terms", "snippet": "Governs VPN and R.O.B.E.R.T. DNS firewall, free/Pro data allowances, and static IPs."},
+        {"title": "Windscribe Privacy Policy", "url": "https://windscribe.com/privacy", "snippet": "Details RAM-disk servers, zero IP/session logging, and minimal bandwidth counters."},
+    ],
+    "tunnelbear": [
+        {"title": "TunnelBear Terms of Service", "url": "https://www.tunnelbear.com/terms-of-service", "snippet": "Governs consumer VPN apps, VigilantBear kill switch, and McAfee-owned service rules."},
+        {"title": "TunnelBear Privacy Policy", "url": "https://www.tunnelbear.com/privacy-policy", "snippet": "Details annual independent security audits and zero browsing activity logging."},
+    ],
+    "adguard": [
+        {"title": "AdGuard End User License Agreement", "url": "https://adguard.com/en/eula.html", "snippet": "Governs AdGuard Ad Blocker, AdGuard DNS, and AdGuard VPN encrypted tunneling."},
+        {"title": "AdGuard Privacy Policy", "url": "https://adguard.com/en/privacy.html", "snippet": "Covers DNS query filtering options, no-logs VPN claims, and crash report opt-ins."},
+    ],
+    "nextdns": [
+        {"title": "NextDNS Privacy Policy", "url": "https://nextdns.io/privacy", "snippet": "Details user-configurable DNS log retention (including zero-logging mode) and jurisdiction."},
+    ],
+    "torproject": [
+        {"title": "Tor Project Terms & Legal FAQ", "url": "https://www.torproject.org/about/trademark/", "snippet": "Governs Tor Browser open-source anonymity software, onion services, and relay operation."},
+        {"title": "Tor Project Privacy Policy", "url": "https://www.torproject.org/about/privacy_policy/", "snippet": "Affirms zero tracking on torproject.org and onion-routed anonymity architecture."},
+    ],
+    "vivaldi": [
+        {"title": "Vivaldi Privacy Policy Overview", "url": "https://vivaldi.com/privacy/", "snippet": "Governs Vivaldi desktop/mobile browser, built-in Mail/Calendar, and sync services."},
+        {"title": "Vivaldi Browser Privacy Policy", "url": "https://vivaldi.com/privacy/browser/", "snippet": "Details end-to-end encrypted sync, zero user profiling, and anonymized daily ping counts."},
+    ],
+    "opera": [
+        {"title": "Opera End User License Agreement", "url": "https://legal.opera.com/terms/", "snippet": "Governs Opera Browser, Opera GX gaming browser, built-in free VPN, and Aria AI."},
+        {"title": "Opera Privacy Statement", "url": "https://legal.opera.com/privacy/", "snippet": "Details browser telemetry, partner search monetization, and built-in VPN data handling."},
+    ],
+    "arc": [
+        {"title": "The Browser Company (Arc / Dia) Privacy Policy", "url": "https://arc.net/privacy", "snippet": "Covers encrypted tab sync, AI summary query handling, and product analytics."},
+    ],
+    "dashlane": [
+        {"title": "Dashlane Terms of Service", "url": "https://www.dashlane.com/terms", "snippet": "Governs zero-knowledge password vault, passkey sync, and bundled Hotspot Shield VPN."},
+        {"title": "Dashlane Privacy Policy", "url": "https://www.dashlane.com/privacy", "snippet": "Details zero-knowledge encryption architecture, dark web monitoring, and billing."},
+    ],
+    "crowdstrike": [
+        {"title": "CrowdStrike Terms and Conditions", "url": "https://www.crowdstrike.com/terms-conditions/", "snippet": "Governs Falcon endpoint detection and response (EDR), threat intelligence, and cloud security."},
+        {"title": "CrowdStrike Privacy Notice", "url": "https://www.crowdstrike.com/privacy-notice/", "snippet": "Covers endpoint process telemetry, malware file inspection, and enterprise compliance."},
+    ],
+    "cloudflarewarp": [
+        {"title": "Cloudflare 1.1.1.1 & WARP Terms of Service", "url": "https://developers.cloudflare.com/1.1.1.1/privacy/public-dns-resolver/", "snippet": "Governs 1.1.1.1 public DNS resolver and WARP WireGuard consumer/Zero Trust tunnels."},
+        {"title": "Cloudflare 1.1.1.1 Privacy Commitments", "url": "https://www.cloudflare.com/application/privacypolicy/", "snippet": "Audited commitment never to sell browsing data or retain client source IP addresses beyond 25h."},
+    ],
+    "hackerone": [
+        {"title": "HackerOne Terms of Service", "url": "https://www.hackerone.com/terms", "snippet": "Governs bug bounty programs, coordinated vulnerability disclosure, and researcher payouts."},
+        {"title": "HackerOne Privacy Policy", "url": "https://www.hackerone.com/privacy", "snippet": "Details researcher identity/KYC checks, vulnerability report confidentiality, and safe harbor."},
+    ],
+    "virustotal": [
+        {"title": "VirusTotal / Google Cloud Terms of Service", "url": "https://cloud.google.com/terms", "snippet": "Governs malware file/URL scanning, Threat Intelligence APIs, and Google Cloud services."},
+        {"title": "VirusTotal / Google Cloud Privacy Policy", "url": "https://cloud.google.com/privacy", "snippet": "Covers cloud service privacy, threat sample disclosures, and security telemetry."},
+    ],
+
+    # ---------------------------------------------------------
+    # 22. Expanded Streaming, Music, Books & Creator Media
+    # ---------------------------------------------------------
+    "bandcamp": [
+        {"title": "Bandcamp Terms of Use", "url": "https://bandcamp.com/terms_of_use", "snippet": "Governs direct-to-artist music sales, vinyl merch, Bandcamp Fridays, and streaming."},
+        {"title": "Bandcamp Privacy Policy", "url": "https://bandcamp.com/privacy", "snippet": "Covers fan collection visibility, artist mailing lists, and Epic/Songtradr data transitions."},
+    ],
+    "plex": [
+        {"title": "Plex Terms of Service", "url": "https://www.plex.tv/about/privacy-legal/plex-terms-of-service/", "snippet": "Governs personal media servers, Plex Pass, free ad-supported streaming, and live TV."},
+        {"title": "Plex Privacy Policy", "url": "https://www.plex.tv/about/privacy-legal/", "snippet": "Details personal library metadata privacy, Discover Watchlist sharing, and ad telemetry."},
+    ],
+    "letterboxd": [
+        {"title": "Letterboxd Terms of Use", "url": "https://letterboxd.com/legal/terms-of-use/", "snippet": "Governs film logging, community reviews, Pro/Patron tiers, and content moderation."},
+        {"title": "Letterboxd Privacy Policy", "url": "https://letterboxd.com/legal/privacy-policy/", "snippet": "Covers public film diary visibility, programmatic advertising, and GDPR rights."},
+    ],
+    "imdb": [
+        {"title": "IMDb Conditions of Use", "url": "https://www.imdb.com/conditions", "snippet": "Governs film/TV database contributions, IMDbPro casting profiles, and Amazon integration."},
+        {"title": "IMDb Privacy Notice", "url": "https://www.imdb.com/privacy", "snippet": "Covers watchlist telemetry, user reviews, and Amazon advertising cross-profiling."},
+    ],
+    "goodreads": [
+        {"title": "Goodreads Terms of Use", "url": "https://www.goodreads.com/about/terms", "snippet": "Governs book reviews, reading challenges, Kindle highlights syncing, and giveaways."},
+        {"title": "Goodreads Privacy Notice", "url": "https://www.goodreads.com/about/privacy", "snippet": "Covers reading shelves, Amazon account linking, and personalized book recommendations."},
+    ],
+    "scribd": [
+        {"title": "Scribd & Everand Terms of Use", "url": "https://support.scribd.com/hc/en-us/articles/210129366-General-Terms-of-Use", "snippet": "Governs digital document uploads, Everand audiobooks/ebooks, and copyright takedowns."},
+        {"title": "Scribd Privacy Policy", "url": "https://support.scribd.com/hc/en-us/articles/210129146-Privacy-Policy", "snippet": "Details reading progress logs, document indexing, and subscription billing."},
+    ],
+    "gumroad": [
+        {"title": "Gumroad Terms of Service", "url": "https://gumroad.com/terms", "snippet": "Governs digital product sales, creator 10% platform fees, chargebacks, and payouts."},
+        {"title": "Gumroad Privacy Policy", "url": "https://gumroad.com/privacy", "snippet": "Covers buyer download receipts, creator tax verification, and email marketing lists."},
+    ],
+    "kofi": [
+        {"title": "Ko-fi Terms & Conditions", "url": "https://more.ko-fi.com/terms", "snippet": "Governs creator tips, memberships, commissions, and zero-fee donation tiers."},
+        {"title": "Ko-fi Privacy Policy", "url": "https://more.ko-fi.com/privacy", "snippet": "Details supporter payment metadata, creator payout links, and cookie usage."},
+    ],
+    "ghost": [
+        {"title": "Ghost(Pro) Terms of Service", "url": "https://ghost.org/terms/", "snippet": "Governs managed Ghost publishing, newsletter delivery, and zero-commission memberships."},
+        {"title": "Ghost Foundation Privacy Policy", "url": "https://ghost.org/privacy/", "snippet": "Covers subscriber lists, email open telemetry, and open-source publishing privacy."},
+    ],
+
+    # ---------------------------------------------------------
+    # 23. Crypto, Exchanges, Wallets, DeFi & Blockchain
+    # ---------------------------------------------------------
+    "geminiexchange": [
+        {"title": "Gemini Trust User Agreement", "url": "https://www.gemini.com/legal/user-agreement", "snippet": "Governs NYDFS-regulated crypto exchange trading, GUSD stablecoin, and ActiveTrader."},
+        {"title": "Gemini Privacy Policy", "url": "https://www.gemini.com/legal/privacy-policy", "snippet": "Covers KYC/AML financial disclosures, wallet addresses, and tax reporting."},
+    ],
+    "metamask": [
+        {"title": "Consensys / MetaMask Terms of Use", "url": "https://consensys.io/terms-of-use", "snippet": "Governs self-custody MetaMask wallet, Swaps aggregator fees, and Infura RPC routing."},
+        {"title": "Consensys Privacy Policy", "url": "https://consensys.io/privacy-policy", "snippet": "Details RPC IP address/wallet logging disclosures and privacy toggle settings."},
+    ],
+    "phantom": [
+        {"title": "Phantom Wallet Terms of Service", "url": "https://phantom.app/terms", "snippet": "Governs multi-chain self-custody wallet (Solana, Ethereum, Bitcoin), swaps, and staking."},
+        {"title": "Phantom Privacy Policy", "url": "https://phantom.app/privacy", "snippet": "Covers transaction simulation telemetry, phishing domain checks, and non-custodial keys."},
+    ],
+    "ledger": [
+        {"title": "Ledger Terms of Use & Ledger Live", "url": "https://shop.ledger.com/pages/terms-and-conditions", "snippet": "Governs Ledger hardware wallets, Ledger Live companion app, and Ledger Recover."},
+        {"title": "Ledger Privacy Policy", "url": "https://www.ledger.com/privacy-policy", "snippet": "Details device attestation checks, e-commerce order records, and opt-in analytics."},
+    ],
+    "trezor": [
+        {"title": "Trezor Terms of Use", "url": "https://trezor.io/terms-of-use", "snippet": "Governs open-source Trezor hardware wallets, Trezor Suite, and firmware updates."},
+        {"title": "Trezor Privacy Policy", "url": "https://trezor.io/support/logistics/orders-payments/privacy-policy-at-trezor", "snippet": "Details data erasure schedules after hardware delivery and Tor-enabled Suite privacy."},
+    ],
+    "uniswap": [
+        {"title": "Uniswap Labs Terms of Service", "url": "https://uniswap.org/terms-of-service", "snippet": "Governs Uniswap web interface, Uniswap Wallet, DEX routing fees, and token screening."},
+        {"title": "Uniswap Labs Privacy Policy", "url": "https://uniswap.org/privacy-policy", "snippet": "Details on-chain wallet screening, browser local storage, and zero seed-phrase access."},
+    ],
+    "opensea": [
+        {"title": "OpenSea Terms of Service", "url": "https://opensea.io/tos", "snippet": "Governs NFT marketplace listings, creator royalties, Seaport protocol, and takedowns."},
+        {"title": "OpenSea Privacy Policy", "url": "https://opensea.io/privacy", "snippet": "Covers public blockchain wallet indexing, IP fraud prevention, and account profiles."},
+    ],
+    "ethereum": [
+        {"title": "Ethereum.org Terms of Use", "url": "https://ethereum.org/en/terms-of-use/", "snippet": "Governs Ethereum Foundation educational portal, open-source docs, and trademark use."},
+        {"title": "Ethereum.org Privacy Policy", "url": "https://ethereum.org/en/privacy-policy/", "snippet": "Details minimal, tracker-free web analytics and open-source contributor privacy."},
+    ],
+    "solana": [
+        {"title": "Solana Foundation Terms of Use", "url": "https://solana.com/tos", "snippet": "Governs Solana.com developer portal, validator delegation programs, and trademarks."},
+        {"title": "Solana Foundation Privacy Policy", "url": "https://solana.com/privacy-policy", "snippet": "Covers grant applicant records, developer telemetry, and cookie disclosures."},
+    ],
+    "alchemy": [
+        {"title": "Alchemy Terms of Service", "url": "https://www.alchemy.com/policies/terms", "snippet": "Governs Web3 RPC node infrastructure, NFT APIs, Account Kit, and compute unit billing."},
+        {"title": "Alchemy Privacy Policy", "url": "https://www.alchemy.com/policies/privacy-policy", "snippet": "Details JSON-RPC request logs, developer API metrics, and security audits."},
+    ],
+    "coingecko": [
+        {"title": "CoinGecko Terms of Service", "url": "https://www.coingecko.com/en/terms", "snippet": "Governs cryptocurrency price tracking, CoinGecko API licensing, and portfolio tools."},
+        {"title": "CoinGecko Privacy Policy", "url": "https://www.coingecko.com/en/privacy", "snippet": "Covers portfolio watchlist sync, API key telemetry, and ad personalization."},
+    ],
+
+    # ---------------------------------------------------------
+    # 24. Expanded Finance, Banking, Brokerages & Payments
+    # ---------------------------------------------------------
+    "chase": [
+        {"title": "JPMorgan Chase Digital Services Agreement", "url": "https://www.chase.com/digital/resources/terms-of-use", "snippet": "Governs Chase online banking, Sapphire/Freedom credit cards, Zelle transfers, and J.P. Morgan."},
+        {"title": "Chase Online Privacy Policy", "url": "https://www.chase.com/digital/resources/privacy-security/privacy/online-privacy-policy", "snippet": "Details Gramm-Leach-Bliley financial disclosures, credit reporting, and mobile telemetry."},
+    ],
+    "bankofamerica": [
+        {"title": "Bank of America Online Banking Service Agreement", "url": "https://www.bankofamerica.com/online-banking/service-agreement.go", "snippet": "Governs checking/savings accounts, Merrill Edge investing, Erica AI, and wire limits."},
+        {"title": "Bank of America Privacy Notice", "url": "https://www.bankofamerica.com/security-center/online-privacy-notice/", "snippet": "Details affiliate financial data sharing, biometric login, and fraud telemetry."},
+    ],
+    "capitalone": [
+        {"title": "Capital One Terms & Conditions", "url": "https://www.capitalone.com/legal/terms-conditions/", "snippet": "Governs Venture/Quicksilver credit cards, 360 Checking, Eno virtual cards, and Auto Navigator."},
+        {"title": "Capital One Online Privacy Policy", "url": "https://www.capitalone.com/privacy/online-privacy-policy/", "snippet": "Details credit bureau sharing, merchant offer tracking, and app security logs."},
+    ],
+    "americanexpress": [
+        {"title": "American Express Online Privacy Disclosures", "url": "https://www.americanexpress.com/us/company/privacy-center/online-privacy-disclosures/", "snippet": "Covers cardholder spending insights, fraud analytics, and travel partner sharing."},
+    ],
+    "visa": [
+        {"title": "Visa Legal & Terms of Use", "url": "https://www.visa.com/en-us/legal", "snippet": "Governs Visa payment network portals, Click to Pay, and Visa Direct developer APIs."},
+        {"title": "Visa Global Privacy Notice", "url": "https://www.visa.com/en-us/legal/global-privacy-notice", "snippet": "Details card transaction routing metadata, tokenization, and fraud scoring."},
+    ],
+    "mastercard": [
+        {"title": "Mastercard Global Privacy Notice", "url": "https://www.mastercard.com/us/en/global-privacy-notice.html", "snippet": "Details payment clearing analytics, fraud monitoring, and consumer opt-outs."},
+    ],
+    "fidelity": [
+        {"title": "Fidelity Investments Terms of Use", "url": "https://www.fidelity.com/terms-of-use", "snippet": "Governs brokerage accounts, 401(k) plans, IRA retirement trading, and research tools."},
+        {"title": "Fidelity Privacy Policy", "url": "https://www.fidelity.com/privacy-policy", "snippet": "Details SEC/FINRA financial recordkeeping, voice biometrics, and customer data security."},
+    ],
+    "schwab": [
+        {"title": "Charles Schwab Online Services Agreement", "url": "https://www.schwab.com/legal/terms", "snippet": "Governs Schwab brokerage, thinkorswim trading, checking accounts, and advisory fees."},
+        {"title": "Charles Schwab Privacy Overview", "url": "https://www.schwab.com/legal/privacy-overview", "snippet": "Covers financial regulatory disclosures, trade logs, and mobile app security."},
+    ],
+    "interactivebrokers": [
+        {"title": "Interactive Brokers Privacy Policy", "url": "https://www.interactivebrokers.com/en/accounts/legalDocuments/privacy.php", "snippet": "Covers international regulatory reporting, KYC records, and trade audit logs."},
+    ],
+    "monzo": [
+        {"title": "Monzo Terms & Conditions", "url": "https://monzo.com/legal/terms-and-conditions/", "snippet": "Governs UK/US app-based checking accounts, Pots savings, and fee-free foreign spend."},
+        {"title": "Monzo Privacy Notice", "url": "https://monzo.com/legal/privacy-notice/", "snippet": "Details Open Banking connections, credit reference checks, and fraud detection."},
+    ],
+    "chime": [
+        {"title": "Chime Privacy Notice", "url": "https://www.chime.com/policies/chime/privacy-policy/", "snippet": "Covers banking partner disclosures, transaction alerts, and identity verification."},
+    ],
+    "sofi": [
+        {"title": "SoFi Terms of Use", "url": "https://www.sofi.com/terms-of-use/", "snippet": "Governs SoFi Checking & Savings, student/personal loans, and SoFi Invest brokerage."},
+        {"title": "SoFi Privacy Policy", "url": "https://www.sofi.com/privacy-policy/", "snippet": "Details credit underwriting disclosures, Relay budget tracking, and affiliate sharing."},
+    ],
+    "mercury": [
+        {"title": "Mercury Terms of Use", "url": "https://mercury.com/legal/terms", "snippet": "Governs startup business banking, Treasury accounts, IO credit cards, and API access."},
+        {"title": "Mercury Privacy Policy", "url": "https://mercury.com/legal/privacy", "snippet": "Covers corporate KYC/KYB verification, partner bank disclosures, and audit logs."},
+    ],
+    "razorpay": [
+        {"title": "Razorpay Terms of Use", "url": "https://razorpay.com/terms/", "snippet": "Governs Indian payment gateway, UPI/card settlements, RazorpayX banking, and payouts."},
+        {"title": "Razorpay Privacy Policy", "url": "https://razorpay.com/privacy/", "snippet": "Details RBI/PCI-DSS transaction auditing, merchant KYC, and fraud risk telemetry."},
+    ],
+    "adyen": [
+        {"title": "Adyen Terms and Conditions", "url": "https://www.adyen.com/legal/terms-and-conditions", "snippet": "Governs enterprise omnichannel payment acquiring, POS terminals, and global settlements."},
+        {"title": "Adyen Privacy Statement", "url": "https://www.adyen.com/policies-and-disclaimer/privacy-policy", "snippet": "Covers payment card tokenization, RevenueProtect fraud scoring, and GDPR compliance."},
+    ],
+
+    # ---------------------------------------------------------
+    # 25. Expanded News Networks, Tech Media & Knowledge Portals
+    # ---------------------------------------------------------
+    "npr": [
+        {"title": "NPR Terms of Use", "url": "https://www.npr.org/about-npr/179876898/terms-of-use", "snippet": "Governs NPR public radio streams, podcasts, articles, and member station links."},
+        {"title": "NPR Privacy Policy", "url": "https://www.npr.org/about-npr/179878450/privacy-policy", "snippet": "Covers podcast download metrics, listener donations, and sponsor measurement."},
+    ],
+    "economist": [
+        {"title": "The Economist Terms of Use", "url": "https://www.economist.com/legal/terms-of-use", "snippet": "Governs Economist digital/print subscriptions, Espresso app, and archival access."},
+        {"title": "The Economist Privacy Policy", "url": "https://www.economistgroup.com/privacy-policy", "snippet": "Covers subscriber reading profiles, event registrations, and targeted marketing."},
+    ],
+    "forbes": [
+        {"title": "Forbes Terms of Service", "url": "https://www.forbes.com/terms/", "snippet": "Governs Forbes digital articles, contributor network, billionaire lists, and paywalls."},
+        {"title": "Forbes Privacy Statement", "url": "https://www.forbes.com/privacy/", "snippet": "Covers programmatic ad-tech profiling, newsletter telemetry, and reader cookies."},
+    ],
+    "cnbc": [
+        {"title": "NBCUniversal / CNBC Terms of Service", "url": "https://www.nbcuniversal.com/terms", "snippet": "Governs CNBC Investing Club, Pro subscriptions, live market streams, and financial news."},
+        {"title": "NBCUniversal Privacy Policy", "url": "https://www.nbcuniversal.com/privacy", "snippet": "Covers market quote tracking, video streaming telemetry, and ad personalization."},
+    ],
+    "foxnews": [
+        {"title": "Fox News Terms of Use", "url": "https://www.foxnews.com/terms-of-use", "snippet": "Governs Fox News digital broadcasts, Fox Nation subscriptions, and article comments."},
+        {"title": "Fox News Privacy Policy", "url": "https://www.foxnews.com/privacy-policy", "snippet": "Covers video viewership metrics, device identifiers, and targeted advertising."},
+    ],
+    "aljazeera": [
+        {"title": "Al Jazeera Terms and Conditions", "url": "https://www.aljazeera.com/terms-and-conditions/", "snippet": "Governs Al Jazeera English international news coverage, live streams, and republishing."},
+        {"title": "Al Jazeera Privacy Policy", "url": "https://privacy.aljazeera.net/", "snippet": "Details cookie preferences, mobile app analytics, and reader correspondence."},
+    ],
+    "wired": [
+        {"title": "Condé Nast (WIRED) User Agreement", "url": "https://www.condenast.com/user-agreement", "snippet": "Governs WIRED technology journalism, digital subscriptions, and Condé Nast publications."},
+        {"title": "Condé Nast Privacy Policy", "url": "https://www.condenast.com/privacy-policy", "snippet": "Covers subscriber behavior profiling, affiliate commerce links, and ad tech."},
+    ],
+    "techcrunch": [
+        {"title": "TechCrunch Terms of Service", "url": "https://techcrunch.com/terms-of-service/", "snippet": "Governs startup news, TechCrunch Disrupt events, and Crunchbase/Media integrations."},
+        {"title": "TechCrunch Privacy Policy", "url": "https://techcrunch.com/privacy/", "snippet": "Covers newsletter subscriptions, event badge telemetry, and targeted advertising."},
+    ],
+    "theverge": [
+        {"title": "Vox Media (The Verge) Terms of Use", "url": "https://www.voxmedia.com/legal/terms-of-use", "snippet": "Governs The Verge tech reviews, community comment threads, and Vox Media properties."},
+        {"title": "Vox Media Privacy Notice", "url": "https://www.voxmedia.com/legal/privacy-notice", "snippet": "Details Coral comment moderation, affiliate link tracking, and ad measurement."},
+    ],
+    "hackernews": [
+        {"title": "Y Combinator / Hacker News Terms of Use", "url": "https://www.ycombinator.com/legal/#tou", "snippet": "Governs Hacker News submissions, moderation guidelines, and Y Combinator portals."},
+        {"title": "Y Combinator Privacy Policy", "url": "https://www.ycombinator.com/legal/#privacy", "snippet": "Details minimal account logging, upvote/karma integrity checks, and YC applications."},
+    ],
+    "archiveorg": [
+        {"title": "Internet Archive Terms of Use", "url": "https://archive.org/about/terms.php", "snippet": "Governs Wayback Machine web snapshots, Open Library lending, and non-profit archiving."},
+    ],
+
+    # ---------------------------------------------------------
+    # 26. Expanded Global Tech, Semiconductors, Fitness, Retail & SaaS
+    # ---------------------------------------------------------
+    "amd": [
+        {"title": "AMD Terms of Use / Copyright", "url": "https://www.amd.com/en/legal/copyright.html", "snippet": "Governs Ryzen/EPYC/Radeon software drivers, ROCm developer tools, and site usage."},
+        {"title": "AMD Privacy Notice", "url": "https://www.amd.com/en/legal/privacy.html", "snippet": "Details Adrenalin driver diagnostic telemetry, crash dumps, and partner disclosures."},
+    ],
+    "asus": [
+        {"title": "ASUS Terms of Use Notice", "url": "https://www.asus.com/terms_of_use_notice_privacy_policy/official-site/", "snippet": "Governs ROG gaming hardware, MyASUS utilities, Armoury Crate, and warranty terms."},
+        {"title": "ASUS Privacy Policy", "url": "https://www.asus.com/terms_of_use_notice_privacy_policy/privacy_policy/", "snippet": "Covers hardware serial registration, driver telemetry, and cloud backup services."},
+    ],
+    "logitech": [
+        {"title": "Logitech Terms of Use", "url": "https://www.logitech.com/en-in/tos/terms", "snippet": "Governs Logi Options+, G HUB gaming peripherals, webcam software, and device sales."},
+        {"title": "Logitech Privacy Policy", "url": "https://www.logitech.com/en-in/legal/privacy-policy", "snippet": "Details peripheral firmware updates, macro cloud sync, and optional usage telemetry."},
+    ],
+    "razer": [
+        {"title": "Razer Terms of Service", "url": "https://www.razer.com/legal/terms-conditions", "snippet": "Governs Razer Synapse, Chroma RGB cloud profiles, Razer Gold currency, and hardware."},
+        {"title": "Razer Privacy Policy", "url": "https://www.razer.com/legal/privacy-policy", "snippet": "Covers peripheral telemetry, Razer Gold payment verification, and game launcher data."},
+    ],
+    "garmin": [
+        {"title": "Garmin Terms of Use", "url": "https://www.garmin.com/en-US/legal/terms-of-use/", "snippet": "Governs Garmin Connect fitness tracking, GPS navigation maps, and Connect IQ apps."},
+        {"title": "Garmin Privacy Policy", "url": "https://www.garmin.com/en-US/privacy/connect/", "snippet": "Details biometric heart-rate/sleep metrics, GPS workout routes, and health data controls."},
+    ],
+    "peloton": [
+        {"title": "Peloton Terms of Service", "url": "https://www.onepeloton.com/terms-of-service", "snippet": "Governs Bike/Tread All-Access memberships, live fitness classes, and mandatory arbitration."},
+        {"title": "Peloton Privacy Policy", "url": "https://www.onepeloton.com/privacy-policy", "snippet": "Covers workout heart-rate telemetry, leaderboard profiles, and camera/mic permissions."},
+    ],
+    "nike": [
+        {"title": "Nike Terms of Use", "url": "https://agreementservice.svs.nike.com/us/en_us/rest/agreement?agreementType=termsOfUse&uxId=com.nike.commerce.nikedotcom.web&country=US&language=en&requestType=redirect", "snippet": "Governs Nike.com, SNKRS app drops, Nike Run Club, and Nike Training Club."},
+        {"title": "Nike Privacy Policy", "url": "https://agreementservice.svs.nike.com/us/en_us/rest/agreement?agreementType=privacyPolicy&uxId=com.nike.commerce.nikedotcom.web&country=US&language=en&requestType=redirect", "snippet": "Covers run GPS tracking, sneaker drop anti-bot checks, and personalized retail ads."},
+    ],
+    "ikea": [
+        {"title": "IKEA Terms and Conditions", "url": "https://www.ikea.com/us/en/customer-service/terms-conditions/", "snippet": "Governs furniture orders, IKEA Family loyalty perks, Home Smart IoT, and returns."},
+        {"title": "IKEA Privacy Notice", "url": "https://www.ikea.com/us/en/customer-service/privacy-policy/", "snippet": "Details room planner saves, smart home hub telemetry, and delivery tracking."},
+    ],
+    "khanacademy": [
+        {"title": "Khan Academy Terms of Service", "url": "https://www.khanacademy.org/about/tos", "snippet": "Governs free K-12 & college educational courses, Khanmigo AI tutor, and teacher tools."},
+        {"title": "Khan Academy Privacy Policy", "url": "https://www.khanacademy.org/about/privacy-policy", "snippet": "Covers COPPA/FERPA student privacy protections, learning progress, and zero ad sales."},
+    ],
+    "codecademy": [
+        {"title": "Codecademy Terms of Service", "url": "https://www.codecademy.com/terms", "snippet": "Governs interactive coding workspaces, Pro career paths, and Skillsoft certifications."},
+        {"title": "Codecademy Privacy Policy", "url": "https://www.codecademy.com/policy", "snippet": "Details code exercise telemetry, learner progress, and Skillsoft enterprise sharing."},
+    ],
+    "n8n": [
+        {"title": "n8n Terms of Service", "url": "https://n8n.io/legal/", "snippet": "Governs n8n Cloud workflow automation, AI agent nodes, and Sustainable Use License."},
+        {"title": "n8n Privacy Policy", "url": "https://n8n.io/legal/#privacy", "snippet": "Covers workflow execution metadata, encrypted OAuth credentials, and EU data residency."},
+    ],
+    "calendly": [
+        {"title": "Calendly Customer Terms & Conditions", "url": "https://calendly.com/legal/customer-terms-conditions", "snippet": "Governs automated meeting scheduling, round-robin team routing, and Stripe payment links."},
+        {"title": "Calendly Privacy Notice", "url": "https://calendly.com/legal/privacy-notice", "snippet": "Details calendar free/busy sync permissions, invitee booking data, and integrations."},
+    ],
+    "typeform": [
+        {"title": "Typeform Terms of Service", "url": "https://www.typeform.com/terms-service/", "snippet": "Governs conversational forms, surveys, VideoAsk, and respondent data ownership."},
+        {"title": "Typeform Privacy Policy", "url": "https://admin.typeform.com/to/dwk6gt", "snippet": "Covers form submission storage, respondent tracking opt-outs, and GDPR compliance."},
+    ],
 }
 
 # Aliases and colloquial abbreviations mapping to canonical directory keys
@@ -1099,7 +1885,6 @@ DIRECTORY_ALIASES: Dict[str, str] = {
     "office365": "microsoft",
     "microsoft365": "microsoft",
     "amzn": "amazon",
-    "aws": "amazon",
     "goog": "google",
     "alphabet": "google",
     "gsuite": "google",
@@ -1109,32 +1894,176 @@ DIRECTORY_ALIASES: Dict[str, str] = {
     "snap": "snapchat",
     "psn": "playstation",
     "playstationnetwork": "playstation",
-    "xboxlive": "microsoft",
+    "xboxlive": "xbox",
+    "gamepass": "xbox",
+    "xboxgamepass": "xbox",
 
-    # AI Platforms
+    # AI Platforms, Labs & Coding Agents
     "chatgpt": "openai",
     "gpt": "openai",
+    "sora": "openai",
     "claude": "anthropic",
     "gemini": "google",
     "deepmind": "google",
     "copilot": "microsoft",
     "githubcopilot": "github",
     "anysphere": "cursor",
+    "grok": "xai",
+    "deepseekr1": "deepseek",
+    "deepseekv3": "deepseek",
+    "alibabaqwen": "qwen",
+    "tongyi": "qwen",
+    "codeium": "windsurf",
+    "bolt": "stackblitz",
+    "boltnew": "stackblitz",
+    "devin": "cognition",
+    "cognitionai": "cognition",
+    "cody": "sourcegraph",
+    "together": "togetherai",
+    "fireworks": "fireworksai",
+    "fal": "falai",
+    "weightsandbiases": "wandb",
+    "scale": "scaleai",
+    "luma": "lumaai",
+    "dreammachine": "lumaai",
+    "pi": "inflection",
+    "hf": "huggingface",
+
+    # Gaming, Studios & Platforms
+    "gta": "rockstargames",
+    "gta5": "rockstargames",
+    "gtav": "rockstargames",
+    "gta6": "rockstargames",
+    "gtavi": "rockstargames",
+    "gtaonline": "rockstargames",
+    "grandtheftauto": "rockstargames",
+    "grand theft auto": "rockstargames",
+    "rockstar": "rockstargames",
+    "rockstar games": "rockstargames",
+    "socialclub": "rockstargames",
+    "reddead": "rockstargames",
+    "red dead": "rockstargames",
+    "rdr2": "rockstargames",
+    "take2": "taketwo",
+    "take2games": "taketwo",
+    "taketwointeractive": "taketwo",
+    "2k": "2kgames",
+    "nba2k": "2kgames",
+    "cod": "activision",
+    "callofduty": "activision",
+    "call of duty": "activision",
+    "warzone": "activision",
+    "zenimax": "bethesda",
+    "elderscrolls": "bethesda",
+    "fallout": "bethesda",
+    "starfield": "bethesda",
+    "cdpr": "cdprojektred",
+    "cyberpunk": "cdprojektred",
+    "witcher": "cdprojektred",
+    "gogcom": "gog",
+    "ffxiv": "squareenix",
+    "finalfantasy": "squareenix",
+    "pubg": "krafton",
+    "clashofclans": "supercell",
+    "brawlstars": "supercell",
+    "clashroyale": "supercell",
+    "mojang": "minecraft",
+    "lol": "riotgames",
+    "leagueoflegends": "riotgames",
+    "valorant": "riotgames",
+    "wow": "blizzard",
+    "worldofwarcraft": "blizzard",
+    "battlenet": "blizzard",
+    "overwatch": "blizzard",
+    "fortnite": "epicgames",
+    "epic": "epicgames",
+    "ue5": "unrealengine",
+    "unreal": "unrealengine",
+    "rustgame": "facepunch",
+    "warthunder": "gaijin",
+    "worldoftanks": "wargaming",
+    "baldursgate": "larian",
+    "paradoxplaza": "paradox",
+    "overwolf": "curseforge",
+    "itch": "itchio",
+    "chess": "chesscom",
+    "nvidia geforce now": "geforcenow",
+
+    # Programming Languages & Foundations
+    "py": "python",
+    "pypi": "python",
+    "psf": "python",
+    "node": "nodejs",
+    "openjs": "nodejs",
+    "js": "nodejs",
+    "javascript": "nodejs",
+    "npmjs": "npm",
+    "ts": "typescript",
+    "rust": "rustlang",
+    "crates": "rustlang",
+    "cratesio": "rustlang",
+    "go": "golang",
+    "jdk": "java",
+    "openjdk": "java",
+    "csharp": "dotnet",
+    "c#": "dotnet",
+    ".net": "dotnet",
+    "nuget": "dotnet",
+    "c++": "cpp",
+    "cplusplus": "cpp",
+    "isocpp": "cpp",
+    "rubygems": "ruby",
+    "rails": "ruby",
+    "packagist": "php",
+    "composer": "php",
+    "dart": "flutter",
+    "pubdev": "flutter",
+    "hexpm": "elixir",
+    "erlang": "elixir",
+    "julialang": "julia",
+    "linux": "linuxfoundation",
+    "cncf": "linuxfoundation",
+    "ubuntu": "canonical",
+    "rhel": "redhat",
+    "openshift": "redhat",
+    "arch": "archlinux",
+    "aur": "archlinux",
+    "brew": "homebrew",
 
     # Dev & Cloud
     "gh": "github",
     "gl": "gitlab",
+    "bitbucket": "atlassian",
+    "jira": "atlassian",
+    "confluence": "atlassian",
     "cf": "cloudflare",
-    "gcp": "google",
-    "azure": "microsoft",
+    "gcp": "googlecloud",
     "so": "stackoverflow",
     "ddg": "duckduckgo",
     "dockerhub": "docker",
-    "elastic": "elastic",
     "wp": "wordpress",
     "automattic": "wordpress",
+    "terraform": "hashicorp",
+    "vault": "hashicorp",
+    "visualstudio": "vscode",
+    "visualstudiocode": "vscode",
+    "sonar": "sonarqube",
+    "sonarcloud": "sonarqube",
+    "dev": "devto",
+    "forem": "devto",
+    "okta": "auth0",
 
-    # Media & Entertainment
+    # VPNs, Privacy, Security & Browsers
+    "protonvpn": "proton",
+    "protonmail": "proton",
+    "pia": "privateinternetaccess",
+    "tor": "torproject",
+    "warp": "cloudflarewarp",
+    "1.1.1.1": "cloudflarewarp",
+    "browsercompany": "arc",
+    "firefox": "mozilla",
+
+    # Media, Streaming & Entertainment
     "prime": "amazon",
     "primevideo": "primevideo",
     "prime video": "primevideo",
@@ -1148,6 +2077,30 @@ DIRECTORY_ALIASES: Dict[str, str] = {
     "hbomax": "max",
     "paramount": "paramountplus",
     "paramount+": "paramountplus",
+    "everand": "scribd",
+    "ko-fi": "kofi",
+
+    # Crypto, Finance & Banking
+    "gemini exchange": "geminiexchange",
+    "consensys": "metamask",
+    "eth": "ethereum",
+    "sol": "solana",
+    "jpmorgan": "chase",
+    "bofa": "bankofamerica",
+    "boa": "bankofamerica",
+    "capone": "capitalone",
+    "amex": "americanexpress",
+    "charlesschwab": "schwab",
+    "ibkr": "interactivebrokers",
+
+    # News & Knowledge
+    "theeconomist": "economist",
+    "hn": "hackernews",
+    "ycombinator": "hackernews",
+    "wayback": "archiveorg",
+    "internetarchive": "archiveorg",
+    "condenast": "wired",
+    "voxmedia": "theverge",
 
     # Rideshare & E-commerce
     "eats": "ubereats",
@@ -1244,10 +2197,15 @@ def search_known_directory(query: str) -> List[Dict[str, str]]:
     if not clean:
         return []
 
-    # Strip common web affixes: "www.", ".com", ".io", ".org", "https://", "http://"
+    # Strip common web affixes: "www.", ".com", ".io", ".org", "https://", "http://", trailing path
     clean_domain = re.sub(r"^https?://", "", clean)
     clean_domain = re.sub(r"^www\.", "", clean_domain)
-    clean_domain = re.sub(r"\.(com|org|net|io|ai|app|co|dev|so|me|tv|in|club)$", "", clean_domain).strip()
+    clean_domain = re.sub(r"/.*$", "", clean_domain)
+    clean_domain = re.sub(
+        r"\.(com|org|net|io|ai|app|co|dev|so|me|tv|in|club|gg|sh|fm|tech|cloud|uk|de|fr|ch|jp|ca|au)$",
+        "",
+        clean_domain,
+    ).strip()
     clean_alphanumeric = re.sub(r"[^a-z0-9]", "", clean)
 
     matched_key: Optional[str] = None
@@ -1271,8 +2229,7 @@ def search_known_directory(query: str) -> List[Dict[str, str]]:
 
     # 3. Token-based and substring match (e.g. "discord web" -> discord, "epic games store" -> epicgames)
     if not matched_key:
-        tokens = set(re.findall(r"[a-z0-9]+", clean))
-        # Prioritize exact token match against directory keys
+        tokens = re.findall(r"[a-z0-9]+", clean)
         for token in tokens:
             if token in KNOWN_DIRECTORY:
                 matched_key = token

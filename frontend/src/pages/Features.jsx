@@ -345,14 +345,15 @@ export default function Features() {
                   Curated Directory Discovery
                 </h3>
                 <span className="text-[11px] font-mono text-[#78716c] dark:text-zinc-500 block">
-                  249+ authoritative services with dynamic web fallback
+                  438+ authoritative services with dynamic web fallback
                 </span>
               </div>
             </div>
             <p className="text-xs text-[#5c5549] dark:text-zinc-400 leading-relaxed">
-              Provides instant lookup across 249+ popular platforms, streaming services, and developer tools
-              with zero API keys or external costs. For unlisted companies, an auto-discovery pipeline crawls
-              known policy paths and search engine endpoints with realistic progression timers and modal pagination.
+              Provides instant lookup across 438+ popular platforms, AI labs, programming languages, VPNs,
+              streaming services, fintechs, and developer tools with zero API keys or external costs. For
+              unlisted companies, an auto-discovery pipeline crawls known policy paths and search engine
+              endpoints with realistic progression timers and modal pagination.
             </p>
           </div>
 
@@ -387,7 +388,7 @@ export default function Features() {
         </h2>
         <p className="text-xs sm:text-sm text-[#5c5549] dark:text-zinc-400 max-w-xl mx-auto leading-relaxed">
           Paste any public Terms of Use or Privacy Policy URL on the dashboard, or pick
-          from over 249+ verified platforms in the directory.
+          from over 438+ verified platforms in the directory.
         </p>
         <div className="pt-2 flex justify-center">
           <Link
