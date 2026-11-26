@@ -159,7 +159,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
       <div
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg bg-[#f5eedf] dark:bg-[#121215] rounded-t-2xl sm:rounded-xl p-4 sm:p-5 border border-[#d5cbba] dark:border-zinc-800 shadow-2xl text-[#1c1917] dark:text-zinc-100 max-h-[88vh] sm:max-h-[85vh] flex flex-col"
+        className="relative w-full max-w-lg bg-[#f5eedf] dark:bg-[#121215] rounded-t-2xl sm:rounded-xl p-4 sm:p-5 border border-[#b5a994] dark:border-[var(--edge-card)] shadow-2xl sm:shadow-[4px_4px_0_0_var(--shadow-card)] text-[#1c1917] dark:text-zinc-100 max-h-[88vh] sm:max-h-[85vh] flex flex-col"
       >
         {/* Close Button */}
         <button
@@ -194,7 +194,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                 }}
                 disabled={loading}
                 placeholder="Company name or domain (e.g. Spotify, Linear, Stripe)"
-                className="w-full pl-9 pr-9 py-2.5 sm:py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-xs focus:outline-none focus:border-[#1c1917] dark:focus:border-zinc-500 font-mono min-h-[42px] sm:min-h-0 disabled:opacity-50"
+                className="w-full pl-9 pr-9 py-2.5 sm:py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#b5a994] dark:border-[var(--edge-card)] text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-xs focus:outline-none focus:border-[#1c1917] dark:focus:border-zinc-200 font-mono min-h-[42px] sm:min-h-0 disabled:opacity-50 input-3d"
               />
               {query && !loading && (
                 <button
@@ -214,7 +214,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-4 py-2.5 sm:py-2 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-medium text-xs font-mono transition-all disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 flex items-center justify-center active:scale-95 shrink-0"
+              className="px-4 py-2.5 sm:py-2 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-[#1c1917] dark:border-zinc-300 font-medium text-xs font-mono disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 flex items-center justify-center shrink-0 btn-3d-primary"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
             </button>
@@ -260,13 +260,13 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
 
         {/* Candidates list with pagination */}
         {!loading && totalItems > 0 && (
-          <div className="space-y-2 flex-1 overflow-y-auto pr-1 min-h-0">
+          <div className="space-y-2.5 flex-1 overflow-y-auto pr-1.5 pb-1 min-h-0">
             {paginatedCandidates.map((cand, idx) => {
               const isKnown = cand.source === 'known_directory';
               return (
                 <div
                   key={`${cand.url}-${idx}`}
-                  className="p-3 sm:p-3 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-all flex flex-col justify-between gap-1.5 text-left"
+                  className="p-3 sm:p-3 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 card-3d-interactive flex flex-col justify-between gap-1.5 text-left"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -292,7 +292,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                         onSelectUrl(cand.url);
                         onClose();
                       }}
-                      className="shrink-0 text-xs sm:text-[11px] font-mono px-3 py-1.5 sm:px-2.5 sm:py-1 rounded bg-[#ece5d8] hover:bg-[#ded6c6] active:bg-[#d5cbba] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600 dark:text-zinc-200 dark:hover:text-white dark:border-transparent transition-colors cursor-pointer min-h-[34px] sm:min-h-0 flex items-center active:scale-95 shadow-2xs"
+                      className="shrink-0 text-xs sm:text-[11px] font-mono px-3 py-1.5 sm:px-2.5 sm:py-1 rounded bg-[#ece5d8] hover:bg-[#ded6c6] active:bg-[#d5cbba] text-[#1c1917] dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:active:bg-zinc-600 dark:text-zinc-200 dark:hover:text-white cursor-pointer min-h-[34px] sm:min-h-0 flex items-center btn-3d-sm"
                     >
                       Select
                     </button>
@@ -330,7 +330,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                 type="button"
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
-                className="px-2 py-1 rounded bg-[#ece5d8] border border-[#d5cbba] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 text-[11px] cursor-pointer"
+                className="px-2 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer btn-3d-sm"
                 aria-label="Previous page"
               >
                 <ChevronLeft className="w-3 h-3" />
@@ -343,7 +343,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                 type="button"
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className="px-2 py-1 rounded bg-[#ece5d8] border border-[#d5cbba] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1 text-[11px] cursor-pointer"
+                className="px-2 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer btn-3d-sm"
                 aria-label="Next page"
               >
                 <span>Next</span>

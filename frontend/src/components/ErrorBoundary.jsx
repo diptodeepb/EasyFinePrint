@@ -35,11 +35,11 @@ export default class ErrorBoundary extends React.Component {
               {this.state.error?.message || 'An unexpected rendering error occurred.'}
             </p>
           </div>
-          <div className="flex items-center gap-2 pt-2">
+          <div className="flex items-center gap-2.5 pt-2">
             <button
               type="button"
               onClick={this.handleReset}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 text-xs font-medium cursor-pointer transition-all active:scale-95 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-[#1c1917] dark:border-zinc-300 text-xs font-medium cursor-pointer btn-3d-primary"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Return to Dashboard</span>
@@ -47,7 +47,7 @@ export default class ErrorBoundary extends React.Component {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95 shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 text-xs cursor-pointer btn-3d-secondary"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Reload Page</span>

@@ -33,6 +33,7 @@ export default function PolicyDetail() {
   const [analyzingSeconds, setAnalyzingSeconds] = useState(0);
   const [rawSnapshotText, setRawSnapshotText] = useState('');
   const [error, setError] = useState('');
+  const [loadedId, setLoadedId] = useState(null);
 
   useEffect(() => {
     if (!analyzing) {
@@ -45,34 +46,60 @@ export default function PolicyDetail() {
     return () => clearInterval(timer);
   }, [analyzing]);
 
+  const fetchPolicyBundle = useCallback(async (targetId) => {
+    const pData = await api.getPolicy(targetId);
+    const hData = await api.getPolicyHistory(targetId);
+    const sData = pData.latest_snapshot_id
+      ? await api.getSnapshot(targetId, pData.latest_snapshot_id)
+      : null;
+    return { pData, hData, sData };
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const pData = await api.getPolicy(id);
+      const { pData, hData, sData } = await fetchPolicyBundle(id);
       setPolicy(pData);
-
-      const hData = await api.getPolicyHistory(id);
       setHistory(hData);
-
-      if (pData.latest_snapshot_id) {
-        const sData = await api.getSnapshot(id, pData.latest_snapshot_id);
-        setSnapshot(sData);
-        setRawSnapshotText(sData.extracted_text || '');
-      } else {
-        setSnapshot(null);
-        setRawSnapshotText('');
-      }
+      setSnapshot(sData);
+      setRawSnapshotText(sData?.extracted_text || '');
+      setLoadedId(id);
     } catch (err) {
       setError(err.message || 'Failed to load policy');
+      setLoadedId(id);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [fetchPolicyBundle, id]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    let active = true;
+    const syncPolicy = async () => {
+      try {
+        const { pData, hData, sData } = await fetchPolicyBundle(id);
+        if (!active) return;
+        setPolicy(pData);
+        setHistory(hData);
+        setSnapshot(sData);
+        setRawSnapshotText(sData?.extracted_text || '');
+        setError('');
+      } catch (err) {
+        if (active) {
+          setError(err.message || 'Failed to load policy');
+        }
+      } finally {
+        if (active) {
+          setLoadedId(id);
+          setLoading(false);
+        }
+      }
+    };
+    syncPolicy();
+    return () => {
+      active = false;
+    };
+  }, [fetchPolicyBundle, id]);
 
   const handleRecheck = async () => {
     setChecking(true);
@@ -123,7 +150,7 @@ export default function PolicyDetail() {
     }
   };
 
-  if (loading) {
+  if (loading || loadedId !== id) {
     return (
       <div className="max-w-5xl mx-auto px-4 py-20 text-center space-y-2 font-mono">
         <Loader2 className="w-6 h-6 animate-spin text-[#5c5549] dark:text-zinc-400 mx-auto" />
@@ -140,7 +167,7 @@ export default function PolicyDetail() {
         </div>
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 active:scale-95 py-2 px-3 rounded-lg border border-[#d5cbba] dark:border-zinc-800 bg-[#f5eedf] dark:bg-zinc-900 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 py-2 px-3 rounded-lg bg-[#f5eedf] dark:bg-zinc-900 btn-3d-secondary"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to dashboard
         </Link>
@@ -176,11 +203,11 @@ export default function PolicyDetail() {
         </Link>
 
         {/* Action Controls - side by side on mobile */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto">
           <button
             onClick={handleReanalyze}
             disabled={analyzing || checking}
-            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#ece5d8] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 border border-[#d5cbba] dark:border-zinc-700/80 text-[#1c1917] dark:text-zinc-200 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 transition-all disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 active:scale-[0.98]"
+            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#ece5d8] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 text-[#1c1917] dark:text-zinc-200 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 btn-3d-secondary"
             title="Re-run deep semantic single-pass clause analysis across the entire policy"
           >
             {analyzing ? (
@@ -199,7 +226,7 @@ export default function PolicyDetail() {
           <button
             onClick={handleRecheck}
             disabled={checking || analyzing}
-            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-4 py-2.5 sm:py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-[#0c0a09] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 transition-all disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 active:scale-[0.98]"
+            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-4 py-2.5 sm:py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-[#0c0a09] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 border border-[#1c1917] dark:border-zinc-300 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 btn-3d-primary"
           >
             {checking ? (
               <>
@@ -252,7 +279,7 @@ export default function PolicyDetail() {
 
       {/* Real-time Single-Pass Analyzing Banner */}
       {analyzing && (
-        <div className="p-4 rounded-xl panel border space-y-2.5 font-mono text-xs">
+        <div className="p-4 rounded-xl panel card-3d space-y-2.5 font-mono text-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-[#1c1917] dark:text-zinc-200">
             <span className="flex items-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#5c5549] dark:text-zinc-400 shrink-0" />
@@ -276,7 +303,7 @@ export default function PolicyDetail() {
       )}
 
       {/* Policy Meta Panel */}
-      <div className="panel rounded-xl p-4 sm:p-5 border space-y-4">
+      <div className="panel card-3d rounded-xl p-4 sm:p-5 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
           <div className="space-y-1 min-w-0 max-w-full">
             <h1 className="text-lg sm:text-xl font-bold text-[#1c1917] dark:text-zinc-100 tracking-tight leading-snug">
@@ -352,7 +379,7 @@ export default function PolicyDetail() {
 
         {/* Consumer Risk Score & Clause Metrics Card */}
         {analysis && (
-          <div className="p-4 rounded-xl bg-[#faf5ec] dark:bg-zinc-950/80 border border-[#d5cbba] dark:border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xs">
+          <div className="p-4 rounded-xl bg-[#faf5ec] dark:bg-zinc-950/80 card-3d-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 flex-1">
               <div className="flex items-center justify-between sm:justify-start gap-3">
               {(() => {
@@ -493,13 +520,13 @@ export default function PolicyDetail() {
 
             {/* Severity Distribution Pills */}
             <div className="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-2 text-[11px] font-mono text-center">
-              <span className="px-2 py-1 sm:py-0.5 rounded bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-900/60 text-rose-800 dark:text-rose-300">
+              <span className="px-2 py-1 sm:py-0.5 rounded bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-900/60 text-rose-800 dark:text-rose-300 badge-3d">
                 {findings.filter((f) => f.severity === 'high').length} High
               </span>
-              <span className="px-2 py-1 sm:py-0.5 rounded bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 dark:border-amber-900/60 text-amber-800 dark:text-amber-300">
+              <span className="px-2 py-1 sm:py-0.5 rounded bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/30 dark:border-amber-900/60 text-amber-800 dark:text-amber-300 badge-3d">
                 {findings.filter((f) => f.severity === 'medium').length} Med
               </span>
-              <span className="px-2 py-1 sm:py-0.5 rounded bg-[#ece5d8] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-400">
+              <span className="px-2 py-1 sm:py-0.5 rounded bg-[#ece5d8] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-400 badge-3d">
                 {findings.filter((f) => f.severity === 'low').length} Low
               </span>
             </div>
@@ -518,7 +545,7 @@ export default function PolicyDetail() {
             <button
               onClick={handleReanalyze}
               disabled={analyzing}
-              className="w-full sm:w-auto px-3.5 py-2 sm:py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-900 dark:text-amber-200 border border-amber-500/40 text-xs sm:text-[11px] cursor-pointer whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center justify-center active:scale-95 transition-all"
+              className="w-full sm:w-auto px-3.5 py-2 sm:py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 active:bg-amber-500/40 text-amber-900 dark:text-amber-200 border border-amber-500/40 text-xs sm:text-[11px] cursor-pointer whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center justify-center btn-3d-sm"
             >
               Analyze Now
             </button>
@@ -548,13 +575,13 @@ export default function PolicyDetail() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-4 gap-1 sm:flex sm:items-center sm:gap-1.5 border-b border-[#d5cbba] dark:border-zinc-800 pb-2 text-[11px] sm:text-xs font-mono">
+      <div className="grid grid-cols-4 gap-1.5 sm:flex sm:items-center sm:gap-2 border-b border-[#d5cbba] dark:border-zinc-800 pb-2.5 text-[11px] sm:text-xs font-mono">
         <button
           onClick={() => setActiveTab('findings')}
-          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center cursor-pointer ${
             activeTab === 'findings'
-              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium shadow-xs'
-              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800'
+              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary'
+              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800 transition-colors'
           }`}
         >
           Clauses ({findings.length})
@@ -562,10 +589,10 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('diff')}
-          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center cursor-pointer ${
             activeTab === 'diff'
-              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium shadow-xs'
-              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800'
+              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary'
+              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800 transition-colors'
           }`}
         >
           Diffs ({changes.length})
@@ -573,10 +600,10 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center cursor-pointer ${
             activeTab === 'history'
-              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium shadow-xs'
-              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800'
+              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary'
+              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800 transition-colors'
           }`}
         >
           Log ({history.length})
@@ -584,10 +611,10 @@ export default function PolicyDetail() {
 
         <button
           onClick={() => setActiveTab('raw')}
-          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center transition-all cursor-pointer active:scale-95 ${
+          className={`w-full sm:w-auto px-1 sm:px-3 py-2 sm:py-1.5 rounded-lg justify-center whitespace-nowrap min-h-[36px] sm:min-h-0 flex items-center cursor-pointer ${
             activeTab === 'raw'
-              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium shadow-xs'
-              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800'
+              ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary'
+              : 'text-[#5c5549] hover:text-[#1c1917] hover:bg-[#ded6c6]/60 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-zinc-900 dark:active:bg-zinc-800 transition-colors'
           }`}
         >
           Source Text
@@ -599,7 +626,7 @@ export default function PolicyDetail() {
         <div className="space-y-3">
           {findings.length === 0 ? (
             isFallback ? (
-              <div className="p-6 sm:p-8 text-center rounded-xl panel border border-amber-500/30 dark:border-amber-900/40 bg-amber-500/10 dark:bg-amber-950/10 text-xs font-mono space-y-3">
+              <div className="p-6 sm:p-8 text-center rounded-xl panel card-3d border-amber-500/30 dark:border-amber-900/40 bg-amber-500/10 dark:bg-amber-950/10 text-xs font-mono space-y-3">
                 <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
                 <div className="font-semibold text-[#1c1917] dark:text-zinc-200 text-sm">Clause AI Analysis Deferred (Fallback Mode)</div>
                 <div className="text-[#5c5549] dark:text-zinc-400 max-w-lg mx-auto text-xs leading-relaxed">
@@ -608,14 +635,14 @@ export default function PolicyDetail() {
                 <button
                   onClick={handleReanalyze}
                   disabled={analyzing}
-                  className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 font-medium text-xs font-mono inline-flex items-center justify-center gap-1.5 cursor-pointer transition-all active:scale-95 min-h-[40px] sm:min-h-0"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-1.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:text-zinc-950 border border-[#1c1917] dark:border-zinc-300 font-medium text-xs font-mono inline-flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px] sm:min-h-0 btn-3d-primary"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Re-analyze Clauses Now</span>
                 </button>
               </div>
             ) : (
-              <div className="p-6 sm:p-8 text-center rounded-xl panel text-[#5c5549] dark:text-zinc-400 text-xs font-mono space-y-1">
+              <div className="p-6 sm:p-8 text-center rounded-xl panel card-3d text-[#5c5549] dark:text-zinc-400 text-xs font-mono space-y-1">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mx-auto mb-1" />
                 <div className="font-semibold text-[#1c1917] dark:text-zinc-200 text-sm">No Notable High-Risk Clauses Flagged</div>
                 <div className="text-[#78716c] dark:text-zinc-500 max-w-md mx-auto text-[11px] leading-relaxed">
@@ -624,7 +651,7 @@ export default function PolicyDetail() {
               </div>
             )
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               {findings.map((f, idx) => (
                 <FindingCard key={idx} finding={f} />
               ))}
@@ -651,7 +678,7 @@ export default function PolicyDetail() {
 
       {/* Tab 4: Raw Extracted Text */}
       {activeTab === 'raw' && (
-        <div className="panel rounded-xl p-3.5 sm:p-4 border space-y-2">
+        <div className="panel card-3d rounded-xl p-3.5 sm:p-4 space-y-2">
           <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-xs font-mono text-[#78716c] dark:text-zinc-500 border-b border-[#d5cbba] dark:border-zinc-800 pb-2">
             <span>Snapshot Baseline ({rawSnapshotText.length.toLocaleString()} characters)</span>
             <span className="break-all">ID: {policy.latest_snapshot_id}</span>

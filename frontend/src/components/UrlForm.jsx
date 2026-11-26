@@ -301,9 +301,9 @@ export default function UrlForm({
 
   return (
     <div className="w-full">
-      <div className="panel rounded-xl p-4 sm:p-6 shadow-sm">
+      <div className="panel card-3d rounded-xl p-4 sm:p-6">
         {/* Input Mode Selector (URL Link vs Direct Paste) */}
-        <div className="flex items-center gap-1.5 p-1 bg-[#e5ddcf] dark:bg-zinc-950 rounded-lg border border-[#d5cbba] dark:border-zinc-800 w-fit mb-4">
+        <div className="flex items-center gap-1.5 p-1 bg-[#e5ddcf] dark:bg-zinc-950 rounded-lg segmented-3d w-fit mb-4">
           <button
             type="button"
             onClick={() => {
@@ -312,7 +312,7 @@ export default function UrlForm({
             }}
             className={`px-3 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
               mode === "url"
-                ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium btn-3d-sm"
                 : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#ded6c6]/50 dark:hover:bg-zinc-900/50"
             }`}
           >
@@ -327,7 +327,7 @@ export default function UrlForm({
             }}
             className={`px-3 py-1.5 rounded-md text-xs font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
               mode === "paste"
-                ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium btn-3d-sm"
                 : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#ded6c6]/50 dark:hover:bg-zinc-900/50"
             }`}
           >
@@ -361,7 +361,7 @@ export default function UrlForm({
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck="false"
-                  className="w-full pl-10 pr-10 py-3 sm:py-2.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black hover:border-black/80 dark:border-zinc-300 dark:hover:border-zinc-200 text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 transition-colors disabled:opacity-50 font-mono min-h-[44px] shadow-xs"
+                  className="w-full pl-10 pr-10 py-3 sm:py-2.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black hover:border-black/80 dark:border-zinc-300 dark:hover:border-zinc-200 text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 disabled:opacity-50 font-mono min-h-[44px] input-3d"
                 />
                 {url && !loading && (
                   <button
@@ -382,7 +382,7 @@ export default function UrlForm({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-sm sm:text-xs font-mono flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer shrink-0 min-h-[44px] active:scale-[0.99] border border-[#1c1917] dark:border-zinc-300 shadow-xs"
+                className="w-full sm:w-auto px-5 py-3 sm:py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-sm sm:text-xs font-mono flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer shrink-0 min-h-[44px] border border-[#1c1917] dark:border-zinc-300 btn-3d-primary"
               >
                 {loading ? (
                   <>
@@ -467,7 +467,7 @@ export default function UrlForm({
                       type="button"
                       onClick={() => handleSelectSample(item.url)}
                       disabled={loading}
-                      className="w-full sm:w-auto justify-center px-2.5 py-1.5 sm:py-0.5 rounded-md bg-[#faf5ec] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800 active:bg-[#ded6c6] dark:active:bg-zinc-700 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white transition-colors border border-[#d5cbba] dark:border-zinc-800 cursor-pointer text-xs sm:text-[11px] min-h-[34px] sm:min-h-0 flex items-center active:scale-95 text-center font-mono shadow-2xs"
+                      className="w-full sm:w-auto justify-center px-2.5 py-1.5 sm:py-0.5 rounded-md bg-[#faf5ec] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800 active:bg-[#ded6c6] dark:active:bg-zinc-700 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white cursor-pointer text-xs sm:text-[11px] min-h-[34px] sm:min-h-0 flex items-center text-center font-mono btn-3d-sm"
                     >
                       <span>{item.name}</span>
                     </button>
@@ -478,7 +478,7 @@ export default function UrlForm({
               <button
                 type="button"
                 onClick={onOpenDiscovery}
-                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 active:text-black dark:active:text-white transition-colors text-xs sm:text-[11px] cursor-pointer w-full sm:w-auto py-1.5 sm:py-0 rounded-md sm:rounded-none bg-[#faf5ec]/60 dark:bg-zinc-950/60 sm:bg-transparent border border-[#d5cbba] dark:border-zinc-800/80 sm:border-0 active:scale-95 min-h-[34px] sm:min-h-0 font-mono shadow-2xs sm:shadow-none"
+                className="inline-flex items-center justify-center sm:justify-start gap-1.5 text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 active:text-black dark:active:text-white text-xs sm:text-[11px] cursor-pointer w-full sm:w-auto py-1.5 sm:py-0 rounded-md sm:rounded-none bg-[#faf5ec] dark:bg-zinc-900 sm:bg-transparent dark:sm:bg-transparent btn-3d-sm sm:border-0 sm:shadow-none sm:hover:translate-x-0 sm:hover:translate-y-0 sm:active:translate-x-0 sm:active:translate-y-0 min-h-[34px] sm:min-h-0 font-mono"
               >
                 <Search className="w-3.5 h-3.5 sm:w-3 sm:h-3 text-[#78716c] dark:text-zinc-500 shrink-0" />
                 <span>Lookup by company name</span>
@@ -531,7 +531,7 @@ export default function UrlForm({
                     disabled={loading}
                     maxLength={2048}
                     placeholder="https://company.com/terms (mandatory for tracking)"
-                    className="w-full pl-3 pr-8 py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono shadow-xs"
+                    className="w-full pl-3 pr-8 py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono input-3d"
                   />
                   {pastedUrl && !loading && (
                     <button
@@ -566,7 +566,7 @@ export default function UrlForm({
                     disabled={loading}
                     maxLength={200}
                     placeholder="e.g. Acme Terms of Service"
-                    className="w-full pl-3 pr-8 py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono shadow-xs"
+                    className="w-full pl-3 pr-8 py-2 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono input-3d"
                   />
                   {pastedTitle && !loading && (
                     <button
@@ -611,7 +611,7 @@ export default function UrlForm({
                   rows={7}
                   maxLength={500000}
                   placeholder="Paste the raw terms of service or privacy agreement text directly here..."
-                  className="w-full p-3 pr-16 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono resize-y min-h-[140px] shadow-xs"
+                  className="w-full p-3 pr-16 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black dark:border-zinc-700 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs focus:outline-none focus:border-black dark:focus:border-zinc-400 font-mono resize-y min-h-[140px] input-3d"
                 />
                 {rawText && !loading && (
                   <button
@@ -620,7 +620,7 @@ export default function UrlForm({
                       setRawText("");
                       if (error) setError("");
                     }}
-                    className="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded bg-[#e5ddcf] hover:bg-[#ded6c6] text-[#5c5549] hover:text-[#1c1917] text-[10px] font-mono border border-[#d5cbba] dark:bg-zinc-900/90 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 dark:border-zinc-700/80 transition-colors cursor-pointer shadow-xs"
+                    className="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded bg-[#e5ddcf] hover:bg-[#ded6c6] text-[#5c5549] hover:text-[#1c1917] text-[10px] font-mono dark:bg-zinc-900/90 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer btn-3d-sm"
                     title="Clear agreement text body"
                     aria-label="Clear agreement text body"
                   >
@@ -664,7 +664,7 @@ export default function UrlForm({
                 rawText.trim().length < 100 ||
                 isSystemUrl(pastedUrl)
               }
-              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-xs font-mono flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer min-h-[42px] border border-[#1c1917] dark:border-zinc-300 shadow-xs"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-xs font-mono flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer min-h-[42px] border border-[#1c1917] dark:border-zinc-300 btn-3d-primary"
             >
               {loading ? (
                 <>

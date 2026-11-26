@@ -34,15 +34,15 @@ export default function DiffViewer({ changes = [], diffSummary = null, analysisS
         </div>
 
         {/* Filter buttons */}
-        <div className="flex flex-wrap items-center gap-1 text-xs">
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {['all', 'addition', 'removal', 'modification'].map((type) => (
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-xs font-mono capitalize transition-all cursor-pointer min-h-[32px] sm:min-h-0 flex items-center justify-center active:scale-95 ${
+              className={`px-3 py-1.5 sm:px-2.5 sm:py-1 rounded text-xs font-mono capitalize cursor-pointer min-h-[32px] sm:min-h-0 flex items-center justify-center ${
                 filter === type
-                  ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium'
-                  : 'bg-[#f5eedf] text-[#5c5549] hover:text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 dark:border-zinc-800'
+                  ? 'bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-medium border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary'
+                  : 'bg-[#f5eedf] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200 btn-3d-sm'
               }`}
             >
               {type}
@@ -53,7 +53,7 @@ export default function DiffViewer({ changes = [], diffSummary = null, analysisS
 
       {/* Change Summary Card */}
       {analysisSummary && (
-        <div className="p-3.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-xs text-[#292524] dark:text-zinc-300 space-y-1">
+        <div className="p-3.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-900 card-3d-sm text-xs text-[#292524] dark:text-zinc-300 space-y-1">
           <div className="font-mono text-[11px] uppercase tracking-wider text-[#78716c] dark:text-zinc-500 font-semibold">
             Version Delta Analysis
           </div>
@@ -63,15 +63,15 @@ export default function DiffViewer({ changes = [], diffSummary = null, analysisS
 
       {/* Changes list */}
       {filteredChanges.length === 0 ? (
-        <div className="p-8 text-center rounded-xl panel text-[#78716c] dark:text-zinc-500 text-xs font-mono">
+        <div className="p-8 text-center rounded-xl panel card-3d text-[#78716c] dark:text-zinc-500 text-xs font-mono">
           No changes match the selected filter.
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3.5">
           {filteredChanges.map((chg) => (
             <div
               key={chg.change_id}
-              className="panel rounded-lg overflow-hidden border"
+              className="panel card-3d-sm rounded-lg overflow-hidden"
             >
               {/* Header Bar */}
               <div className="px-3 sm:px-4 py-2.5 sm:py-2 bg-[#faf5ec] dark:bg-zinc-950 border-b border-[#d5cbba] dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">

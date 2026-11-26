@@ -140,7 +140,7 @@ export default function MarkdownDocViewer({ markdown, id = 'document-content-bod
   return (
     <article
       id={id}
-      className="rounded-lg border border-[#d5cbba] bg-[#f5eedf] dark:border-zinc-800 dark:bg-zinc-950/40 p-4 sm:p-8 space-y-8 text-sm text-[#292524] dark:text-zinc-300 leading-relaxed font-sans break-words [overflow-wrap:anywhere] max-w-full overflow-hidden"
+      className="rounded-lg bg-[#f5eedf] dark:bg-zinc-950/40 card-3d p-4 sm:p-8 space-y-8 text-sm text-[#292524] dark:text-zinc-300 leading-relaxed font-sans break-words [overflow-wrap:anywhere] max-w-full overflow-hidden"
     >
       {sections.map((section, sIdx) => (
         <section key={sIdx} className="space-y-3 min-w-0">
