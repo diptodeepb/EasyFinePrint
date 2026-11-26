@@ -122,7 +122,116 @@ class PolicyRepository:
             key=lambda x: x.get("last_checked_at") or x.get("created_at") or datetime.min,
             reverse=True,
         )
-        return [_normalize_doc(x) for x in items[:limit]]
+        return [_normalize_doc(x) for x in items[:safe_limit]]
+
+    async def list_policies_with_details(self, limit: int = 50) -> List[dict]:
+        """Fetch tracked policies pre-joined with latest analysis and snapshot provenance in a single query."""
+        safe_limit = min(max(1, int(limit)), 100)
+        if await self._use_mongo():
+            pipeline = [
+                {"$sort": {"last_checked_at": -1, "created_at": -1}},
+                {"$limit": safe_limit},
+                {
+                    "$lookup": {
+                        "from": "analyses",
+                        "let": {"pid": "$id", "p_id": "$_id"},
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": {
+                                        "$or": [
+                                            {"$eq": ["$policy_id", "$$pid"]},
+                                            {"$eq": ["$policy_id", "$$p_id"]},
+                                        ]
+                                    }
+                                }
+                            },
+                            {"$sort": {"created_at": -1}},
+                            {"$limit": 1},
+                        ],
+                        "as": "latest_analysis_docs",
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": "snapshots",
+                        "let": {"sid": "$latest_snapshot_id"},
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": {
+                                        "$or": [
+                                            {"$eq": ["$_id", "$$sid"]},
+                                            {"$eq": ["$id", "$$sid"]},
+                                        ]
+                                    }
+                                }
+                            },
+                            {"$project": {"provenance": 1}},
+                            {"$limit": 1},
+                        ],
+                        "as": "latest_snapshot_docs",
+                    }
+                },
+            ]
+            cursor = get_db()["policies"].aggregate(pipeline)
+            items = []
+            async for doc in cursor:
+                analysis_docs = doc.pop("latest_analysis_docs", [])
+                snapshot_docs = doc.pop("latest_snapshot_docs", [])
+
+                latest_analysis = _normalize_doc(analysis_docs[0]) if analysis_docs else None
+                latest_snap = _normalize_doc(snapshot_docs[0]) if snapshot_docs else None
+
+                norm_doc = _normalize_doc(doc)
+                provenance = (
+                    norm_doc.get("provenance")
+                    or (latest_analysis.get("provenance") if latest_analysis else None)
+                    or (latest_snap.get("provenance") if latest_snap else None)
+                    or "live"
+                )
+                norm_doc["latest_analysis"] = latest_analysis
+                norm_doc["provenance"] = provenance
+                norm_doc["warnings"] = latest_analysis.get("warnings", []) if latest_analysis else []
+                items.append(norm_doc)
+            return items
+
+        # In-memory fallback
+        raw_items = sorted(
+            list(self._mem_policies.values()),
+            key=lambda x: x.get("last_checked_at") or x.get("created_at") or datetime.min,
+            reverse=True,
+        )[:safe_limit]
+
+        latest_analyses_map: Dict[str, dict] = {}
+        for a in self._mem_analyses.values():
+            pid = a.get("policy_id")
+            if not pid:
+                continue
+            curr = latest_analyses_map.get(pid)
+            if curr is None or a.get("created_at", datetime.min) > curr.get("created_at", datetime.min):
+                latest_analyses_map[pid] = a
+
+        items = []
+        for p in raw_items:
+            norm_p = _normalize_doc(p)
+            pid = norm_p.get("id") or norm_p.get("_id")
+            latest_analysis = _normalize_doc(latest_analyses_map.get(pid))
+
+            snap_id = norm_p.get("latest_snapshot_id")
+            latest_snap = _normalize_doc(self._mem_snapshots.get(snap_id)) if snap_id else None
+
+            provenance = (
+                norm_p.get("provenance")
+                or (latest_analysis.get("provenance") if latest_analysis else None)
+                or (latest_snap.get("provenance") if latest_snap else None)
+                or "live"
+            )
+            norm_p["latest_analysis"] = latest_analysis
+            norm_p["provenance"] = provenance
+            norm_p["warnings"] = latest_analysis.get("warnings", []) if latest_analysis else []
+            items.append(norm_p)
+        return items
 
     async def create_policy(
         self,

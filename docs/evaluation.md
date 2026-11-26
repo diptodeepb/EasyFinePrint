@@ -6,10 +6,10 @@ EasyFinePrint is evaluated against an automated suite of unit and integration te
 
 ## 1. Test Summary
 
-- **Total Test Cases**: 77
-- **Passed**: 76 (100% of runnable offline tests; live external model gracefully skips when offline)
+- **Total Test Cases**: 79
+- **Passed**: 78 (100% of runnable offline tests; live external model gracefully skips when offline)
 - **Skipped**: 1 (live external model integration test, skipped when API key not present)
-- **Execution Time**: ~33 seconds
+- **Execution Time**: ~35 seconds
 - **Platform**: Python 3.14 on Linux (x86_64)
 
 ```
@@ -60,6 +60,8 @@ backend/tests/test_policies_flow.py::test_character_for_character_match_bypasses
 backend/tests/test_policies_flow.py::test_reanalyze_skipped_when_text_unchanged PASSED
 backend/tests/test_policies_flow.py::test_security_protections_and_nosql_mitigation PASSED
 backend/tests/test_policies_flow.py::test_delete_policy_lifecycle PASSED
+backend/tests/test_policies_flow.py::test_list_policies_with_details_zero_n_plus_one PASSED
+backend/tests/test_policies_flow.py::test_list_policies_with_details_mongo_aggregation_pipeline PASSED
 backend/tests/test_self_policy.py::test_self_policies_metadata PASSED
 backend/tests/test_self_policy.py::test_analyze_self_terms PASSED
 backend/tests/test_self_policy.py::test_analyze_self_privacy PASSED
@@ -96,7 +98,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_passed PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_partial_and_drops_unsupported PASSED
 backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_fails PASSED
 
-======================== 76 passed, 1 skipped in 33.97s ========================
+======================== 78 passed, 1 skipped in 35.23s ========================
 ```
 
 ---
@@ -105,6 +107,7 @@ backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_f
 
 | Evaluation Criterion                       | Observed Result                                                      | Rationale                                                                                                                 |
 | ------------------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Database Query Optimization**            | 0 N+1 queries, 1 aggregation roundtrip                               | Pre-joins latest analyses and snapshot provenance in a single MongoDB `$lookup` pipeline, projecting only `provenance: 1` |
 | **4-Tier Ingestion & Provenance**          | 100% test coverage across all 4 tiers                                | Live fetch, Wayback archive fallback, user paste with length bounds and canonical URL deduplication, and database baseline cache |
 | **Anti-Spam & Field Length Bounds**        | 100% of length boundary checks validated                             | Enforces RFC 7230 URL limit ($\le 2,048$ chars), title limit ($\le 200$ chars), and payload cap ($\le 500,000$ chars)    |
 | **Canonical Deduplication Guard**          | 100% of duplicate evasion tricks blocked                             | Rejects user-paste attempts matching system-maintained policies across trailing slashes, schemes, ports, and casing       |
@@ -124,7 +127,27 @@ backend/tests/test_validator.py::test_validate_initial_findings_all_fabricated_f
 
 ---
 
-## 3. Known Limitations
+## 3. Frontend Unit & Session Cache Tests
+
+The frontend includes an automated unit test suite executed with Node.js native test runner (`node --test frontend/src/lib/policiesCache.test.js`):
+
+- **Total Test Cases**: 5
+- **Passed**: 5 (100%)
+- **Execution Time**: ~300ms
+
+```text
+✔ session cache - set and retrieve policies (4.13ms)
+✔ session cache - invalidation marks stale (0.34ms)
+✔ cooldown management - starts at 30 seconds and calculates remaining (0.59ms)
+✔ cooldown management - expires cleanly (0.36ms)
+✔ fetchPoliciesWithCache - returns cached data without calling api when fresh (0.59ms)
+```
+
+Verifies session-scoped in-memory / `sessionStorage` caching, Stale-While-Revalidate (SWR) stale boundary checks, cache invalidation on policy submission, and persistent 30-second manual refresh throttling across route navigation.
+
+---
+
+## 4. Known Limitations
 
 1. **Single Page Applications (SPAs) & Interactive Challenges**: EasyFinePrint employs a 4-tier extraction pipeline supporting client-side JSON hydration states (`__NEXT_DATA__`, `window.__pageData__`, `window.__INITIAL_STATE__`) and sandboxed Node.js VM evaluation (`node:vm`). For origin websites requiring interactive human engagement (such as CAPTCHAs, multi-step click-to-agree gates, or cloudflare turnstile challenges), EasyFinePrint provides automated public archive fallback (Tier 2) and direct user-provided text ingestion (Tier 3) with immutable provenance badging.
 2. **Third-Party Rate Limits**: While EasyFinePrint enforces application-level limits, target legal websites may deploy Cloudflare or Akamai bot management that temporarily restricts automated requests. In such cases, the system seamlessly falls back to public archive records or user-provided ingestion.

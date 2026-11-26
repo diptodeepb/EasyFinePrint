@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from pymongo import ASCENDING, IndexModel
+from pymongo import ASCENDING, DESCENDING, IndexModel
 from app.config import settings
 
 logger = logging.getLogger("easyfineprint.db")
@@ -77,6 +77,7 @@ async def create_indexes():
         await db["policies"].create_indexes([
             IndexModel([("canonical_url", ASCENDING)], unique=True),
             IndexModel([("created_at", ASCENDING)]),
+            IndexModel([("last_checked_at", DESCENDING)]),
             IndexModel([("last_checked_at", ASCENDING)]),
         ])
         await db["snapshots"].create_indexes([
@@ -85,6 +86,7 @@ async def create_indexes():
             IndexModel([("content_hash", ASCENDING)]),
         ])
         await db["analyses"].create_indexes([
+            IndexModel([("policy_id", ASCENDING), ("created_at", DESCENDING)]),
             IndexModel([("policy_id", ASCENDING)]),
             IndexModel([("new_snapshot_id", ASCENDING)]),
             IndexModel([("created_at", ASCENDING)]),

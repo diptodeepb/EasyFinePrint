@@ -96,7 +96,7 @@ export default function PrivacyPolicy() {
             <button
               type="button"
               onClick={copyPrivacy}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] text-[#1c1917] border border-[#d5cbba] hover:border-[#bfb4a0] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-700 text-xs font-mono transition-colors cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] text-[#1c1917] border border-[#d5cbba] hover:border-[#bfb4a0] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-zinc-100 dark:border-zinc-800 dark:hover:border-zinc-700 text-xs font-mono transition-colors cursor-pointer active:scale-95"
             >
               {copied ? (
                 <>
@@ -131,11 +131,11 @@ export default function PrivacyPolicy() {
       </header>
 
       {/* Summary Box */}
-      <div className="p-4 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-xs text-[#5c5549] dark:text-zinc-400 leading-relaxed space-y-1.5 font-mono shadow-xs">
-        <div className="text-[#1c1917] dark:text-zinc-200 font-semibold uppercase tracking-wider text-[11px]">
+      <div className="p-4 sm:p-5 rounded-lg bg-[#faf5ec] dark:bg-zinc-900/90 border border-[#d5cbba] dark:border-zinc-700 text-xs text-[#5c5549] dark:text-zinc-200 leading-relaxed space-y-1.5 font-mono shadow-xs">
+        <div className="text-[#1c1917] dark:text-white font-semibold uppercase tracking-wider text-[11px]">
           Privacy Overview &amp; Telemetry Redaction
         </div>
-        <p>
+        <p className="text-[#5c5549] dark:text-zinc-200 leading-relaxed">
           EasyFinePrint operates a privacy-first service with strict telemetry
           redaction. We do not collect personal data, we do not operate tracking
           cookies or advertising pixels, and we do not sell or monetize

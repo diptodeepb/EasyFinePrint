@@ -56,6 +56,11 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
   - Initial visit auto-selects the user's OS preference (`prefers-color-scheme`) and dynamically syncs with system mode shifts. A pre-mount inline script in `index.html` evaluates theme before DOM render to eliminate Flash of Unstyled Content (FOUC).
   - Eye-comfort warm beige light palette (`#ece5d8` background, `#f5eedf` panels, `#faf5ec` elevated inputs, `#d5cbba` borders, `#1c1917` text) eliminating harsh white glare.
   - Radial outward curve animation using the CSS View Transitions API (`::view-transition-new(root)`), anchored to the trigger coordinates. Utilizes `flushSync` DOM batching and device-calibrated bezier curves (`cubic-bezier(0.4, 0, 0.2, 1)` on mobile; `cubic-bezier(0.5, 0, 1, 1)` on desktop) with shader optimization (`.is-theme-transitioning` suppressing expensive blurs) to maintain 60fps across mobile GPUs.
+- **Session-Scoped Policy Caching & Stale-While-Revalidate (SWR)**:
+  - **Zero-Latency In-App Routing**: Monitored policies are cached within the browser session via `frontend/src/lib/policiesCache.js` (in-memory state backed by `sessionStorage`). Navigating between client routes (`/`, `/features`, `/terms`, `/privacy`, `/policies/:id`) renders the dashboard table instantly with 0ms latency, zero layout shift, and zero loading spinners.
+  - **Background Auto-Revalidation**: When cached data age exceeds `STALE_TIME_MS` (60 seconds), the dashboard transparently triggers a background revalidation request without blocking the UI or clearing the table. Periodic synchronization intervals and `visibilitychange` listeners automatically refresh data when the user refocuses the tab.
+  - **Cache Invalidation on Mutation**: Submitting a new policy URL via the form or triggering re-analysis marks the session cache stale, guaranteeing newly created or re-evaluated policies appear immediately when returning to the dashboard.
+  - **Refresh Throttling & 30-Second Cooldown**: The manual "Refresh" button bypasses cache to force a fresh GET request. Once the updated list is posted, the button is disabled for exactly 30 seconds with a real-time countdown (`Refresh (30s)` $\rightarrow$ `Refresh (29s)`). The cooldown timestamp persists in `sessionStorage`, preventing throttling bypasses via fast route switching.
 - **Mobile & Modal Interaction Safety**:
   - **Auto-Closing Mobile Navigation**: Mobile theme selection or toggle interactions automatically close the mobile navigation drawer.
   - **Ghost-Click Elimination**: The mobile drawer's blurred backdrop consumes `onTouchEnd` and `onClick` with `e.preventDefault()` and `e.stopPropagation()`. Per W3C Touch Events specifications, preventing default on `touchend` suppresses synthetic mouse/click events, ensuring taps outside the drawer never trigger underlying input fields or buttons. Background scrolling is locked (`document.body.style.overflow = "hidden"`) while the drawer is open.
@@ -79,7 +84,7 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
   - `gemma.py`: Cloudflare Workers AI REST adapter for Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) with strict safety prompts isolating untrusted text inside `<UNTRUSTED_DOCUMENT_CONTENT>` tags. Computes an evidence-based consumer risk score (10 to 100) using diminishing-returns severity weighting and calibrated risk tiers: Low (0-30, Emerald), Moderate (31-55, Yellow), Elevated (56-74, Amber), and High (75-100, Rose) with specialized hazard multipliers for mandatory arbitration, court waivers, and bodily harm disclaimers.
   - `validator.py`: Server-side evidence checker. Ensures every quotation returned by the LLM is present verbatim in the source text.
   - `known_directory.py` & `discovery.py`: Expansive legal policy discovery service featuring an audited directory of **249+ leading platforms** (covering AI, SaaS, Cloud, Fintech, E-Commerce, Quick-Commerce, Rideshare, Streaming, Gaming, Hardware, and Telecom) with **501+ verified policy documents** and comprehensive alias resolution (`fb`, `yt`, `amzn`, `chatgpt`, `spacex`, `xfinity`, etc.). For unlisted companies, an automated multi-tier discovery pipeline probes candidate TLDs (`.com`, `.io`, `.ai`, `.app`, `.org`, `.dev`), inspects homepage DOM legal footers, probes canonical endpoints (`/terms`, `/privacy`, `/legal`), and executes privacy-preserving search engine fallback under strict multi-hop SSRF validation. The frontend modal includes a realistic stage-based progress bar and 5-per-page pagination for companies with extensive policy resources.
-  - `policies.py`: Manages the 4-Tier Hybrid Policy Ingestion & Diff Engine, single-pass clause risk scoring, Myers diff generation, self-policy intercept, exact-match baseline upgrade, and `DELETE /api/policies/{id}` cascade deletion.
+  - `policies.py`: Manages the 4-Tier Hybrid Policy Ingestion & Diff Engine, single-pass clause risk scoring, Myers diff generation, self-policy intercept, exact-match baseline upgrade, and `DELETE /api/policies/{id}` cascade deletion. Features an **optimized single-roundtrip `GET /api/policies` pipeline** eliminating the N+1 query problem by consuming pre-joined documents directly from `repositories.py:list_policies_with_details`.
   - `health.py`: Anti-reconnaissance health check endpoint returning minimal status (`status: healthy`) without leaking internal AI models, provider names, environment modes, or database topologies to external scanners.
   - `security.py`: HTTP security middleware enforcing HSTS, CSP, X-Frame-Options (`DENY`), X-Content-Type-Options (`nosniff`), Referrer-Policy, and request body size caps.
   - `sentry_tunnel` (`/api/tunnel`): Same-origin Sentry envelope proxy that validates DSN target hostnames and routes client telemetry server-to-server, preventing Brave Shields and adblockers from misclassifying error monitoring as advertising trackers. HTTP client logging (`httpx`/`httpcore`) is silenced to `WARNING` to prevent telemetry URL leakage.
@@ -87,15 +92,21 @@ EasyFinePrint is an evidence-backed monitor for public Terms of Service and Priv
 ### 2.3 Persistence Layer (`backend/app/db/`)
 
 - **Database**: MongoDB Atlas Free (M0 sandbox cluster, 512 MB) or local MongoDB.
-- **Collections**:
-  - `policies`: Tracked URLs, titles, and latest snapshot references.
-  - `snapshots`: Immutable version snapshots with content hashes and extracted text.
-  - `analyses`: Stored risk and change evaluations with model IDs and validation outcomes.
+- **Collections & Indexes**:
+  - `policies`: Tracked URLs, titles, and latest snapshot references. Indexed on `[("canonical_url", ASCENDING)]` (unique), `[("created_at", ASCENDING)]`, and `[("last_checked_at", DESCENDING)]` for index-covered dashboard sorting.
+  - `snapshots`: Immutable version snapshots with content hashes and extracted text. Indexed on `[("policy_id", ASCENDING)]`, `[("checked_at", ASCENDING)]`, and `[("content_hash", ASCENDING)]`.
+  - `analyses`: Stored risk and change evaluations with model IDs and validation outcomes. Includes an optimized compound index on `[("policy_id", ASCENDING), ("created_at", DESCENDING)]` for zero-overhead latest-analysis joins.
   - `check_events`: Chronological log of manual rechecks and extraction statuses.
   - `usage_counters`: Ephemeral operational metrics.
+- **Single-Roundtrip Dashboard Aggregation**:
+  - Implements `list_policies_with_details` in `repositories.py`.
+  - In MongoDB mode, executes a single `$lookup` aggregation pipeline:
+    - Sorts policies by `last_checked_at` descending up to the requested limit.
+    - Correlates each policy with its latest analysis in a single sub-pipeline join.
+    - Projects solely `provenance: 1` from the associated snapshot, eliminating megabytes of `extracted_text` payload transfers over the wire.
 - **Security Hardening**:
   - Strict NoSQL injection defenses: All ID queries use strict alphanumeric validation and MongoDB `$eq` operator binding to prevent operator injection attacks.
-- **Fallback**: Built-in async in-memory repository for local development and test isolation without database dependencies.
+- **Fallback**: Built-in async in-memory repository for local development and test isolation without database dependencies, utilizing an $O(N+M)$ single-pass dictionary lookup to pre-join latest analyses.
 
 ---
 

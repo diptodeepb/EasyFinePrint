@@ -57,6 +57,8 @@ A user supplies a massive 100 MB HTML file or a streaming connection that hangs 
 3. **Content-Type Filter**: Only `text/html`, `application/xhtml+xml`, or `text/plain` are accepted. Binary payloads (images, video, ZIP) are rejected before download completion.
 4. **Sandboxed JavaScript Execution**: When executing dynamic script evaluations for client-side SPAs, scripts run exclusively within an isolated Node.js V8 virtual machine (`node:vm`) with a strict 2-second timeout, mock sandbox objects (`window`, `document`), zero access to file system I/O, and zero network sockets.
 5. **Request Body Size Limit**: Global middleware rejects any inbound JSON request payload exceeding 10 MB with HTTP 413.
+6. **Query Amplification & N+1 Prevention**: The `/api/policies` endpoint utilizes a single-roundtrip MongoDB `$lookup` aggregation pipeline with projected `provenance: 1` (omitting multi-megabyte `extracted_text` payloads), bounded compound index lookups (`("policy_id", 1), ("created_at", -1)` on `analyses`), and pre-sorted index retrieval (`("last_checked_at", -1)` on `policies`), eliminating database connection starvation and resource exhaustion attacks.
+7. **Client-Side Refresh Throttling (30-Second Cooldown)**: Manual policy list refreshes enforce a strict 30-second cooldown period backed by `sessionStorage`. Rapid repeated re-fetch attempts are prevented in the user interface, mitigating client-driven denial-of-service spam on read endpoints.
 
 ---
 

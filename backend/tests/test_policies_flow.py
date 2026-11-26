@@ -255,3 +255,132 @@ async def test_delete_policy_lifecycle():
         assert resp_after.status_code == 404
 
 
+@pytest.mark.asyncio
+async def test_list_policies_with_details_zero_n_plus_one():
+    """Verify list_policies_with_details returns pre-joined details without N+1 repository loops."""
+    from app.db.repositories import repo
+    from unittest.mock import patch
+
+    # 1. Clear and populate repository with multiple policies
+    await repo.clear_all_data()
+
+    p1 = await repo.create_policy("https://example.com/terms", "https://example.com/terms", "Terms A", provenance="live")
+    s1 = await repo.create_snapshot(p1["id"], "hash1", "Snapshot text 1", "test", "success", 200, "Terms A", provenance="live")
+    a1 = await repo.create_analysis(
+        p1["id"], "initial", s1["id"], "Summary 1", [], [], "model1", "passed", risk_score=25, risk_level="low", provenance="live"
+    )
+
+    p2 = await repo.create_policy("https://example.org/privacy", "https://example.org/privacy", "Privacy B", provenance="user_pasted")
+    s2 = await repo.create_snapshot(p2["id"], "hash2", "Snapshot text 2", "user_pasted", "success", 200, "Privacy B", provenance="user_pasted")
+    a2 = await repo.create_analysis(
+        p2["id"], "initial", s2["id"], "Summary 2", [], [], "model1", "passed", risk_score=75, risk_level="high", provenance="user_pasted"
+    )
+
+    # 2. Call list_policies_with_details directly
+    results = await repo.list_policies_with_details(limit=10)
+    assert len(results) == 2
+    r_map = {r["id"]: r for r in results}
+
+    assert r_map[p1["id"]]["latest_analysis"]["risk_score"] == 25
+    assert r_map[p1["id"]]["provenance"] == "live"
+
+    assert r_map[p2["id"]]["latest_analysis"]["risk_score"] == 75
+    assert r_map[p2["id"]]["provenance"] == "user_pasted"
+
+    # 3. Test through HTTP GET /api/policies and ensure no N+1 calls to get_snapshot_by_id or get_latest_analysis_for_policy
+    with patch.object(repo, "get_snapshot_by_id") as mock_get_snap, \
+         patch.object(repo, "get_latest_analysis_for_policy") as mock_get_analysis:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            resp = await client.get("/api/policies")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert len(data) == 2
+            # Crucial verification: N+1 loop methods must NEVER be called!
+            mock_get_snap.assert_not_called()
+            mock_get_analysis.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_list_policies_with_details_mongo_aggregation_pipeline():
+    """Verify that when MongoDB is active, list_policies_with_details executes the single aggregation pipeline."""
+    from app.db.repositories import repo
+    from unittest.mock import patch, MagicMock
+
+    class AsyncMockCursor:
+        def __init__(self, docs):
+            self.docs = docs
+            self.idx = 0
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if self.idx < len(self.docs):
+                item = self.docs[self.idx]
+                self.idx += 1
+                return item
+            raise StopAsyncIteration
+
+    mock_raw_mongo_doc = {
+        "_id": "pol_100",
+        "id": "pol_100",
+        "url": "https://company.test/terms",
+        "canonical_url": "https://company.test/terms",
+        "title": "Company Terms",
+        "status": "active",
+        "created_at": "2026-01-01T00:00:00Z",
+        "last_checked_at": "2026-01-02T00:00:00Z",
+        "latest_snapshot_id": "snp_100",
+        "latest_analysis_docs": [
+            {
+                "_id": "ana_100",
+                "id": "ana_100",
+                "policy_id": "pol_100",
+                "analysis_type": "initial",
+                "new_snapshot_id": "snp_100",
+                "summary": "Mongo summary",
+                "risk_score": 42,
+                "risk_level": "moderate",
+                "findings": [],
+                "changes": [],
+                "model_id": "gemma",
+                "created_at": "2026-01-02T00:00:00Z",
+                "validation_status": "passed",
+                "provenance": "live",
+                "warnings": [],
+            }
+        ],
+        "latest_snapshot_docs": [
+            {
+                "_id": "snp_100",
+                "provenance": "live",
+            }
+        ],
+    }
+
+    mock_db = MagicMock()
+    mock_collection = MagicMock()
+    mock_cursor = AsyncMockCursor([dict(mock_raw_mongo_doc)])
+    mock_collection.aggregate.return_value = mock_cursor
+    mock_db.__getitem__.return_value = mock_collection
+
+    with patch.object(repo, "_use_mongo", return_value=True), \
+         patch("app.db.repositories.get_db", return_value=mock_db):
+        results = await repo.list_policies_with_details(limit=25)
+        assert len(results) == 1
+        item = results[0]
+        assert item["id"] == "pol_100"
+        assert item["latest_analysis"]["risk_score"] == 42
+        assert item["provenance"] == "live"
+
+        # Verify aggregate was called with $lookup pipeline
+        mock_collection.aggregate.assert_called_once()
+        pipeline_arg = mock_collection.aggregate.call_args[0][0]
+        stages = [list(stage.keys())[0] for stage in pipeline_arg]
+        assert "$sort" in stages
+        assert "$limit" in stages
+        assert "$lookup" in stages
+
+
+
+

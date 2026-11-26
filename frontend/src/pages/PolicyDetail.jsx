@@ -180,7 +180,7 @@ export default function PolicyDetail() {
           <button
             onClick={handleReanalyze}
             disabled={analyzing || checking}
-            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#ece5d8] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 border border-[#d5cbba] dark:border-zinc-700/80 text-[#1c1917] dark:text-zinc-200 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 transition-all disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 active:scale-[0.98]"
+            className="w-full sm:w-auto px-1.5 min-[360px]:px-2.5 sm:px-3.5 py-2.5 sm:py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#ece5d8] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 border border-[#d5cbba] dark:border-zinc-700/80 text-[#1c1917] dark:text-zinc-200 font-medium font-mono flex items-center justify-center gap-1 min-[360px]:gap-1.5 transition-all disabled:opacity-50 cursor-pointer min-h-[42px] sm:min-h-0 active:scale-[0.98]"
             title="Re-run deep semantic single-pass clause analysis across the entire policy"
           >
             {analyzing ? (
