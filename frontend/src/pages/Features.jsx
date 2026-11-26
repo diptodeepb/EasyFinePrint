@@ -35,7 +35,7 @@ export default function Features() {
 
       {/* Header */}
       <header className="space-y-3 border-b border-[#d5cbba] dark:border-zinc-800/80 pb-6">
-        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-[10px] sm:text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 shadow-2xs">
+        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#f5eedf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] text-[10px] sm:text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 badge-3d">
           <Layers className="w-3.5 h-3.5 text-[#5c5549] dark:text-zinc-400 shrink-0" />
           <span>Platform Architecture &amp; Capabilities</span>
         </div>
@@ -60,12 +60,12 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Feature 1: Clause Risk Auditing */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 flex flex-col justify-between space-y-4 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 shadow-2xs">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 badge-3d">
                   <Scale className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -101,10 +101,10 @@ export default function Features() {
           </div>
 
           {/* Feature 2: Verbatim Source Citations */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 flex flex-col justify-between space-y-4 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 shadow-2xs">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 badge-3d">
                   <FileCheck className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -140,10 +140,10 @@ export default function Features() {
           </div>
 
           {/* Feature 3: Revision & Change Tracking */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 flex flex-col justify-between space-y-4 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 shadow-2xs">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-200 shrink-0 badge-3d">
                   <GitCompare className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -191,11 +191,11 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Tier 1 */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Globe className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
@@ -214,9 +214,9 @@ export default function Features() {
           </div>
 
           {/* Tier 2 */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Archive className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
@@ -235,9 +235,9 @@ export default function Features() {
           </div>
 
           {/* Tier 3 */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <FileText className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
@@ -256,9 +256,9 @@ export default function Features() {
           </div>
 
           {/* Tier 4 */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Database className="w-4 h-4 text-[#5c5549] dark:text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
@@ -289,11 +289,11 @@ export default function Features() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Card 1: Cloudflare Workers AI */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Cpu className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -313,9 +313,9 @@ export default function Features() {
           </div>
 
           {/* Card 2: SSRF & Anti-Spam Security */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -335,9 +335,9 @@ export default function Features() {
           </div>
 
           {/* Card 3: Zero-Dependency Company Discovery */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Search className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -357,9 +357,9 @@ export default function Features() {
           </div>
 
           {/* Card 4: SPA Hydration & State Scraping */}
-          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 space-y-3 shadow-xs hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors">
+          <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
-              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 shadow-2xs">
+              <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
                 <Zap className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -381,7 +381,7 @@ export default function Features() {
       </section>
 
       {/* CTA Section */}
-      <section className="rounded-xl p-5 sm:p-8 bg-[#f5eedf] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-center space-y-3.5 sm:space-y-4 shadow-xs">
+      <section className="rounded-xl p-5 sm:p-8 bg-[#f5eedf] dark:bg-zinc-950 card-3d text-center space-y-3.5 sm:space-y-4">
         <h2 className="text-base sm:text-xl font-semibold text-[#1c1917] dark:text-zinc-100">
           Ready to audit a legal agreement?
         </h2>
@@ -392,7 +392,7 @@ export default function Features() {
         <div className="pt-2 flex justify-center">
           <Link
             to="/"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-xs font-mono transition-all active:scale-[0.98] shadow-sm min-h-[44px] border border-[#1c1917] dark:border-zinc-300"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-[#1c1917] hover:bg-[#292524] active:bg-black text-[#faf5ec] dark:bg-zinc-100 dark:hover:bg-white dark:active:bg-zinc-200 dark:text-zinc-950 font-medium text-xs font-mono min-h-[44px] border border-[#1c1917] dark:border-zinc-300 btn-3d-primary"
           >
             <span>Go to Dashboard</span>
             <ArrowRight className="w-3.5 h-3.5" />

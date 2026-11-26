@@ -74,7 +74,7 @@ export default function ThemeToggle({
         }
         const meta = document.querySelector('meta[name="theme-color"]');
         if (meta) {
-          meta.setAttribute("content", isSystemDark ? "#09090b" : "#ece5d8");
+          meta.setAttribute("content", isSystemDark ? "#050507" : "#f4ecde");
         }
       };
 
@@ -120,7 +120,7 @@ export default function ThemeToggle({
       }
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) {
-        meta.setAttribute("content", nextIsDark ? "#09090b" : "#ece5d8");
+        meta.setAttribute("content", nextIsDark ? "#050507" : "#f4ecde");
       }
     };
 
@@ -199,7 +199,7 @@ export default function ThemeToggle({
             return next;
           });
         }}
-        className={`px-2.5 py-1.5 rounded-lg bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7] dark:hover:bg-zinc-800/80 transition-colors cursor-pointer active:scale-95 flex items-center gap-1.5 min-h-[36px] shadow-2xs ${className}`}
+        className={`px-2.5 py-1.5 rounded-lg bg-[#f5eedf] dark:bg-zinc-900 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7] dark:hover:bg-zinc-800/80 cursor-pointer flex items-center gap-1.5 min-h-[36px] btn-3d-secondary ${className}`}
         title={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)} (Click to change)`}
         aria-label={`Theme: ${theme.charAt(0).toUpperCase() + theme.slice(1)} (Click to change)`}
         aria-haspopup="true"
@@ -218,7 +218,7 @@ export default function ThemeToggle({
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 mt-1.5 w-36 rounded-xl bg-[#faf5ec] dark:bg-[#121215] border border-[#d5cbba] dark:border-zinc-800 shadow-xl shadow-stone-900/10 dark:shadow-black/60 z-[60] p-1 font-mono text-xs animate-in fade-in zoom-in-95 duration-100"
+          className="absolute right-0 mt-2 w-36 rounded-xl bg-[#faf5ec] dark:bg-[#121215] card-3d-sm z-[60] p-1 font-mono text-xs animate-in fade-in zoom-in-95 duration-100"
         >
           {THEME_OPTIONS.map((opt) => {
             const Icon = opt.icon;

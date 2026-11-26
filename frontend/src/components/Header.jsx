@@ -1,17 +1,29 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ArrowRight, Star } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
   const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuState, setMenuState] = useState({
+    open: false,
+    path: location.pathname,
+  });
   const headerRef = useRef(null);
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
+  const mobileMenuOpen = menuState.open && menuState.path === location.pathname;
+
+  const setMobileMenuOpen = useCallback(
+    (updater) => {
+      setMenuState((prev) => {
+        const isOpen = prev.open && prev.path === location.pathname;
+        const nextOpen =
+          typeof updater === "function" ? updater(isOpen) : updater;
+        return { open: nextOpen, path: location.pathname };
+      });
+    },
+    [location.pathname],
+  );
 
   // Close mobile menu on Escape key
   useEffect(() => {
@@ -27,7 +39,7 @@ export default function Header() {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, setMobileMenuOpen]);
 
   // Lock body scroll while mobile menu is open to prevent background scrolling
   useEffect(() => {
@@ -48,7 +60,7 @@ export default function Header() {
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [setMobileMenuOpen]);
 
   const isCurrent = (path) => location.pathname === path;
 
@@ -56,7 +68,9 @@ export default function Header() {
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-50 w-full bg-[#ece5d8]/85 dark:bg-[#09090b]/85 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] transition-colors relative"
+        className={`sticky top-0 z-50 w-full bg-[#f4ecde]/85 dark:bg-[#050507]/85 backdrop-blur-md pt-[env(safe-area-inset-top,0px)] transition-colors relative ${
+          mobileMenuOpen ? "rounded-b-2xl md:rounded-none" : ""
+        }`}
       >
         <div className="max-w-6xl mx-auto px-3.5 sm:px-6 h-15 flex items-center justify-between gap-3">
           {/* Left: Brand Logo & Title */}
@@ -69,7 +83,7 @@ export default function Header() {
               <img
                 src="/logo.svg"
                 alt="EasyFinePrint Logo"
-                className="w-7 h-7 rounded-lg border border-[#d5cbba] dark:border-zinc-700/80 shadow-xs transition-transform duration-200 group-hover:scale-105"
+                className="w-7 h-7 rounded-lg border border-[#b5a994] dark:border-[var(--edge-btn)] shadow-[2px_2px_0_0_var(--shadow-btn)] transition-transform duration-200 group-hover:-translate-x-0.5 group-hover:-translate-y-0.5"
               />
               <span className="font-semibold text-sm sm:text-base text-[#1c1917] dark:text-zinc-100 tracking-tight group-hover:text-black dark:group-hover:text-white transition-colors">
                 EasyFinePrint
@@ -81,9 +95,9 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-1 sm:gap-1.5">
             <Link
               to="/"
-              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
+              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center ${
                 isCurrent("/")
-                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 shadow-xs font-medium"
+                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 btn-3d-sm font-medium"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/40"
               }`}
             >
@@ -92,9 +106,9 @@ export default function Header() {
 
             <Link
               to="/features"
-              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
+              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center ${
                 isCurrent("/features")
-                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 shadow-xs font-medium"
+                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 btn-3d-sm font-medium"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/40"
               }`}
             >
@@ -103,9 +117,9 @@ export default function Header() {
 
             <Link
               to="/terms"
-              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
+              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center ${
                 isCurrent("/terms")
-                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 shadow-xs font-medium"
+                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 btn-3d-sm font-medium"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/40"
               }`}
             >
@@ -114,9 +128,9 @@ export default function Header() {
 
             <Link
               to="/privacy"
-              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center active:scale-95 ${
+              className={`text-xs font-mono transition-all px-3 py-1.5 rounded-md min-h-[36px] flex items-center ${
                 isCurrent("/privacy")
-                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 shadow-xs font-medium"
+                  ? "text-[#1c1917] dark:text-zinc-100 bg-[#f5eedf] dark:bg-zinc-900 btn-3d-sm font-medium"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200 hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/40"
               }`}
             >
@@ -131,7 +145,7 @@ export default function Header() {
               href="https://github.com/diptodeepb/EasyFinePrint"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs font-mono text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white transition-all px-2.5 py-1.5 rounded-lg min-h-[36px] hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/60 border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 active:scale-95 shadow-2xs"
+              className="flex items-center gap-1.5 text-xs font-mono text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white px-2.5 py-1.5 rounded-lg min-h-[36px] bg-[#f5eedf] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800/80 btn-3d-secondary"
               title="Star on GitHub"
             >
               <Star className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400 fill-none shrink-0" />
@@ -148,7 +162,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="p-2 rounded-lg bg-[#f5eedf] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white transition-colors cursor-pointer active:scale-95 min-h-[36px] min-w-[36px] flex items-center justify-center shadow-2xs"
+              className="p-2 rounded-lg bg-[#f5eedf] dark:bg-zinc-900 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center btn-3d-secondary"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -163,7 +177,7 @@ export default function Header() {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden relative bg-[#ece5d8]/98 dark:bg-[#09090b]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 border-b border-[#d5cbba] dark:border-zinc-800">
+          <div className="md:hidden relative bg-[#f4ecde]/98 dark:bg-[#07070a]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 rounded-b-2xl border-b border-[#b5a994] dark:border-[var(--edge-card)] shadow-[0_4px_0_0_var(--shadow-card)]">
             {/* Architectural Top Divider Line for Mobile Menu */}
             <div
               className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
@@ -174,13 +188,13 @@ export default function Header() {
               <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2/5 h-full bg-gradient-to-r from-transparent via-white/40 dark:via-white/20 to-transparent blur-[0.5px]" />
             </div>
 
-            <nav className="flex flex-col space-y-1">
+            <nav className="flex flex-col space-y-1.5">
               <Link
                 to="/"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`px-3 py-2.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
                   isCurrent("/")
-                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold border border-[#d5cbba] dark:border-zinc-800"
+                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold btn-3d-sm"
                     : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/50"
                 }`}
               >
@@ -193,7 +207,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`px-3 py-2.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
                   isCurrent("/features")
-                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold border border-[#d5cbba] dark:border-zinc-800"
+                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold btn-3d-sm"
                     : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/50"
                 }`}
               >
@@ -206,7 +220,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`px-3 py-2.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
                   isCurrent("/terms")
-                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold border border-[#d5cbba] dark:border-zinc-800"
+                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold btn-3d-sm"
                     : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/50"
                 }`}
               >
@@ -219,7 +233,7 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
                 className={`px-3 py-2.5 rounded-lg text-xs font-mono transition-colors flex items-center justify-between ${
                   isCurrent("/privacy")
-                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold border border-[#d5cbba] dark:border-zinc-800"
+                    ? "bg-[#f5eedf] dark:bg-zinc-900 text-[#1c1917] dark:text-white font-semibold btn-3d-sm"
                     : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/50"
                 }`}
               >

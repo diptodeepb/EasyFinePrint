@@ -2,8 +2,14 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: "Geist", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 @layer base {
   :root {
+    color-scheme: light;
     /* Light Theme (CSI-UEMK inspired warm beige) */
     --bg-base: #ece5d8;
     --bg-surface: #f5eedf;
@@ -18,9 +24,33 @@
     --color-red: #e11d48;
     --color-amber: #d97706;
     --color-blue: #2563eb;
+
+    /* Tactile 3D depth tokens (Light) */
+    --edge-card: #b5a994;
+    --edge-card-strong: #9c8f78;
+    --shadow-card: #c4b8a3;
+    --shadow-card-hover: #afa28b;
+    --edge-btn: #b5a994;
+    --shadow-btn: #c4b8a3;
+    --shadow-btn-hover: #afa28b;
+    --shadow-btn-primary: #8a7f6f;
+    --shadow-well: #d3c8b6;
+
+    /* Editorial Canvas Gradient (Light: warm creamy top -> slightly darker beige bottom) */
+    --bg-gradient:
+      radial-gradient(110% 55% at 50% 0%, rgba(247, 240, 226, 0.55) 0%, rgba(247, 240, 226, 0) 65%),
+      radial-gradient(100% 65% at 50% 100%, rgba(208, 193, 168, 0.48) 0%, rgba(208, 193, 168, 0) 65%),
+      linear-gradient(180deg, #f2eadc 0%, #ece5d8 48%, #dfd4c0 100%);
+
+    /* Scrollbar Tokens (Light) */
+    --scrollbar-track: #e9e0d0;
+    --scrollbar-thumb: #b5a994;
+    --scrollbar-thumb-hover: #9c8f78;
+    --scrollbar-thumb-active: #5c5549;
   }
 
   .dark {
+    color-scheme: dark;
     /* Dark Theme */
     --bg-base: #09090b;
     --bg-surface: #121215;
@@ -35,6 +65,29 @@
     --color-red: #f43f5e;
     --color-amber: #f59e0b;
     --color-blue: #3b82f6;
+
+    /* Tactile 3D depth tokens (Dark) */
+    --edge-card: #43434c;
+    --edge-card-strong: #767682;
+    --shadow-card: #565660;
+    --shadow-card-hover: #7c7c88;
+    --edge-btn: #52525d;
+    --shadow-btn: #6a6a76;
+    --shadow-btn-hover: #858592;
+    --shadow-btn-primary: #5e5e69;
+    --shadow-well: #383842;
+
+    /* Architectural Canvas Gradient (Dark: deeper top -> subtle dark slate bottom) */
+    --bg-gradient:
+      radial-gradient(110% 55% at 50% 0%, rgba(3, 3, 5, 0.7) 0%, rgba(3, 3, 5, 0) 65%),
+      radial-gradient(100% 65% at 50% 100%, rgba(24, 24, 32, 0.32) 0%, rgba(24, 24, 32, 0) 65%),
+      linear-gradient(180deg, #050507 0%, #08080b 50%, #0e0e13 100%);
+
+    /* Scrollbar Tokens (Dark) */
+    --scrollbar-track: #0a0a0e;
+    --scrollbar-thumb: #3f3f46;
+    --scrollbar-thumb-hover: #52525b;
+    --scrollbar-thumb-active: #71717a;
   }
 
   html {
@@ -56,8 +109,11 @@
 
   body {
     background-color: var(--bg-base);
+    background-image: var(--bg-gradient);
+    background-repeat: no-repeat;
     color: var(--text-high);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--font-sans);
+    font-optical-sizing: auto;
     min-height: 100vh;
     min-height: 100dvh;
     overflow-x: hidden;
@@ -129,13 +185,208 @@
   background-color: var(--bg-surface-elevated);
 }
 
-/* Custom Themed Scrollbar for PC and Mobile */
-html,
-body,
-#root,
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-subtle) var(--bg-base);
+@layer components {
+  /* Tactile 3D Cards & Tables */
+  .card-3d {
+    border: 1px solid var(--edge-card);
+    box-shadow: 4px 4px 0 0 var(--shadow-card);
+  }
+
+  .card-3d-sm {
+    border: 1px solid var(--edge-card);
+    box-shadow: 3px 3px 0 0 var(--shadow-card);
+  }
+
+  .card-3d-interactive {
+    border: 1px solid var(--edge-card);
+    box-shadow: 3px 3px 0 0 var(--shadow-card);
+    transition:
+      transform 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.14s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.14s ease,
+      background-color 0.14s ease;
+  }
+
+  @media (hover: hover) {
+    .card-3d-interactive:hover {
+      transform: translate(-1px, -1px);
+      border-color: var(--edge-card-strong);
+      box-shadow: 4px 4px 0 0 var(--shadow-card-hover);
+    }
+  }
+
+  .table-3d {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--edge-card);
+    box-shadow: 4px 4px 0 0 var(--shadow-card);
+  }
+
+  /* Tactile 3D Buttons */
+  .btn-3d-primary {
+    box-shadow: 3px 3px 0 0 var(--shadow-btn-primary);
+    transition:
+      transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  @media (hover: hover) {
+    .btn-3d-primary:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 0 var(--shadow-btn-primary);
+    }
+  }
+
+  .btn-3d-primary:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 var(--shadow-btn-primary);
+  }
+
+  .btn-3d-primary:disabled {
+    box-shadow: 1px 1px 0 0 var(--shadow-btn-primary);
+  }
+
+  .btn-3d-secondary {
+    border: 1px solid var(--edge-btn);
+    box-shadow: 2.5px 2.5px 0 0 var(--shadow-btn);
+    transition:
+      transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  @media (hover: hover) {
+    .btn-3d-secondary:hover:not(:disabled) {
+      transform: translate(-1px, -1px);
+      border-color: var(--edge-card-strong);
+      box-shadow: 3.5px 3.5px 0 0 var(--shadow-btn-hover);
+    }
+  }
+
+  .btn-3d-secondary:active:not(:disabled) {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 1px 1px 0 0 var(--shadow-btn);
+  }
+
+  .btn-3d-secondary:disabled {
+    box-shadow: none;
+  }
+
+  .btn-3d-sm {
+    border: 1px solid var(--edge-btn);
+    box-shadow: 2px 2px 0 0 var(--shadow-btn);
+    transition:
+      transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
+  }
+
+  @media (hover: hover) {
+    .btn-3d-sm:hover:not(:disabled) {
+      transform: translate(-0.5px, -0.5px);
+      border-color: var(--edge-card-strong);
+      box-shadow: 2.5px 2.5px 0 0 var(--shadow-btn-hover);
+    }
+  }
+
+  .btn-3d-sm:active:not(:disabled) {
+    transform: translate(1.5px, 1.5px);
+    box-shadow: 0.5px 0.5px 0 0 var(--shadow-btn);
+  }
+
+  .btn-3d-sm:disabled {
+    box-shadow: none;
+  }
+
+  .btn-3d-sm-primary {
+    box-shadow: 2px 2px 0 0 var(--shadow-btn-primary);
+    transition:
+      transform 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.12s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background-color 0.15s ease;
+  }
+
+  .btn-3d-sm-primary:active:not(:disabled) {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0 0 var(--shadow-btn-primary);
+  }
+
+  /* Tactile Inputs, Segmented Tracks & Key Badges */
+  .input-3d {
+    box-shadow: 2px 2px 0 0 var(--shadow-well);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+
+  .input-3d:focus:not(:disabled) {
+    box-shadow: 3px 3px 0 0 var(--shadow-card);
+  }
+
+  .segmented-3d {
+    border: 1px solid var(--edge-card);
+    box-shadow: 2px 2px 0 0 var(--shadow-well);
+  }
+
+  .badge-3d {
+    box-shadow: 1.5px 1.5px 0 0 var(--shadow-well);
+  }
+
+  .wordmark-char {
+    display: inline-block;
+    transition:
+      color 0.2s ease,
+      transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @media (min-width: 768px) and (hover: hover) {
+    .wordmark-char:hover {
+      color: var(--text-high);
+      transform: translateY(-0.045em);
+    }
+
+    .dark .wordmark-char:hover {
+      color: #e4e4e7;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-3d-interactive,
+  .btn-3d-primary,
+  .btn-3d-secondary,
+  .btn-3d-sm,
+  .btn-3d-sm-primary,
+  .wordmark-char {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .card-3d-interactive:hover,
+  .wordmark-char:hover,
+  .btn-3d-primary:hover:not(:disabled),
+  .btn-3d-primary:active:not(:disabled),
+  .btn-3d-secondary:hover:not(:disabled),
+  .btn-3d-secondary:active:not(:disabled),
+  .btn-3d-sm:hover:not(:disabled),
+  .btn-3d-sm:active:not(:disabled),
+  .btn-3d-sm-primary:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Custom Themed Scrollbar for PC and Mobile (no stepper arrows) */
+/* Apply standard scrollbar-* only when ::-webkit-scrollbar is unsupported (e.g. Firefox),
+   since setting scrollbar-width/color in Chromium 121+ disables ::-webkit-scrollbar* rules. */
+@supports not selector(::-webkit-scrollbar) {
+  html,
+  body,
+  #root,
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  }
 }
 
 /* WebKit & Blink Browsers (Chrome, Safari, Edge, Opera, iOS/Android WebKit) */
@@ -145,31 +396,45 @@ body,
   height: 6px;
 }
 
+::-webkit-scrollbar-button,
+*::-webkit-scrollbar-button,
+::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:single-button,
+::-webkit-scrollbar-button:start:decrement,
+*::-webkit-scrollbar-button:start:decrement,
+::-webkit-scrollbar-button:end:increment,
+*::-webkit-scrollbar-button:end:increment {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
 ::-webkit-scrollbar-track,
 *::-webkit-scrollbar-track {
-  background: var(--bg-base);
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb,
 *::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
-  border: 1px solid var(--bg-base);
+  border: 1px solid var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb:hover,
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--border-strong);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-thumb:active,
 *::-webkit-scrollbar-thumb:active {
-  background: var(--text-low);
+  background: var(--scrollbar-thumb-active);
 }
 
 ::-webkit-scrollbar-corner,
 *::-webkit-scrollbar-corner {
-  background: var(--bg-base);
+  background: var(--scrollbar-track);
 }
 
 /* Hide scrollbar for smooth mobile horizontal swipe tabs when explicitly needed */

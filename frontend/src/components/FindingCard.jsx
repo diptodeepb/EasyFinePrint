@@ -37,11 +37,11 @@ export default function FindingCard({ finding }) {
   };
 
   return (
-    <div className="panel panel-hover rounded-xl p-4 sm:p-5 border flex flex-col justify-between gap-3">
+    <div className="panel panel-hover card-3d-interactive rounded-xl p-4 sm:p-5 flex flex-col justify-between gap-3">
       <div>
         {/* Header tags */}
         <div className="flex items-center justify-between gap-2 flex-wrap mb-3">
-          <span className="text-xs font-mono font-medium text-[#1c1917] bg-[#ece5d8] border border-[#d5cbba] dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-800 px-2.5 py-1 rounded-md">
+          <span className="text-xs font-mono font-medium text-[#1c1917] bg-[#ece5d8] border border-[#b5a994] dark:text-zinc-300 dark:bg-zinc-900 dark:border-zinc-700/80 px-2.5 py-1 rounded-md badge-3d">
             {categoryLabel}
           </span>
 
@@ -61,7 +61,7 @@ export default function FindingCard({ finding }) {
             <span>Source excerpt</span>
             <button
               onClick={handleCopyQuote}
-              className="text-[#5c5549] hover:text-[#1c1917] active:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 dark:active:text-white transition-colors p-1.5 -mr-1 -mt-1 rounded-md hover:bg-[#ded6c6]/60 dark:hover:bg-zinc-800 active:bg-[#d5cbba] dark:active:bg-zinc-700 min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer"
+              className="text-[#5c5549] hover:text-[#1c1917] active:text-[#1c1917] dark:text-zinc-400 dark:hover:text-zinc-200 dark:active:text-white p-1.5 -mr-1 -mt-1 rounded-md bg-[#f5eedf] hover:bg-[#e2d9c7] dark:bg-zinc-900 dark:hover:bg-zinc-800 min-w-[32px] min-h-[32px] flex items-center justify-center cursor-pointer btn-3d-sm"
               title="Copy quote"
               aria-label="Copy quote"
             >

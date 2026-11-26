@@ -2,24 +2,27 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ExternalLink } from "lucide-react";
 
+const CURRENT_YEAR = new Date().getFullYear();
+const BRAND_CHARS = "EasyFinePrint.".split("");
+
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = CURRENT_YEAR;
   const licenseUrl =
     "https://github.com/diptodeepb/EasyFinePrint/blob/main/LICENSE";
 
   return (
-    <footer className="relative bg-[#e5ddcf] dark:bg-[#09090b] text-[#5c5549] dark:text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto border-t border-[#d5cbba] dark:border-zinc-800/80 transition-colors">
+    <footer className="relative bg-gradient-to-b from-transparent to-[#d7cab4] dark:from-[#0e0e13] dark:to-[#111117] text-[#5c5549] dark:text-zinc-400 font-mono text-xs pt-8 sm:pt-12 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] mt-auto dark:border-t dark:border-zinc-800/80 transition-colors">
       {/* Architectural Top Divider Line */}
       <div
         className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
         aria-hidden="true"
       >
         {/* Subtle base gradient line fading to screen edges */}
-        <div className="w-full h-full bg-gradient-to-r from-transparent via-[#d5cbba] dark:via-zinc-800/80 to-transparent" />
+        <div className="w-full h-full bg-gradient-to-r from-transparent via-[#c4b7a1]/80 dark:via-zinc-800/80 to-transparent" />
         {/* Luminous center shimmer */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-[#bfb4a0]/50 dark:via-zinc-600/50 to-transparent" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-3/4 max-w-4xl h-full bg-gradient-to-r from-transparent via-[#a99b84]/55 dark:via-zinc-600/50 to-transparent" />
         {/* Delicate centered highlight accent */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/40 dark:via-white/25 to-transparent blur-[0.5px]" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 w-1/3 max-w-lg h-full bg-gradient-to-r from-transparent via-white/45 dark:via-white/25 to-transparent blur-[0.5px]" />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8 sm:space-y-10">
@@ -157,16 +160,19 @@ export default function Footer() {
         </div>
 
         {/* Large Brand Showcase Wordmark */}
-        <div className="pt-8 sm:pt-14 md:pt-20 pb-2 sm:pb-4 flex justify-center items-center overflow-hidden select-none">
-          <Link
-            to="/"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="font-sans text-[clamp(2.4rem,11.5vw,9.5rem)] font-bold tracking-tighter leading-none text-[#1c1917] hover:text-[#5c5549] dark:text-zinc-500/80 dark:hover:text-zinc-200 transition-colors duration-300 text-center block w-full whitespace-nowrap cursor-pointer active:scale-[0.99]"
-            title="EasyFinePrint - Back to Top"
-            aria-label="EasyFinePrint Home"
+        <div className="pt-6 sm:pt-12 md:pt-16 pb-1 sm:pb-3 flex justify-center items-center overflow-hidden select-none">
+          <div
+            className="font-sans text-[clamp(2.4rem,11.5vw,9.5rem)] font-bold tracking-tighter leading-[1.05] text-[#5c5549] dark:text-zinc-500/80 text-center inline-block py-3 whitespace-nowrap cursor-default"
+            aria-label="EasyFinePrint"
           >
-            EasyFinePrint.
-          </Link>
+            <span aria-hidden="true">
+              {BRAND_CHARS.map((char, idx) => (
+                <span key={idx} className="wordmark-char">
+                  {char}
+                </span>
+              ))}
+            </span>
+          </div>
         </div>
 
         {/* Bottom Bar: Copyright & Rights */}

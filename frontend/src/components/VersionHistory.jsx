@@ -5,7 +5,7 @@ import { formatLocalDate } from '../lib/dateUtils';
 export default function VersionHistory({ events = [], onViewSnapshot }) {
   if (!events || events.length === 0) {
     return (
-      <div className="p-8 text-center rounded-xl panel text-[#78716c] dark:text-zinc-500 text-xs font-mono">
+      <div className="p-8 text-center rounded-xl panel card-3d text-[#78716c] dark:text-zinc-500 text-xs font-mono">
         No check history recorded yet for this policy.
       </div>
     );
@@ -49,7 +49,7 @@ export default function VersionHistory({ events = [], onViewSnapshot }) {
               {/* Dot on line */}
               <div className="absolute -left-[17px] sm:-left-[21px] top-2 w-2 h-2 rounded-full bg-[#78716c] border border-[#faf5ec] dark:bg-zinc-500 dark:border-zinc-900" />
 
-              <div className="panel rounded-lg p-3 sm:p-3.5 border space-y-2 text-xs">
+              <div className="panel card-3d-sm rounded-lg p-3 sm:p-3.5 space-y-2 text-xs">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                     <span className={`text-[11px] font-mono px-2 py-0.5 rounded border ${badgeClass}`}>

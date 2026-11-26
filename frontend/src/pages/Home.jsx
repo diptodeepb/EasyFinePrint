@@ -390,13 +390,13 @@ export default function Home() {
         {/* Dedicated Line: Left-aligned Tabs and Right-aligned Search/Refresh on PC */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-1">
           {/* Switchable Ingestion Tabs (Left-aligned) */}
-          <div className="h-[34px] inline-flex items-center p-0.5 rounded-lg bg-[#e5ddcf] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-[11px] font-mono self-start shadow-xs">
+          <div className="h-[36px] inline-flex items-center p-1 rounded-lg bg-[#e5ddcf] dark:bg-zinc-950 segmented-3d text-[11px] font-mono self-start">
             <button
               type="button"
               onClick={() => handleTabChange("system")}
               className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
                 policyTab === "system"
-                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium btn-3d-sm"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200"
               }`}
             >
@@ -414,7 +414,7 @@ export default function Home() {
               onClick={() => handleTabChange("user")}
               className={`h-full px-2.5 rounded-md transition-all cursor-pointer flex items-center gap-1.5 text-[11px] leading-none ${
                 policyTab === "user"
-                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium shadow-xs border border-[#d5cbba] dark:border-zinc-700/60"
+                  ? "bg-[#f5eedf] dark:bg-zinc-800 text-[#1c1917] dark:text-zinc-100 font-medium btn-3d-sm"
                   : "text-[#5c5549] dark:text-zinc-400 hover:text-[#1c1917] dark:hover:text-zinc-200"
               }`}
             >
@@ -445,7 +445,7 @@ export default function Home() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
-                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#d5cbba] dark:border-zinc-800 text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-[#5c5549] dark:focus:border-zinc-300 focus:ring-1 focus:ring-[#5c5549]/30 dark:focus:ring-zinc-300/30 transition-colors disabled:opacity-50 h-[34px] shadow-xs"
+                className="w-full pl-8 pr-8 py-1.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-[#b5a994] dark:border-[var(--edge-card)] text-[#1c1917] dark:text-zinc-100 placeholder-[#8c8273] dark:placeholder-zinc-500 text-xs font-mono focus:outline-none focus:border-[#5c5549] dark:focus:border-zinc-200 focus:ring-1 focus:ring-[#5c5549]/30 dark:focus:ring-zinc-200/30 disabled:opacity-50 h-[36px] input-3d"
               />
               {searchQuery && !loadingPolicies && (
                 <button
@@ -463,10 +463,10 @@ export default function Home() {
             <button
               onClick={handleManualRefresh}
               disabled={loadingPolicies || isRevalidating || cooldownRemaining > 0}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-colors shrink-0 h-[34px] shadow-xs border ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 shrink-0 h-[36px] btn-3d-secondary ${
                 cooldownRemaining > 0
-                  ? "bg-[#f2ece1] text-[#9a9081] dark:bg-zinc-900/60 dark:text-zinc-500 border-[#ded5c5] dark:border-zinc-800 cursor-not-allowed opacity-75"
-                  : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white cursor-pointer active:scale-95 border-[#d5cbba] dark:border-zinc-800"
+                  ? "bg-[#f2ece1] text-[#9a9081] dark:bg-zinc-900/60 dark:text-zinc-500 cursor-not-allowed opacity-75"
+                  : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white cursor-pointer"
               }`}
               title={
                 cooldownRemaining > 0
@@ -498,12 +498,12 @@ export default function Home() {
         </div>
 
         {loadingPolicies ? (
-          <div className="p-8 text-center rounded-xl panel border text-[#5c5549] dark:text-zinc-400 text-xs font-mono">
+          <div className="p-8 text-center rounded-xl panel card-3d text-[#5c5549] dark:text-zinc-400 text-xs font-mono">
             <Loader2 className="w-5 h-5 animate-spin text-[#5c5549] dark:text-zinc-400 mx-auto mb-2" />
             <span>Loading tracked policies...</span>
           </div>
         ) : policies.length === 0 ? (
-          <div className="p-8 text-center rounded-xl panel border space-y-2">
+          <div className="p-8 text-center rounded-xl panel card-3d space-y-2">
             <Database className="w-6 h-6 text-[#78716c] dark:text-zinc-600 mx-auto" />
             <p className="text-xs text-[#5c5549] dark:text-zinc-400 font-mono">
               No policies tracked yet
@@ -513,7 +513,7 @@ export default function Home() {
             </p>
           </div>
         ) : tabPolicies.length === 0 ? (
-          <div className="p-8 text-center rounded-xl panel border space-y-2 font-mono">
+          <div className="p-8 text-center rounded-xl panel card-3d space-y-2 font-mono">
             <Database className="w-6 h-6 text-[#78716c] dark:text-zinc-600 mx-auto mb-1" />
             <p className="text-xs text-[#1c1917] dark:text-zinc-300">
               {policyTab === "user"
@@ -527,7 +527,7 @@ export default function Home() {
             </p>
           </div>
         ) : filteredPolicies.length === 0 ? (
-          <div className="p-8 text-center rounded-xl panel border border-[#d5cbba] dark:border-zinc-800 space-y-3 font-mono">
+          <div className="p-8 text-center rounded-xl panel card-3d space-y-3 font-mono">
             <div className="w-10 h-10 rounded-full bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 flex items-center justify-center mx-auto text-[#78716c] dark:text-zinc-500">
               <Search className="w-4 h-4" />
             </div>
@@ -542,7 +542,7 @@ export default function Home() {
             <button
               type="button"
               onClick={handleClearSearch}
-              className="px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white dark:border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95 shadow-2xs"
+              className="px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white text-xs cursor-pointer btn-3d-secondary"
             >
               Clear search filter
             </button>
@@ -550,10 +550,10 @@ export default function Home() {
         ) : (
           <>
             {/* Desktop / Tablet Table View */}
-            <div className="hidden md:block panel rounded-xl border overflow-hidden">
-              <div className="w-full overflow-hidden">
+            <div className="hidden md:block table-3d rounded-xl">
+              <div className="w-full overflow-hidden rounded-[11px]">
                 <table className="w-full text-xs font-mono">
-                  <thead className="bg-[#e5ddcf] dark:bg-zinc-950 border-b border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-400 uppercase tracking-wider text-[11px]">
+                  <thead className="bg-[#e5ddcf] dark:bg-zinc-950 border-b border-[#b5a994] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-400 uppercase tracking-wider text-[11px]">
                     <tr>
                       <th className="py-3 px-4 text-center w-[44%]">
                         Policy Document
@@ -585,7 +585,7 @@ export default function Home() {
                       return (
                         <tr
                           key={pol.id}
-                          className="hover:bg-[#e5ddcf]/50 dark:hover:bg-zinc-900/50 transition-colors"
+                          className="hover:bg-[#faf5ec] dark:hover:bg-zinc-900/60 transition-colors"
                         >
                           <td className="py-3.5 pl-4 pr-3 text-left">
                             <div className="flex items-center gap-2">
@@ -632,7 +632,7 @@ export default function Home() {
                           <td className="py-3.5 px-3 whitespace-nowrap text-left">
                             {score !== null && score !== undefined ? (
                               <span
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium tracking-wide whitespace-nowrap ${
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono font-medium tracking-wide whitespace-nowrap badge-3d ${
                                   level === "high"
                                     ? "bg-rose-500/10 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800/80 text-rose-800 dark:text-rose-300"
                                     : level === "elevated"
@@ -654,7 +654,7 @@ export default function Home() {
                                 </span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 whitespace-nowrap badge-3d">
                                 <span>{isFb ? "Fallback" : "Pending"}</span>
                               </span>
                             )}
@@ -665,7 +665,7 @@ export default function Home() {
                           <td className="py-3.5 pr-4 pl-2 text-right whitespace-nowrap">
                             <Link
                               to={`/policies/${pol.id}`}
-                              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors text-xs active:scale-95 shadow-2xs"
+                              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white text-xs btn-3d-sm"
                             >
                               <span>Inspect</span>
                               <ChevronRight className="w-3.5 h-3.5 text-[#78716c] group-hover:text-[#1c1917] dark:text-zinc-400 dark:group-hover:text-white transition-colors" />
@@ -680,7 +680,7 @@ export default function Home() {
             </div>
 
             {/* Mobile Dedicated 2x2 Grid View with final card centered in between */}
-            <div className="md:hidden grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="md:hidden grid grid-cols-2 gap-3.5 sm:gap-4">
               {paginatedPolicies.map((pol, idx) => {
                 const formattedDate = formatLocalDate(pol.last_checked_at);
                 const shortDate = formatLocalDate(pol.last_checked_at, {
@@ -697,9 +697,9 @@ export default function Home() {
                 return (
                   <div
                     key={pol.id}
-                    className={`panel panel-hover rounded-xl p-3.5 sm:p-4.5 border flex flex-col justify-between min-h-[195px] sm:min-h-[215px] text-xs transition-all ${
+                    className={`panel panel-hover card-3d-interactive rounded-xl p-3.5 sm:p-4.5 flex flex-col justify-between min-h-[195px] sm:min-h-[215px] text-xs ${
                       isFinalOdd
-                        ? "col-span-2 w-full max-w-[calc(50%-0.375rem)] sm:max-w-[calc(50%-0.5rem)] justify-self-center"
+                        ? "col-span-2 w-full max-w-[calc(50%-0.4375rem)] sm:max-w-[calc(50%-0.5rem)] justify-self-center"
                         : ""
                     }`}
                   >
@@ -758,7 +758,7 @@ export default function Home() {
                       <div className="flex items-center justify-between gap-1">
                         {score !== null && score !== undefined ? (
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium ${
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-medium badge-3d ${
                               level === "high"
                                 ? "bg-rose-500/10 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800/80 text-rose-800 dark:text-rose-300"
                                 : level === "elevated"
@@ -772,7 +772,7 @@ export default function Home() {
                             <span className="text-[#78716c] dark:text-zinc-500 font-normal">/100</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800">
+                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 bg-[#faf5ec] dark:bg-zinc-900 border border-[#d5cbba] dark:border-zinc-800 badge-3d">
                             <span>{isFb ? "Fallback" : "Pending"}</span>
                           </span>
                         )}
@@ -788,7 +788,7 @@ export default function Home() {
 
                       <Link
                         to={`/policies/${pol.id}`}
-                        className="group w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-300 dark:hover:text-white text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
+                        className="group w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-300 dark:hover:text-white text-xs font-mono font-medium flex items-center justify-center gap-1 btn-3d-sm"
                       >
                         <span>Inspect</span>
                         <ChevronRight className="w-3.5 h-3.5 text-[#78716c] group-hover:text-[#1c1917] dark:text-zinc-400 dark:group-hover:text-white transition-colors" />
@@ -827,28 +827,28 @@ export default function Home() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-1 sm:gap-1.5">
+                <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
                     disabled={safeCurrentPage <= 1}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white text-xs font-mono cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 btn-3d-sm"
                     aria-label="Previous page"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
                     <span>Prev</span>
                   </button>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {getVisiblePages().map((page) => (
                       <button
                         key={page}
                         type="button"
                         onClick={() => handlePageChange(page)}
-                        className={`min-w-[30px] h-[28px] rounded-md text-xs font-mono transition-colors cursor-pointer active:scale-95 flex items-center justify-center ${
+                        className={`min-w-[30px] h-[28px] rounded-md text-xs font-mono cursor-pointer flex items-center justify-center ${
                           page === safeCurrentPage
-                            ? "bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-bold shadow-xs border border-[#1c1917] dark:border-transparent"
-                            : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 shadow-2xs"
+                            ? "bg-[#1c1917] text-[#faf5ec] dark:bg-zinc-100 dark:text-zinc-950 font-bold border border-[#1c1917] dark:border-zinc-300 btn-3d-sm-primary"
+                            : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 btn-3d-sm"
                         }`}
                         aria-label={`Page ${page}`}
                         aria-current={
@@ -866,7 +866,7 @@ export default function Home() {
                       handlePageChange(Math.min(totalPages, safeCurrentPage + 1))
                     }
                     disabled={safeCurrentPage >= totalPages}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white text-xs font-mono cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 btn-3d-sm"
                     aria-label="Next page"
                   >
                     <span>Next</span>
