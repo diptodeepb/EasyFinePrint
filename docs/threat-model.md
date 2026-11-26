@@ -55,7 +55,7 @@ A user supplies a massive 100 MB HTML file or a streaming connection that hangs 
 1. **Streaming Byte Cap**: Responses are read in chunks with a hard cap of 5,000,000 bytes (5 MB). If exceeded, connection terminates immediately.
 2. **Timeout Enforcement**: A 20-second total read timeout (and 10s connect timeout) is enforced on all HTTP client calls.
 3. **Content-Type Filter**: Only `text/html`, `application/xhtml+xml`, or `text/plain` are accepted. Binary payloads (images, video, ZIP) are rejected before download completion.
-4. **Sandboxed JavaScript Execution**: When executing dynamic script evaluations for client-side SPAs, scripts run exclusively within an isolated Node.js V8 virtual machine (`node:vm`) with a strict 2-second timeout, mock sandbox objects (`window`, `document`), zero access to file system I/O, and zero network sockets.
+4. **Sandboxed JavaScript Execution**: When executing dynamic script evaluations for client-side SPAs, scripts run exclusively within an isolated Node.js V8 virtual machine (`node:vm`) with a strict 2-second timeout, lightweight DOM stub objects (`window`, `document`), zero access to file system I/O, and zero network sockets.
 5. **Request Body Size Limit**: Global middleware rejects any inbound JSON request payload exceeding 10 MB with HTTP 413.
 6. **Query Amplification & N+1 Prevention**: The `/api/policies` endpoint utilizes a single-roundtrip MongoDB `$lookup` aggregation pipeline with projected `provenance: 1` (omitting multi-megabyte `extracted_text` payloads), bounded compound index lookups (`("policy_id", 1), ("created_at", -1)` on `analyses`), and pre-sorted index retrieval (`("last_checked_at", -1)` on `policies`), eliminating database connection starvation and resource exhaustion attacks.
 7. **Client-Side Refresh Throttling (30-Second Cooldown)**: Manual policy list refreshes enforce a strict 30-second cooldown period backed by `sessionStorage`. Rapid repeated re-fetch attempts are prevented in the user interface, mitigating client-driven denial-of-service spam on read endpoints.
@@ -69,7 +69,7 @@ Adversaries use `/api/discovery/search` to probe internal networks or force back
 
 ### 4.2 Implemented Mitigations
 1. **Zero External Search Dependencies**: The discovery engine operates independently without third-party commercial search APIs, eliminating API token theft and quota exhaustion vectors.
-2. **Authoritative Directory Precedence**: 249+ high-profile companies (Google, Apple, Microsoft, Amazon, Meta, Netflix, Spotify, Discord, etc.) are resolved instantly from an audited, hardcoded directory of official policy URLs with zero network hops.
+2. **Authoritative Directory Precedence**: 438+ high-profile platforms, AI labs, developer ecosystems, programming languages, VPNs, gaming publishers, fintechs, and news networks (Google, Apple, Microsoft, Amazon, Meta, Netflix, Spotify, Discord, etc.) are resolved instantly from an audited, hardcoded directory of 869+ official policy URLs with zero network hops.
 3. **SSRF Guard on Direct Website Inspection & Probes**: When falling back to direct domain inspection, candidate TLD domains and canonical path probes undergo full `resolve_and_verify_hostname` validation before any outbound socket connection is opened.
 4. **Candidate Result Capping**: Auto-discovered policy candidates are hard-capped to a maximum of 15 documents per query, preventing runaway memory allocations or response flooding.
 5. **In-Memory Query Cache**: Search results are cached in-memory by trimmed query to eliminate redundant outbound HTTP traffic.
@@ -119,7 +119,7 @@ Attackers probe `/api/health`, error tracebacks, or development logs to identify
    - Returns only minimal status confirmation (`status: healthy`).
 2. **Exception & Validation Sanitization**:
    - `RequestValidationError` errors are intercepted by a centralized handler and converted into friendly, concise text, preventing internal schema or Pydantic JSON structure leakage.
-   - Network resolution errors never expose raw Python `[Errno -5]` socket tracebacks to the client.
+   - Network and DNS resolution errors (`socket.gaierror`, `OSError`, and IDNA `UnicodeError`) are converted cleanly to `URLValidationError` without exposing raw Python socket tracebacks to the client.
 3. **Runner & Logger Credential Redaction (`start.py` & `main.py`)**:
    - All log streams passing through the unified development runner are filtered through regex and in-memory token masks, redacting Bearer tokens, MongoDB credentials, API keys, and Sentry DSNs before reaching console output.
    - Internal HTTP client loggers (`httpx` and `httpcore`) are silenced to `WARNING` level in `main.py`, and `start.py` regex-replaces outbound Sentry ingest endpoints with `https://[REDACTED_SENTRY_ENDPOINT]` to eliminate telemetry URL exposure in stdout.

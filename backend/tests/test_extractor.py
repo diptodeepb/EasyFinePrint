@@ -119,3 +119,56 @@ def test_empty_html_raises_extraction_error():
         extract_policy_content(html)
     assert "empty or suspiciously short" in str(exc_info.value)
 
+
+def test_plain_text_license_extraction():
+    """Verify text/plain documents without HTML tags extract cleanly."""
+    plain = (
+        "Apache License, Version 2.0\n\n"
+        "1. Definitions. 'License' shall mean the terms and conditions for use, reproduction, and distribution.\n"
+        "2. Grant of Copyright License. Subject to the terms and conditions of this License, each Contributor grants you a perpetual copyright license.\n"
+        "3. Grant of Patent License. Each Contributor hereby grants to You a perpetual, worldwide, non-exclusive patent license."
+    )
+    title, text, warnings = extract_policy_content(plain)
+    assert "Apache License" in title
+    assert "Grant of Copyright License" in text
+    assert len(text) > 200
+
+
+def test_main_container_preserved_when_nav_inside_main():
+    """Verify DOM fallback retries without stripping nav/header/aside if stripping them empties <main>."""
+    html = """
+    <html><head><title>Cloud Legal Hub</title></head><body>
+    <main>
+      <nav>
+        <h1>Legal Agreements and Terms of Service</h1>
+        <p>By accessing or using our cloud services, you agree to be bound by these terms, acceptable use rules, and dispute resolution clauses.</p>
+        <p>All customer data remains confidential and subject to our enterprise data processing addendum and security controls.</p>
+      </nav>
+    </main>
+    </body></html>
+    """
+    title, text, warnings = extract_policy_content(html)
+    assert "Cloud Legal Hub" in title
+    assert "acceptable use rules" in text
+
+
+def test_node_vm_extracts_top_level_var_and_stubs_dom():
+    """Verify Node VM sandbox handles top-level var declarations and basic document.querySelector calls."""
+    script_html = """
+    <script>
+    var content = {
+        pageContent: {
+            legalText: "This Privacy Policy explains how connected fitness devices collect GPS workout telemetry and account information."
+        }
+    };
+    if (document.querySelector("#missing") === null) {
+        window.__App_Data = {
+            terms: "Users must maintain account security and comply with all applicable regional privacy and acceptable use laws."
+        };
+    }
+    </script>
+    """
+    res = evaluate_inline_scripts_with_node(script_html)
+    assert "GPS workout telemetry" in res
+    assert "regional privacy and acceptable use laws" in res
+

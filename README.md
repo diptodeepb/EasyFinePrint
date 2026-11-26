@@ -228,7 +228,7 @@ Every outbound fetch is guarded by a comprehensive defense-in-depth security lay
 
 Instant policy discovery without third-party search APIs or quota caps:
 
-- **Authoritative Directory**: Curated index of **249+ top platforms** (Discord, Spotify, Roblox, GitHub, OpenAI, Google, Apple, Microsoft, Amazon, Meta, Twitter/X, Uber, Airbnb, Stripe, PayPal, Twitch, TikTok, LinkedIn, Steam, Slack, Zoom, Dropbox, Notion, Figma, Anthropic, Vercel, Cloudflare, Netflix, Flipkart, Swiggy, etc.) spanning AI, SaaS, Cloud, Fintech, E-Commerce, Quick-Commerce, Rideshare, Streaming, Gaming, Hardware, and Telecom with **501+ verified policy URLs** and comprehensive alias resolution (`fb`, `yt`, `amzn`, `chatgpt`, `spacex`, `xfinity`, etc.).
+- **Authoritative Directory**: Curated index of **438+ top platforms** (Discord, Spotify, Roblox, GitHub, OpenAI, Anthropic, xAI, Google, Apple, Microsoft, Amazon, Meta, Twitter/X, Uber, Airbnb, Stripe, PayPal, Twitch, TikTok, LinkedIn, Steam, Slack, Zoom, Dropbox, Notion, Figma, Vercel, Cloudflare, Netflix, Flipkart, Swiggy, Python, Rust, Go, Mullvad, Coinbase, etc.) spanning AI, Software Engineering, Programming Languages, Cloud, DevOps, Gaming, VPNs, Cybersecurity, Crypto, Finance, News, SaaS, E-Commerce, Quick-Commerce, Rideshare, Streaming, Hardware, and Telecom with **869+ verified policy URLs** and **282+ aliases** (`fb`, `yt`, `amzn`, `chatgpt`, `gta`, `rust`, `go`, `c++`, `spacex`, `xfinity`, etc.).
 - **Multi-Tier Auto-Discovery**: For unlisted companies, automatically guesses candidate TLDs (`.com`, `.io`, `.ai`, `.app`, `.org`, `.dev`), inspects homepage DOM legal footers, probes canonical endpoints (`/terms`, `/privacy`, `/legal`), and executes privacy-preserving search engine fallback under strict multi-hop SSRF validation.
 - **Modal Pagination & Realistic Progress Bar**: Supports 5-per-page pagination for companies with extensive policy resources and displays a realistic stage-based progress bar matching the Gemma analysis flow with real-time elapsed seconds.
 - **In-Memory Cache**: Transparently caches lookup results to eliminate duplicate outbound requests.
@@ -269,7 +269,7 @@ Instant policy discovery without third-party search APIs or quota caps:
 | **Content Extraction** | Trafilatura, BeautifulSoup4, Node.js VM & Hydration Parser                | 4-tier legal document extraction with SPA hydration & sandboxed evaluation                                   |
 | **Diff & Hashing**     | Python `difflib`, `hashlib.sha256`                                        | Deterministic paragraph diffing and content hashes                                                           |
 | **Database**           | MongoDB Atlas (Motor AsyncIO driver)                                      | Resilient persistence with single-roundtrip $lookup aggregation, compound indexes & in-memory test fallback  |
-| **Company Discovery**  | Authoritative Directory (249+ services) + Multi-Tier Auto-Discovery       | Zero-cost legal policy lookup with modal pagination & realistic stage timer                                  |
+| **Company Discovery**  | Authoritative Directory (438+ services) + Multi-Tier Auto-Discovery       | Zero-cost legal policy lookup with modal pagination & realistic stage timer                                  |
 | **Deployment**         | Vercel Serverless Functions                                               | Production serverless API and edge static frontend                                                           |
 
 ---
@@ -381,12 +381,12 @@ python3 start.py
 
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated backend test suite of **79 tests (78 passed, 1 skipped)** (100% offline pass rate) and dedicated frontend unit tests for session caching, SWR revalidation, and refresh cooldowns:
+EasyFinePrint includes an automated backend test suite of **85 tests (84 passed, 1 skipped)** (100% offline pass rate) and dedicated frontend unit tests for session caching, SWR revalidation, and refresh cooldowns:
 
 ```bash
 # Run backend tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 78 passed, 1 skipped in 35.23s ========================
+# Output: ================== 84 passed, 1 skipped, 1 warning in 35.52s ===================
 
 # Run frontend unit tests
 node --test frontend/src/lib/policiesCache.test.js

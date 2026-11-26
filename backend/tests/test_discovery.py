@@ -232,4 +232,63 @@ async def test_expanded_consumer_and_media_services():
         assert res["total"] == len(candidates)
 
 
+@pytest.mark.asyncio
+async def test_discovery_search_handles_getaddrinfo_ebusy_gracefully(monkeypatch):
+    """Regression test for EASYFINEPRINT-BACKEND-3: OSError(16, EBUSY) during DNS lookup must not crash /api/discovery/search."""
+    import errno
+    import socket
+    from httpx import ASGITransport, AsyncClient
+    from app.main import app
+    from app.services import discovery as discovery_mod
+
+    discovery_mod._query_cache.clear()
+
+    def raise_ebusy(*args, **kwargs):
+        raise OSError(errno.EBUSY, "Device or resource busy")
+
+    monkeypatch.setattr(socket, "getaddrinfo", raise_ebusy)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post("/api/discovery/search", json={"query": "unlistedebusyprobe"})
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["query"] == "unlistedebusyprobe"
+        assert isinstance(data["candidates"], list)
+        assert data["total"] == len(data["candidates"])
+
+
+@pytest.mark.asyncio
+async def test_expanded_known_directory_domains_and_integrity():
+    """Verify expanded known directory coverage across gaming, AI, programming languages, dev tools, VPNs, streaming, crypto, finance, and news."""
+    from app.services.known_directory import DIRECTORY_ALIASES
+
+    # Verify every alias points to a valid canonical entry
+    for alias, target in DIRECTORY_ALIASES.items():
+        assert target in KNOWN_DIRECTORY, f"Alias '{alias}' points to missing key '{target}'"
+
+    sample_queries = [
+        ("gta", "take2games.com"),
+        ("rockstar games", "take2games.com"),
+        ("call of duty", "activision.com"),
+        ("cyberpunk", "cdprojektred.com"),
+        ("grok", "x.ai"),
+        ("deepseek", "deepseek.com"),
+        ("windsurf", "windsurf.com"),
+        ("python", "pypi.org"),
+        ("rust", "rustfoundation.org"),
+        ("c++", "isocpp.org"),
+        ("docker", "docker.com"),
+        ("mullvad", "mullvad.net"),
+        ("metamask", "consensys.io"),
+        ("chase", "chase.com"),
+        ("aljazeera", "aljazeera.com"),
+        ("bandcamp", "bandcamp.com"),
+    ]
+    for q, expected_domain in sample_queries:
+        res = await discover_policy_urls(q)
+        candidates = res["candidates"]
+        assert len(candidates) >= 2, f"Expected >=2 candidates for '{q}'"
+        assert any(expected_domain in c["url"] for c in candidates), f"Expected '{expected_domain}' for '{q}'"
+
+
 

@@ -118,6 +118,9 @@ def resolve_and_verify_hostname(hostname: str) -> List[str]:
     Resolve DNS for both IPv4 and IPv6 and verify that none of the resolved IPs are internal.
     Returns list of verified IP addresses. Raises URLValidationError if resolution fails or any IP is blocked.
     """
+    if not hostname:
+        raise URLValidationError("Missing hostname.")
+
     # If hostname is already a literal IP address
     try:
         ipaddress.ip_address(hostname)
@@ -130,10 +133,12 @@ def resolve_and_verify_hostname(hostname: str) -> List[str]:
 
     try:
         addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-    except socket.gaierror:
+    except (OSError, UnicodeError) as exc:
+        if not isinstance(exc, socket.gaierror):
+            logger.warning("DNS resolution failed for '%s': %s", hostname, exc)
         raise URLValidationError(
             f"Unable to resolve domain '{hostname}'. Please check that the URL is spelled correctly and the website is publicly reachable."
-        )
+        ) from exc
 
     resolved_ips: List[str] = []
     for entry in addr_info:

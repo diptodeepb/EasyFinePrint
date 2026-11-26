@@ -176,7 +176,7 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
             <span>Company Policy Directory &amp; Auto-Discovery</span>
           </h3>
           <p className="text-xs text-[#5c5549] dark:text-zinc-400">
-            Search 249+ verified platforms (500+ legal documents) or auto-find policies dynamically for any company
+            Search 438+ verified platforms (869+ legal documents) or auto-find policies dynamically for any company
           </p>
         </div>
 

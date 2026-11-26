@@ -69,3 +69,25 @@ def test_ip_guard_public_ips():
     for ip in ["8.8.8.8", "1.1.1.1", "93.184.216.34", "2606:4700:4700::1111"]:
         allowed, _ = is_ip_allowed(ip)
         assert allowed
+
+
+def test_resolve_hostname_handles_oserror_and_unicode_error(monkeypatch):
+    import errno
+    import socket
+
+    def raise_ebusy(*args, **kwargs):
+        raise OSError(errno.EBUSY, "Device or resource busy")
+
+    monkeypatch.setattr(socket, "getaddrinfo", raise_ebusy)
+    with pytest.raises(URLValidationError, match="Unable to resolve domain 'gta.dev'"):
+        resolve_and_verify_hostname("gta.dev")
+
+    def raise_unicode_error(*args, **kwargs):
+        raise UnicodeError("encoding with 'idna' codec failed")
+
+    monkeypatch.setattr(socket, "getaddrinfo", raise_unicode_error)
+    with pytest.raises(URLValidationError, match="Unable to resolve domain"):
+        resolve_and_verify_hostname("bad..host")
+
+    with pytest.raises(URLValidationError, match="Missing hostname"):
+        resolve_and_verify_hostname("")

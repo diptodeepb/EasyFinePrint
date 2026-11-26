@@ -260,19 +260,19 @@ def extract_js_hydration_policy(html: str) -> str:
             except Exception:
                 pass
 
-    # 2. Inspect window state assignments in inline scripts
+    # 2. Inspect window/var state assignments in inline scripts
     for s in soup.find_all("script"):
         txt = s.get_text()
         if not txt or len(txt) < 50:
             continue
 
         matches = re.finditer(
-            r"window(?:\[\"([a-zA-Z0-9_$]+)\"\]|\.([a-zA-Z0-9_$]+))\s*=\s*(\{.*?\})(?:;window|;const|;let|;var|;\s*$)",
+            r"(?:window(?:\[\"([a-zA-Z0-9_$]+)\"\]|\.([a-zA-Z0-9_$]+))|(?:var|let|const)\s+([a-zA-Z0-9_$]+))\s*=\s*(\{.*?\})(?:\s*;|\s*$)",
             txt,
             re.DOTALL,
         )
         for m in matches:
-            raw_json = m.group(3)
+            raw_json = m.group(4)
             try:
                 data = json.loads(raw_json)
                 _collect_legal_strings(data, paragraphs)
@@ -315,26 +315,63 @@ def evaluate_inline_scripts_with_node(html: str) -> str:
 
         runner_js = """
         const vm = require("node:vm");
-        const sandbox = {
-            window: {},
-            document: {},
-            console: { log: () => {}, error: () => {} }
+        const noop = () => {};
+        const stubEl = () => ({ style: {}, setAttribute: noop, appendChild: noop, classList: { add: noop, remove: noop } });
+        const stubDoc = {
+            cookie: "",
+            head: stubEl(),
+            body: stubEl(),
+            currentScript: null,
+            querySelector: () => null,
+            querySelectorAll: () => [],
+            getElementById: () => null,
+            getElementsByTagName: () => [],
+            getElementsByClassName: () => [],
+            createElement: stubEl,
+            addEventListener: noop,
         };
+        const stubWin = {
+            location: { href: "", pathname: "", hostname: "", search: "", hash: "" },
+            navigator: { userAgent: "" },
+            addEventListener: noop,
+            matchMedia: () => ({ matches: false, addListener: noop, removeListener: noop }),
+        };
+        stubWin.window = stubWin;
+        const sandbox = {
+            window: stubWin,
+            document: stubDoc,
+            self: stubWin,
+            location: stubWin.location,
+            navigator: stubWin.navigator,
+            console: { log: noop, error: noop, warn: noop },
+        };
+        sandbox.globalThis = sandbox;
         vm.createContext(sandbox);
         try {
             vm.runInContext(process.argv[1], sandbox, { timeout: 2000 });
             const res = [];
+            const seen = new Set();
             function walk(obj) {
-                if (typeof obj === "string" && obj.length > 25 && obj.includes(" ")) {
-                    res.push(obj.trim());
-                } else if (Array.isArray(obj)) {
-                    obj.forEach(walk);
-                } else if (obj && typeof obj === "object") {
-                    Object.values(obj).forEach(walk);
+                if (typeof obj === "string") {
+                    if (obj.length > 25 && obj.includes(" ")) {
+                        res.push(obj.trim());
+                    }
+                    return;
+                }
+                if (!obj || typeof obj !== "object" || seen.has(obj)) return;
+                seen.add(obj);
+                if (Array.isArray(obj)) {
+                    for (const item of obj) walk(item);
+                } else {
+                    for (const val of Object.values(obj)) walk(val);
                 }
             }
+            const reserved = new Set(["window", "document", "self", "globalThis", "location", "navigator", "console"]);
             walk(sandbox.window);
             walk(sandbox.document);
+            for (const key of Object.keys(sandbox)) {
+                if (!reserved.has(key)) walk(sandbox[key]);
+            }
             process.stdout.write(JSON.stringify(res));
         } catch (e) {
             process.stdout.write(JSON.stringify([]));
@@ -390,6 +427,18 @@ def extract_policy_content(html: str) -> Tuple[str, str, List[str]]:
 
     extracted_text: Optional[str] = None
 
+    # 0. Plain-text fallback when response is not HTML (e.g. LICENSE.txt / terms.txt)
+    stripped_input = (html or "").strip()
+    if stripped_input and not re.search(r"<(?:html|body|div|p|article|main|section|h[1-6])\b", stripped_input[:4000], re.IGNORECASE):
+        if len(stripped_input) >= 100:
+            first_line = stripped_input.splitlines()[0].strip()
+            if 3 <= len(first_line) <= 120:
+                title = first_line
+            if len(stripped_input) > settings.max_policy_chars:
+                stripped_input = stripped_input[:settings.max_policy_chars]
+                warnings.append(f"Policy truncated to max character limit ({settings.max_policy_chars}).")
+            return title, stripped_input, warnings
+
     # 1. Primary extractor: trafilatura (optimized for main text / legal bodies)
     try:
         extracted_text = trafilatura.extract(
@@ -407,21 +456,30 @@ def extract_policy_content(html: str) -> Tuple[str, str, List[str]]:
     if not extracted_text or len(extracted_text.strip()) < 200:
         logger.info("Trafilatura returned short text. Attempting BeautifulSoup DOM fallback.")
         try:
-            soup = BeautifulSoup(html, "html.parser")
-            for tag in soup(["script", "style", "noscript", "svg", "nav", "footer", "header", "aside", "form"]):
-                tag.decompose()
+            for strip_tags in (
+                ["script", "style", "noscript", "svg", "nav", "footer", "header", "aside", "form"],
+                ["script", "style", "noscript", "svg"],
+            ):
+                soup = BeautifulSoup(html, "html.parser")
+                for tag in soup(strip_tags):
+                    tag.decompose()
 
-            main_container = soup.find("main") or soup.find("article") or soup.find(attrs={"role": "main"}) or soup.body
-            if main_container:
+                main_container = soup.find("main") or soup.find("article") or soup.find(attrs={"role": "main"}) or soup.body
+                if not main_container:
+                    continue
+
                 paragraphs = []
                 for element in main_container.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "p", "li"]):
                     text = element.get_text(separator=" ", strip=True)
                     if text and len(text) > 15:
                         paragraphs.append(text)
                 bs_text = "\n\n".join(paragraphs)
+                if len(bs_text.strip()) < 200:
+                    bs_text = re.sub(r"\n{3,}", "\n\n", main_container.get_text(separator="\n", strip=True))
                 if len(bs_text.strip()) >= 200:
                     extracted_text = bs_text
                     warnings.append("Used secondary BeautifulSoup extractor fallback.")
+                    break
         except Exception as exc:
             logger.debug("BeautifulSoup DOM fallback error: %s", exc)
 
@@ -452,7 +510,7 @@ def extract_policy_content(html: str) -> Tuple[str, str, List[str]]:
     return title, extracted_text, warnings
 
 
-async def fetch_wayback_snapshot(target_url: str, timeout_sec: float = 12.0) -> Optional[Tuple[str, str, str]]:
+async def fetch_wayback_snapshot(target_url: str, timeout_sec: float = 18.0) -> Optional[Tuple[str, str, str]]:
     """
     Tier 2 Public Web Archive Fallback (Internet Archive / Wayback Machine):
     Queries the official Wayback Machine Availability API to retrieve the closest
