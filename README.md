@@ -25,28 +25,44 @@
 - [The Core Problem](#the-core-problem)
 - [Architectural Guarantee: Facts vs. Interpretation](#architectural-guarantee-facts-vs-interpretation)
 - [Core Capabilities](#core-capabilities)
-  - [4-Tier Hybrid Policy Ingestion & Diff Engine](#4-tier-hybrid-policy-ingestion--diff-engine)
-  - [Single-Pass Gemma 4 Risk Scoring](#single-pass-gemma-4-risk-scoring)
-  - [High-Impact Clause Prioritization (Disputes, Arbitration &amp; Safety)](#high-impact-clause-prioritization-disputes-arbitration--safety)
-  - [Character-for-Character Verification &amp; Cache](#character-for-character-verification--cache)
-  - [Server-Side Verbatim Quotation Validation](#server-side-verbatim-quotation-validation)
-  - [Deterministic Paragraph Diffing Engine](#deterministic-paragraph-diffing-engine)
-  - [Strict Multi-Layer SSRF Guard](#strict-multi-layer-ssrf-guard)
-  - [Zero-Cost Company Policy Discovery Engine](#zero-cost-company-policy-discovery-engine)
-  - [NoSQL &amp; Network Hardening (Security Headers &amp; Prompt Isolation)](#nosql--network-hardening-security-headers--prompt-isolation)
+  - **AI Analysis & Evidence Validation**
+    - [Single-Pass Gemma 4 Risk Scoring](#single-pass-gemma-4-risk-scoring)
+    - [High-Impact Clause Prioritization (Disputes, Arbitration & Safety)](#high-impact-clause-prioritization-disputes-arbitration-safety)
+    - [Server-Side Verbatim Quotation Validation](#server-side-verbatim-quotation-validation)
+  - **Ingestion, Diffing & Audit Provenance**
+    - [4-Tier Hybrid Policy Ingestion & Diff Engine](#4-tier-hybrid-policy-ingestion-diff-engine)
+    - [Deterministic Paragraph Diffing Engine](#deterministic-paragraph-diffing-engine)
+    - [Character-for-Character Verification & Cache](#character-for-character-verification-cache)
+    - [Switchable Policy Segmentation (System vs. User Maintained)](#switchable-policy-segmentation-system-maintained-vs-user-maintained)
+  - **High-Throughput Performance**
+    - [Optimized Single-Roundtrip Database Queries & Indexing](#optimized-single-roundtrip-database-queries-indexing)
+    - [Session-Scoped Policy Caching & Stale-While-Revalidate (SWR)](#session-scoped-policy-caching-stale-while-revalidate-swr)
+  - **Security & Discovery**
+    - [Strict Multi-Layer SSRF Guard](#strict-multi-layer-ssrf-guard)
+    - [Zero-Cost Company Policy Discovery Engine](#zero-cost-company-policy-discovery-engine)
+    - [NoSQL & Network Hardening (Security Headers & Prompt Isolation)](#nosql-network-hardening-security-headers-prompt-isolation)
+  - **Design & Ergonomics**
+    - [Adaptive Theming & Interaction Ergonomics](#adaptive-theming-interaction-ergonomics)
 - [Technology Stack](#technology-stack)
 - [API Reference](#api-reference)
-- [Local Development &amp; Setup](#local-development--setup)
+  - [REST API Endpoints](#api-reference)
+  - [Sentry Envelope Tunneling & Adblocker Compatibility](#sentry-envelope-tunneling-adblocker-compatibility)
+- [Local Development & Setup](#local-development-setup)
   - [Prerequisites](#prerequisites)
-  - [Environment Configuration](#environment-configuration)
-  - [One-Command Unified Runner](#one-command-unified-runner)
-  - [Manual Execution](#manual-execution)
-- [Automated Testing &amp; CI](#automated-testing--ci)
+  - [1. Clone the Repository](#1-clone-the-repository)
+  - [2. Environment Configuration](#2-environment-configuration)
+  - [3. Install Dependencies](#3-install-dependencies)
+  - [4. One-Command Unified Runner](#4-one-command-unified-runner)
+- [Automated Testing & CI](#automated-testing-ci)
 - [Zero-Cost Vercel Serverless Deployment](#zero-cost-vercel-serverless-deployment)
-- [Security &amp; Threat Model](#security--threat-model)
+  - [Option A: Two Separate Vercel Projects (Recommended)](#option-a-two-separate-vercel-projects-recommended)
+  - [Option B: Single Unified Monorepo](#option-b-single-unified-monorepo)
+- [Security & Threat Model](#security-threat-model)
 - [License](#license)
 
 ---
+
+<a id="the-core-problem"></a>
 
 ## ⚖️ The Core Problem
 
@@ -61,12 +77,14 @@ Traditional monitoring approaches suffer from two fatal flaws:
 
 ---
 
+<a id="architectural-guarantee-facts-vs-interpretation"></a>
+
 ## 🛡️ Architectural Guarantee: Facts vs. Interpretation
 
 ```
               KEEP FACTS AND PROBABILISTIC INTERPRETATION SEPARATE
     ┌───────────────────────────────────┐  ┌───────────────────────────────────┐
-    │     Deterministic Facts Pipeline   │  │   Probabilistic AI Pipeline       │
+    │     Deterministic Facts Pipeline  │  │   Probabilistic AI Pipeline       │
     │  - Trafilatura & BeautifulSoup    │  │  - Cloudflare Workers AI (Gemma 4)│
     │  - SHA-256 Content Hashing        │  │  - Single-pass clause extraction  │
     │  - Character-for-character cache  │  │  - Concise consumer impact context│
@@ -79,6 +97,8 @@ Traditional monitoring approaches suffer from two fatal flaws:
 - **Evidence-Backed Citations Only**: Every single finding presented to the consumer is required to contain an exact, verbatim quotation from the active policy text. If an excerpt cannot be found character-for-character in the source, **it is automatically dropped**.
 
 ---
+
+<a id="core-capabilities"></a>
 
 ## 🌟 Core Capabilities
 
@@ -106,19 +126,12 @@ Specialized heuristics ensure that critical legal clauses (specifically mandator
 
 Every agreement is evaluated and mapped to four transparent, deterministic tiers:
 
-| Tier | Score Range | UI Color | Classification Criteria |
-| :--- | :--- | :--- | :--- |
-| **Low Concern** | `0 - 30` | Emerald (`text-emerald-400`) | Standard consumer terms with clear remedies, mutual termination rights, and no unverified data monetization or broad liability disclaimers. |
-| **Moderate Concern** | `31 - 55` | Yellow (`text-yellow-400`) | Standard commercial agreements with typical liability caps, third-party analytics telemetry, or routine dispute resolution mechanisms. |
-| **Elevated Concern** | `56 - 74` | Amber (`text-amber-400`) | Restrictive terms including unilateral account termination without cause, class action bans, or rights to train AI models on user content. |
-| **High Concern** | `75 - 100` | Rose (`text-rose-400`) | Aggressive or predatory provisions, unilateral customer indemnification of the vendor, total waivers for physical safety or bodily harm, or silent asset/fund forfeiture. |
-
-### Character-for-Character Verification & Cache
-
-Before invoking any AI inference, EasyFinePrint compares newly extracted text against existing database baselines character-for-character:
-
-- If content matches identically end-to-end, the baseline analysis is served immediately (**< 100ms**).
-- Re-analyzing an existing tracked policy strictly verifies character identity: if no text changed, redundant LLM inference is bypassed, ensuring consumer risk scores remain stable and deterministic.
+| Tier                 | Score Range | UI Color                     | Classification Criteria                                                                                                                                                   |
+| :------------------- | :---------- | :--------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Low Concern**      | `0 - 30`    | Emerald (`text-emerald-400`) | Standard consumer terms with clear remedies, mutual termination rights, and no unverified data monetization or broad liability disclaimers.                               |
+| **Moderate Concern** | `31 - 55`   | Yellow (`text-yellow-400`)   | Standard commercial agreements with typical liability caps, third-party analytics telemetry, or routine dispute resolution mechanisms.                                    |
+| **Elevated Concern** | `56 - 74`   | Amber (`text-amber-400`)     | Restrictive terms including unilateral account termination without cause, class action bans, or rights to train AI models on user content.                                |
+| **High Concern**     | `75 - 100`  | Rose (`text-rose-400`)       | Aggressive or predatory provisions, unilateral customer indemnification of the vendor, total waivers for physical safety or bodily harm, or silent asset/fund forfeiture. |
 
 ### Server-Side Verbatim Quotation Validation
 
@@ -127,14 +140,6 @@ All candidate findings extracted by Gemma undergo server-side substring verifica
 - Standardizes unicode quotes (`“`, `”`, `’`, `‘`) and whitespace.
 - Verifies that the excerpt appears verbatim in the source document.
 - Assigns a formal audit status (`passed`, `partial`, or `failed`).
-
-### Deterministic Paragraph Diffing Engine
-
-Powered by Python's `difflib.SequenceMatcher`:
-
-- Calculates granular additions, removals, and modifications between consecutive snapshots.
-- Changes are presented side-by-side with color-coded additions (emerald) and removals (rose).
-- Gemma 4 is prompted specifically to evaluate the practical implications of only the deterministic diff blocks.
 
 ### 4-Tier Hybrid Policy Ingestion & Diff Engine
 
@@ -158,19 +163,55 @@ Modern web properties increasingly deploy edge Web Application Firewalls (WAFs),
      - Text Body: $\ge 100$ characters minimum for clause evaluation, capped at $\le 500,000$ characters (~100,000 words).
    - **Anti-Bypass Canonical URL Deduplication**: Direct user paste is blocked if the URL already exists as a system-maintained policy. Robust canonicalization catches evasion tricks across trailing slashes, root slashes, protocol schemes (`http`/`https`), default ports (`:80`/`:443`), `www.` subdomains, query parameters, hash fragments, and casing.
    - **Audit Integrity Protection**: To prevent unverified user submissions from spoofing official live audits, all user-submitted snapshots and analyses are permanently stamped with `extractor="user_pasted"`, `provenance="user_pasted"`, and display an unambiguous disclaimer notice:
-     > *"User-Provided Text: This policy snapshot was submitted via direct manual text paste. Findings and diffs reflect user-submitted content and may not represent the complete official agreement."*
+     > _"User-Provided Text: This policy snapshot was submitted via direct manual text paste. Findings and diffs reflect user-submitted content and may not represent the complete official agreement."_
    - Successive user pastes against the same policy URL compute full Myers diffs, enabling users to track revisions on internally hosted or gated policies.
 4. **Tier 4 (Zero-Drift Baseline Database Cache)**:
    - If an origin server experiences downtime or connection failure during an audit, EasyFinePrint gracefully falls back to the existing database baseline snapshot.
    - Preserves historical risk scores without overwriting healthy snapshots or generating false diffs.
    - Ingested snapshots are stamped with `provenance="cached_fallback"`.
 
+### Deterministic Paragraph Diffing Engine
+
+Powered by Python's `difflib.SequenceMatcher`:
+
+- Calculates granular additions, removals, and modifications between consecutive snapshots.
+- Changes are presented side-by-side with color-coded additions (emerald) and removals (rose).
+- Gemma 4 is prompted specifically to evaluate the practical implications of only the deterministic diff blocks.
+
+### Character-for-Character Verification & Cache
+
+Before invoking any AI inference, EasyFinePrint compares newly extracted text against existing database baselines character-for-character:
+
+- If content matches identically end-to-end, the baseline analysis is served immediately (**< 100ms**).
+- Re-analyzing an existing tracked policy strictly verifies character identity: if no text changed, redundant LLM inference is bypassed, ensuring consumer risk scores remain stable and deterministic.
+
 ### Switchable Policy Segmentation ("System Maintained" vs. "User Maintained")
 
 The dashboard clearly partitions monitored agreements into switchable, responsive segmented tabs:
+
 - **System Maintained**: Public platforms continuously fetched and audited via autonomous live crawls and web archive records.
 - **User Maintained**: User-ingested documents and manual baselines stamped with explicit audit disclaimers.
 - Features dedicated header lines, responsive desktop/mobile alignment, and fuzzy search across both collections.
+
+### Optimized Single-Roundtrip Database Queries & Indexing
+
+The root dashboard policy table is backed by a high-throughput, zero-overhead database query pipeline engineered to eliminate the N+1 query problem:
+
+- **Single-Roundtrip MongoDB `$lookup` Aggregation Pipeline**: Rather than performing $2N+1$ sequential queries (fetching policies, querying latest analyses for each, and fetching full snapshot documents), the backend repository executes a single aggregation pipeline with a targeted sub-pipeline `$lookup`.
+- **Selective Projection of `provenance: 1`**: Full policy snapshots contain an `extracted_text` field that can reach several megabytes per document. The aggregation pipeline explicitly projects `provenance: 1` while completely omitting `extracted_text`, slashing network transmission overhead and memory consumption from megabytes down to lightweight metadata.
+- **Optimized Compound & Sorted Indexes**:
+  - `analyses` collection: Compound index on `[("policy_id", 1), ("created_at", -1)]` enables the database engine to locate the latest analysis for any policy in $O(1)$ index time without scanning collections.
+  - `policies` collection: Descending index on `[("last_checked_at", -1)]` guarantees instant, index-covered sorting for dashboard feeds.
+- **In-Memory Fallback Pre-Joining**: For local testing and offline execution, the in-memory repository implements an $O(N+M)$ single-pass hash join using an index map, pre-joining latest analyses and snapshot provenance with zero N+1 latency.
+
+### Session-Scoped Policy Caching & Stale-While-Revalidate (SWR)
+
+Client-side data fetching implements an industry-standard Stale-While-Revalidate (SWR) architecture scoped to the user's active browser session:
+
+- **Zero-Latency In-App Route Switching**: Navigating between internal routes (`/features`, `/terms`, `/privacy`, `/policies/:id`) and returning to the root dashboard (`/`) retrieves policies directly from the session cache (`sessionStorage` and in-memory state). The dashboard renders immediately with 0ms latency, zero layout shift, and zero loading spinners.
+- **Non-Blocking Background Revalidation (60s Stale Window)**: Cached data remains fresh for 60 seconds (`STALE_TIME_MS`). If the cache is stale, the cached policies are displayed immediately while a silent background revalidation request fetches fresh data and updates the table without disrupting the user. Refocusing the browser tab (`visibilitychange`) automatically triggers revalidation.
+- **Active Cache Invalidation on Mutations**: Analyzing a new policy or deleting an existing record invalidates the session cache immediately, guaranteeing that returning to the dashboard displays fresh state.
+- **30-Second Manual Refresh Cooldown**: When a user explicitly clicks the manual "Refresh" button in the dashboard header, the frontend bypasses the cache to fetch a live dataset. Once updated, the refresh button is locked in a 30-second cooldown period with a live countdown label (`Refresh (30s)` $\rightarrow$ `Refresh (1s)`). The cooldown expiration timestamp is persisted in `sessionStorage`, ensuring fast route switching cannot bypass the throttling mechanism.
 
 ### Strict Multi-Layer SSRF Guard
 
@@ -215,39 +256,43 @@ Instant policy discovery without third-party search APIs or quota caps:
 
 ---
 
+<a id="technology-stack"></a>
+
 ## 🛠️ Technology Stack
 
-| Component              | Technology                                                                | Description                                                                 |
-| ---------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **Frontend Framework** | React 19 + Vite 8                                                         | Ultra-fast client-side SPA with React Router & automatic scroll restoration |
-| **Styling & Theming**  | Vanilla CSS + Tailwind CSS v4, Lucide React, View Transitions API         | Adaptive Dark/Light/System theme with warm beige palette, radial view transitions & custom scrollbars |
-| **Backend API**        | FastAPI (Python 3.12+)                                                    | Asynchronous REST endpoints with Pydantic validation                        |
-| **AI Inference**       | Cloudflare Workers AI REST API, Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) | Single-pass structured reasoning and clause extraction                      |
-| **Content Extraction** | Trafilatura, BeautifulSoup4, Node.js VM & Hydration Parser | 4-tier legal document extraction with SPA hydration & sandboxed evaluation  |
-| **Diff & Hashing**     | Python `difflib`, `hashlib.sha256`                                        | Deterministic paragraph diffing and content hashes                          |
-| **Database**           | MongoDB Atlas (Motor AsyncIO driver)                                      | Resilient document persistence with in-memory test fallback                 |
-| **Company Discovery**  | Authoritative Directory (249+ services) + Multi-Tier Auto-Discovery       | Zero-cost legal policy lookup with modal pagination & realistic stage timer |
-| **Deployment**         | Vercel Serverless Functions                                               | Production serverless API and edge static frontend                          |
+| Component              | Technology                                                                | Description                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| **Frontend Framework** | React 19 + Vite 8                                                         | Ultra-fast client-side SPA with React Router, session-scoped SWR cache engine & automatic scroll restoration |
+| **Styling & Theming**  | Vanilla CSS + Tailwind CSS v4, Lucide React, View Transitions API         | Adaptive Dark/Light/System theme with warm beige palette, radial view transitions & custom scrollbars        |
+| **Backend API**        | FastAPI (Python 3.12+)                                                    | Asynchronous REST endpoints with Pydantic validation                                                         |
+| **AI Inference**       | Cloudflare Workers AI REST API, Gemma 4 (`@cf/google/gemma-4-26b-a4b-it`) | Single-pass structured reasoning and clause extraction                                                       |
+| **Content Extraction** | Trafilatura, BeautifulSoup4, Node.js VM & Hydration Parser                | 4-tier legal document extraction with SPA hydration & sandboxed evaluation                                   |
+| **Diff & Hashing**     | Python `difflib`, `hashlib.sha256`                                        | Deterministic paragraph diffing and content hashes                                                           |
+| **Database**           | MongoDB Atlas (Motor AsyncIO driver)                                      | Resilient persistence with single-roundtrip $lookup aggregation, compound indexes & in-memory test fallback  |
+| **Company Discovery**  | Authoritative Directory (249+ services) + Multi-Tier Auto-Discovery       | Zero-cost legal policy lookup with modal pagination & realistic stage timer                                  |
+| **Deployment**         | Vercel Serverless Functions                                               | Production serverless API and edge static frontend                                                           |
 
 ---
 
+<a id="api-reference"></a>
+
 ## 📡 API Reference
 
-| Method | Endpoint                                     | Description                                                                                          |
-| ------ | -------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `POST`   | `/api/policies/analyze`                      | Ingests a public policy URL, validates text, caches or runs single-pass risk analysis.               |
-| `POST`   | `/api/policies/analyze-self`                 | Evaluates EasyFinePrint's own Terms of Use or Privacy Policy directly without network hops.          |
-| `GET`    | `/api/policies`                              | Lists all monitored policies with latest score and status.                                           |
-| `GET`    | `/api/policies/{id}`                         | Retrieves detailed policy information and the latest validated clause findings.                      |
-| `DELETE` | `/api/policies/{id}`                         | Permanently deletes a monitored policy and its snapshots, analyses, and check events.               |
-| `POST`   | `/api/policies/{id}/check`                   | Safely fetches live page, performs character-for-character comparison, and diffs if changed.         |
-| `POST`   | `/api/policies/{id}/reanalyze`               | Re-evaluates an existing baseline snapshot through Gemma 4 (skips if text unchanged).                |
-| `GET`    | `/api/policies/{id}/history`                 | Retrieves chronologically ordered check events, snapshot transitions, and audit logs.                |
-| `GET`    | `/api/policies/{id}/snapshots/{snapshot_id}` | Retrieves raw snapshot text, content hash, and HTTP status code.                                     |
-| `GET`    | `/api/self-policies`                         | Lists metadata and markdown content for self-hosted legal policies (Terms of Use & Privacy Policy).  |
-| `POST`   | `/api/discovery/search`                      | Legal policy URL lookup via authoritative directory & SSRF-safe direct website inspection.           |
-| `POST`   | `/api/tunnel`                                | Sentry envelope reverse-proxy tunnel with DSN host validation (bypasses Brave Shields & adblockers). |
-| `GET`    | `/api/health`                                | Service health status and MongoDB connectivity check.                                                |
+| Method   | Endpoint                                     | Description                                                                                                                         |
+| -------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/api/policies/analyze`                      | Ingests a public policy URL, validates text, caches or runs single-pass risk analysis.                                              |
+| `POST`   | `/api/policies/analyze-self`                 | Evaluates EasyFinePrint's own Terms of Use or Privacy Policy directly without network hops.                                         |
+| `GET`    | `/api/policies`                              | Lists monitored policies with latest score and status via single-roundtrip aggregation (pre-joined analysis & snapshot provenance). |
+| `GET`    | `/api/policies/{id}`                         | Retrieves detailed policy information and the latest validated clause findings.                                                     |
+| `DELETE` | `/api/policies/{id}`                         | Permanently deletes a monitored policy and its snapshots, analyses, and check events.                                               |
+| `POST`   | `/api/policies/{id}/check`                   | Safely fetches live page, performs character-for-character comparison, and diffs if changed.                                        |
+| `POST`   | `/api/policies/{id}/reanalyze`               | Re-evaluates an existing baseline snapshot through Gemma 4 (skips if text unchanged).                                               |
+| `GET`    | `/api/policies/{id}/history`                 | Retrieves chronologically ordered check events, snapshot transitions, and audit logs.                                               |
+| `GET`    | `/api/policies/{id}/snapshots/{snapshot_id}` | Retrieves raw snapshot text, content hash, and HTTP status code.                                                                    |
+| `GET`    | `/api/self-policies`                         | Lists metadata and markdown content for self-hosted legal policies (Terms of Use & Privacy Policy).                                 |
+| `POST`   | `/api/discovery/search`                      | Legal policy URL lookup via authoritative directory & SSRF-safe direct website inspection.                                          |
+| `POST`   | `/api/tunnel`                                | Sentry envelope reverse-proxy tunnel with DSN host validation (bypasses Brave Shields & adblockers).                                |
+| `GET`    | `/api/health`                                | Service health status and MongoDB connectivity check.                                                                               |
 
 ---
 
@@ -262,6 +307,8 @@ When browser privacy shields (like Brave Shields or uBlock Origin) are enabled, 
 - **Console Log Redaction**: Outbound HTTP client logging (`httpx`, `httpcore`) is silenced to `WARNING` in the application, and the unified development runner (`start.py`) scrubs Sentry DSNs, ingest hostnames, and telemetry endpoints (`https://[REDACTED_SENTRY_ENDPOINT]`) from console output.
 
 ---
+
+<a id="local-development-setup"></a>
 
 ## 💻 Local Development & Setup
 
@@ -318,7 +365,7 @@ npm --prefix frontend install
 
 ### 4. One-Command Unified Runner
 
-Start both the FastAPI backend and Vite frontend development servers concurrently with clean, color-coded prefixes (`[system]`, `[backend]`, `[frontend]`, `[error]`) and real-time credential redaction to prevent accidental token or connection string exposure in console logs:
+Start both the FastAPI backend and Vite frontend development servers concurrently with 12-hour AM/PM timestamps (`H:MM:SS AM/PM`) matching Vite's frontend logger, clean color-coded prefixes (`[system]`, `[backend]`, `[frontend]`, `[error]`), and real-time credential redaction to prevent accidental token or connection string exposure in console logs:
 
 ```bash
 python3 start.py
@@ -330,14 +377,20 @@ python3 start.py
 
 ---
 
+<a id="automated-testing-ci"></a>
+
 ## 🧪 Automated Testing & CI
 
-EasyFinePrint includes an automated test suite of **77 tests (76 passed, 1 skipped)** (100% offline pass rate) covering Cloudflare Workers AI integration, 4-tier hybrid policy ingestion, SSRF multi-hop validation, client-side JavaScript hydration and sandboxed Node.js VM evaluation, deterministic Myers diffing, verbatim quote validation, company discovery, Sentry envelope tunneling, cascade policy deletion, anti-spam length bounds, canonical URL deduplication, and self-hosted policy analysis:
+EasyFinePrint includes an automated backend test suite of **79 tests (78 passed, 1 skipped)** (100% offline pass rate) and dedicated frontend unit tests for session caching, SWR revalidation, and refresh cooldowns:
 
 ```bash
-# Run tests locally
+# Run backend tests locally
 backend/.venv/bin/pytest backend/tests/ -v
-# Output: ======================== 76 passed, 1 skipped in 33.97s ========================
+# Output: ======================== 78 passed, 1 skipped in 35.23s ========================
+
+# Run frontend unit tests
+node --test frontend/src/lib/policiesCache.test.js
+# Output: 5 passed (100%)
 ```
 
 ### CI Pipeline
@@ -348,6 +401,8 @@ A GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml
 - **Frontend Job**: Sets up Node.js, installs dependencies, and runs `npm run build` to verify production bundling.
 
 ---
+
+<a id="zero-cost-vercel-serverless-deployment"></a>
 
 ## ☁️ Zero-Cost Vercel Serverless Deployment
 
@@ -387,6 +442,8 @@ Deploy both frontend and backend in a single project using the root [`vercel.jso
 
 ---
 
+<a id="security-threat-model"></a>
+
 ## 🔒 Security & Threat Model
 
 - **Anti-Reconnaissance & Info Disclosure Guard**: Public `/api/health` and error responses omit internal model IDs, providers, and database topology. Development runner logs automatically redact Bearer tokens and connection strings.
@@ -400,6 +457,8 @@ Deploy both frontend and backend in a single project using the root [`vercel.jso
 For in-depth threat analysis and mitigations, see [`docs/threat-model.md`](docs/threat-model.md).
 
 ---
+
+<a id="license"></a>
 
 ## 📄 License
 

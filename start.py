@@ -12,6 +12,7 @@ import shutil
 import signal
 import subprocess
 import threading
+from datetime import datetime
 from typing import List, Set
 from urllib.parse import urlparse
 
@@ -106,11 +107,31 @@ def redact_secrets(text: str) -> str:
     return text
 
 
+_RE_LEADING_TIMESTAMP = re.compile(
+    r"^(?:\d{4}-\d{2}-\d{2}\s+)?\d{1,2}:\d{2}:\d{2}(?:,\d+)?(?:\s*[AP]M)?\s*"
+)
+
+
+def get_current_timestamp() -> str:
+    """Return local time formatted as H:MM:SS AM/PM matching Vite's timestamp format."""
+    now = datetime.now()
+    try:
+        return now.strftime("%-I:%M:%S %p")
+    except ValueError:
+        # Fallback for platforms like Windows without '-' flag
+        return now.strftime("%#I:%M:%S %p")
+
+
 def log(prefix: str, msg: str, color_key: str = "system"):
     """Print prefixed, sanitized log message with ANSI formatting."""
     col = COLORS.get(color_key, COLORS["reset"])
     clean_msg = redact_secrets(msg)
-    print(f"{col}[{prefix}]{COLORS['reset']} {clean_msg}", flush=True)
+    if prefix == "backend":
+        ts = get_current_timestamp()
+        clean_msg = _RE_LEADING_TIMESTAMP.sub("", clean_msg)
+        print(f"{col}[{prefix}]{COLORS['reset']} {ts} {clean_msg}", flush=True)
+    else:
+        print(f"{col}[{prefix}]{COLORS['reset']} {clean_msg}", flush=True)
 
 
 def find_backend_python() -> str:
@@ -141,7 +162,12 @@ def stream_logs(pipe, prefix: str, color_key: str):
         if not raw_line:
             break
         sanitized = redact_secrets(raw_line.rstrip())
-        print(f"{col}[{prefix}]{COLORS['reset']} {sanitized}", flush=True)
+        if prefix == "backend":
+            ts = get_current_timestamp()
+            clean_line = _RE_LEADING_TIMESTAMP.sub("", sanitized)
+            print(f"{col}[{prefix}]{COLORS['reset']} {ts} {clean_line}", flush=True)
+        else:
+            print(f"{col}[{prefix}]{COLORS['reset']} {sanitized}", flush=True)
     pipe.close()
 
 

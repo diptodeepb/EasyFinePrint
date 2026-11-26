@@ -540,18 +540,11 @@ async def get_single_self_policy(key: str = Path(..., description="Self-policy k
 
 @router.get("", response_model=List[PolicyResponse])
 async def list_policies(limit: int = Query(50, ge=1, le=100)):
-    """List tracked policies with latest snapshot and analysis summary."""
-    policies = await repo.list_policies(limit=limit)
+    """List tracked policies with latest snapshot and analysis summary pre-joined efficiently."""
+    detailed_policies = await repo.list_policies_with_details(limit=limit)
     res = []
-    for p in policies:
-        latest_analysis = await repo.get_latest_analysis_for_policy(p["id"])
-        latest_snap = await repo.get_snapshot_by_id(p.get("latest_snapshot_id")) if p.get("latest_snapshot_id") else None
-        provenance = (
-            p.get("provenance")
-            or (latest_analysis.get("provenance") if latest_analysis else None)
-            or (latest_snap.get("provenance") if latest_snap else None)
-            or "live"
-        )
+    for p in detailed_policies:
+        latest_analysis = p.get("latest_analysis")
         res.append(
             PolicyResponse(
                 id=p["id"],
@@ -563,8 +556,8 @@ async def list_policies(limit: int = Query(50, ge=1, le=100)):
                 last_checked_at=p.get("last_checked_at"),
                 latest_snapshot_id=p.get("latest_snapshot_id"),
                 latest_analysis=_format_analysis_response(latest_analysis) if latest_analysis else None,
-                provenance=provenance,
-                warnings=latest_analysis.get("warnings", []) if latest_analysis else [],
+                provenance=p.get("provenance", "live"),
+                warnings=p.get("warnings", []),
             )
         )
     return res

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   ExternalLink,
@@ -15,6 +15,16 @@ import {
 } from "lucide-react";
 import { api } from "../lib/api";
 import { formatLocalDate } from "../lib/dateUtils";
+import {
+  getCachedPolicies,
+  isCacheStale,
+  invalidatePoliciesCache,
+  getCooldownRemaining,
+  startRefreshCooldown,
+  fetchPoliciesWithCache,
+  STALE_TIME_MS,
+  COOLDOWN_DURATION_MS,
+} from "../lib/policiesCache";
 import UrlForm from "../components/UrlForm";
 import DiscoveryModal from "../components/DiscoveryModal";
 
@@ -112,8 +122,11 @@ function fuzzyMatchPolicy(policy, query) {
 
 export default function Home() {
   const navigate = useNavigate();
-  const [policies, setPolicies] = useState([]);
-  const [loadingPolicies, setLoadingPolicies] = useState(true);
+  const cached = getCachedPolicies();
+  const [policies, setPolicies] = useState(() => (cached ? cached.data : []));
+  const [loadingPolicies, setLoadingPolicies] = useState(() => !cached);
+  const [isRevalidating, setIsRevalidating] = useState(false);
+  const [cooldownRemaining, setCooldownRemaining] = useState(() => getCooldownRemaining());
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState("");
   const [isDiscoveryOpen, setIsDiscoveryOpen] = useState(false);
@@ -122,6 +135,88 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [policyTab, setPolicyTab] = useState("system"); // "system" | "user"
+
+  // 30-second cooldown timer management
+  useEffect(() => {
+    if (cooldownRemaining <= 0) return;
+    const timer = setInterval(() => {
+      const remaining = getCooldownRemaining();
+      setCooldownRemaining(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldownRemaining]);
+
+  // Session caching & Stale-While-Revalidate (SWR) policy loader
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPolicies(force = false) {
+      const hasCached = !!getCachedPolicies();
+      if (!hasCached) {
+        setLoadingPolicies(true);
+      } else {
+        setIsRevalidating(true);
+      }
+
+      try {
+        const data = await fetchPoliciesWithCache({ force, limit: 100 });
+        if (isMounted) {
+          setPolicies(data);
+        }
+      } catch (err) {
+        console.error("Failed to load policies:", err);
+      } finally {
+        if (isMounted) {
+          setLoadingPolicies(false);
+          setIsRevalidating(false);
+        }
+      }
+    }
+
+    // On mount: fetch if no cache exists or if cache is stale
+    if (!getCachedPolicies() || isCacheStale()) {
+      loadPolicies(!getCachedPolicies());
+    }
+
+    // Auto-update in background every STALE_TIME_MS when tab is visible
+    const syncInterval = setInterval(() => {
+      if (document.visibilityState === "visible" && isCacheStale()) {
+        loadPolicies(true);
+      }
+    }, STALE_TIME_MS);
+
+    // Visibility restore check
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && isCacheStale()) {
+        loadPolicies(true);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      clearInterval(syncInterval);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const handleManualRefresh = async () => {
+    if (cooldownRemaining > 0 || isRevalidating || loadingPolicies) return;
+    try {
+      setIsRevalidating(true);
+      const freshData = await fetchPoliciesWithCache({ force: true, limit: 100 });
+      setPolicies(freshData);
+      const remaining = startRefreshCooldown(COOLDOWN_DURATION_MS);
+      setCooldownRemaining(remaining);
+    } catch (err) {
+      console.error("Failed to refresh policies:", err);
+    } finally {
+      setIsRevalidating(false);
+    }
+  };
 
   const isUserMaintained = (pol) => {
     return (
@@ -145,22 +240,6 @@ export default function Home() {
     }
     return policies.filter((p) => !isUserMaintained(p));
   }, [policies, policyTab]);
-
-  const fetchTrackedPolicies = useCallback(async () => {
-    try {
-      setLoadingPolicies(true);
-      const data = await api.listPolicies(100);
-      setPolicies(data);
-    } catch (err) {
-      console.error("Failed to load policies:", err);
-    } finally {
-      setLoadingPolicies(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchTrackedPolicies();
-  }, [fetchTrackedPolicies]);
 
   // Filtered & Ranked policies via Fuzzy Search
   const filteredPolicies = useMemo(() => {
@@ -232,6 +311,7 @@ export default function Home() {
     setAnalyzeError("");
     try {
       const policy = await api.analyzePolicy(url);
+      invalidatePoliciesCache();
       navigate(`/policies/${policy.id}`);
     } catch (err) {
       setAnalyzeError(err.message || "Failed to analyze policy URL");
@@ -381,15 +461,38 @@ export default function Home() {
             </div>
 
             <button
-              onClick={fetchTrackedPolicies}
-              disabled={loadingPolicies}
-              className="px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-colors cursor-pointer border border-[#d5cbba] dark:border-zinc-800 active:scale-95 shrink-0 h-[34px] shadow-xs"
-              title="Refresh tracked policies"
+              onClick={handleManualRefresh}
+              disabled={loadingPolicies || isRevalidating || cooldownRemaining > 0}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-colors shrink-0 h-[34px] shadow-xs border ${
+                cooldownRemaining > 0
+                  ? "bg-[#f2ece1] text-[#9a9081] dark:bg-zinc-900/60 dark:text-zinc-500 border-[#ded5c5] dark:border-zinc-800 cursor-not-allowed opacity-75"
+                  : "bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white cursor-pointer active:scale-95 border-[#d5cbba] dark:border-zinc-800"
+              }`}
+              title={
+                cooldownRemaining > 0
+                  ? `Please wait ${cooldownRemaining}s before refreshing again`
+                  : isRevalidating
+                  ? "Refreshing policies..."
+                  : "Refresh tracked policies"
+              }
+              aria-label={
+                cooldownRemaining > 0
+                  ? `Refresh disabled, please wait ${cooldownRemaining} seconds`
+                  : "Refresh tracked policies"
+              }
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 ${loadingPolicies ? "animate-spin" : ""}`}
+                className={`w-3.5 h-3.5 ${
+                  loadingPolicies || isRevalidating ? "animate-spin" : ""
+                }`}
               />
-              <span className="hidden xs:inline">Refresh</span>
+              <span className="hidden xs:inline">
+                {cooldownRemaining > 0
+                  ? `Refresh (${cooldownRemaining}s)`
+                  : isRevalidating
+                  ? "Refreshing..."
+                  : "Refresh"}
+              </span>
             </button>
           </div>
         </div>
@@ -439,7 +542,7 @@ export default function Home() {
             <button
               type="button"
               onClick={handleClearSearch}
-              className="px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95 shadow-2xs"
+              className="px-3 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#1c1917] border border-[#d5cbba] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white dark:border-zinc-800 text-xs transition-colors cursor-pointer active:scale-95 shadow-2xs"
             >
               Clear search filter
             </button>
@@ -562,10 +665,10 @@ export default function Home() {
                           <td className="py-3.5 pr-4 pl-2 text-right whitespace-nowrap">
                             <Link
                               to={`/policies/${pol.id}`}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-200 border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors text-xs active:scale-95 shadow-2xs"
+                              className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 hover:border-[#bfb4a0] dark:hover:border-zinc-700 transition-colors text-xs active:scale-95 shadow-2xs"
                             >
                               <span>Inspect</span>
-                              <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-500" />
+                              <ChevronRight className="w-3.5 h-3.5 text-[#78716c] group-hover:text-[#1c1917] dark:text-zinc-400 dark:group-hover:text-white transition-colors" />
                             </Link>
                           </td>
                         </tr>
@@ -619,7 +722,7 @@ export default function Home() {
                         </div>
                         <Link
                           to={`/policies/${pol.id}`}
-                          className="text-[#78716c] dark:text-zinc-500 hover:text-[#1c1917] dark:hover:text-zinc-300 p-0.5 shrink-0 mt-0.5"
+                          className="text-[#78716c] dark:text-zinc-500 hover:text-[#1c1917] dark:hover:text-white p-0.5 shrink-0 mt-0.5"
                           aria-label="Inspect policy"
                         >
                           <ChevronRight className="w-3.5 h-3.5" />
@@ -685,10 +788,10 @@ export default function Home() {
 
                       <Link
                         to={`/policies/${pol.id}`}
-                        className="w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] dark:text-zinc-200 text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
+                        className="group w-full py-2 px-3 rounded-lg bg-[#faf5ec] hover:bg-[#e2d9c7] active:bg-[#ded6c6] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 border border-[#d5cbba] dark:border-zinc-800 text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-300 dark:hover:text-white text-xs font-mono font-medium flex items-center justify-center gap-1 active:scale-[0.98] transition-all shadow-2xs"
                       >
                         <span>Inspect</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-[#78716c] dark:text-zinc-400" />
+                        <ChevronRight className="w-3.5 h-3.5 text-[#78716c] group-hover:text-[#1c1917] dark:text-zinc-400 dark:group-hover:text-white transition-colors" />
                       </Link>
                     </div>
                   </div>
@@ -729,7 +832,7 @@ export default function Home() {
                     type="button"
                     onClick={() => handlePageChange(Math.max(1, safeCurrentPage - 1))}
                     disabled={safeCurrentPage <= 1}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Previous page"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -763,7 +866,7 @@ export default function Home() {
                       handlePageChange(Math.min(totalPages, safeCurrentPage + 1))
                     }
                     disabled={safeCurrentPage >= totalPages}
-                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-750 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
+                    className="px-2.5 py-1.5 rounded-md bg-[#faf5ec] hover:bg-[#e2d9c7] text-[#5c5549] hover:text-[#1c1917] dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:active:bg-zinc-700 dark:text-zinc-300 dark:hover:text-white border border-[#d5cbba] dark:border-zinc-800 text-xs font-mono transition-colors cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 shadow-2xs"
                     aria-label="Next page"
                   >
                     <span>Next</span>

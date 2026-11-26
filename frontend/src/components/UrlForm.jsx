@@ -467,7 +467,7 @@ export default function UrlForm({
                       type="button"
                       onClick={() => handleSelectSample(item.url)}
                       disabled={loading}
-                      className="w-full sm:w-auto justify-center px-2.5 py-1.5 sm:py-0.5 rounded-md bg-[#faf5ec] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800 active:bg-[#ded6c6] dark:active:bg-zinc-750 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white transition-colors border border-[#d5cbba] dark:border-zinc-800 cursor-pointer text-xs sm:text-[11px] min-h-[34px] sm:min-h-0 flex items-center active:scale-95 text-center font-mono shadow-2xs"
+                      className="w-full sm:w-auto justify-center px-2.5 py-1.5 sm:py-0.5 rounded-md bg-[#faf5ec] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800 active:bg-[#ded6c6] dark:active:bg-zinc-700 text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white transition-colors border border-[#d5cbba] dark:border-zinc-800 cursor-pointer text-xs sm:text-[11px] min-h-[34px] sm:min-h-0 flex items-center active:scale-95 text-center font-mono shadow-2xs"
                     >
                       <span>{item.name}</span>
                     </button>
