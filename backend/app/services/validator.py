@@ -8,8 +8,12 @@ import logging
 import re
 from typing import List, Tuple, Dict, Any, Optional
 from app.services.normalizer import normalize_policy_text
+from app.security.sanitizers import strip_control_chars
 
 logger = logging.getLogger("easyfineprint.validator")
+
+MAX_VALIDATED_FINDINGS = 50
+MAX_FIELD_CHARS = 1500
 
 VALID_CATEGORIES = {
     "renewal",
@@ -54,10 +58,10 @@ def verify_quote_in_text(quote: str, source_text: str) -> bool:
     return clean_quote in clean_source
 
 
-def _safe_str(val: Any) -> str:
+def _safe_str(val: Any, max_len: int = MAX_FIELD_CHARS) -> str:
     if val is None:
         return ""
-    return str(val).strip()
+    return strip_control_chars(str(val), allow_newlines=False, max_length=max_len).strip()
 
 
 def validate_initial_findings(findings: List[Dict[str, Any]], source_text: str) -> Tuple[List[Dict[str, Any]], str]:
@@ -65,16 +69,19 @@ def validate_initial_findings(findings: List[Dict[str, Any]], source_text: str) 
     Validate findings from initial policy analysis against the snapshot text.
     Returns (validated_findings, validation_status: 'passed' | 'partial' | 'failed').
     """
-    if not findings:
+    if not findings or not isinstance(findings, list):
         return [], "passed"
 
     validated: List[Dict[str, Any]] = []
     dropped_count = 0
 
-    for item in findings:
-        excerpt = _safe_str(item.get("exact_excerpt"))
-        category = _safe_str(item.get("category", "other")).lower()
-        severity = _safe_str(item.get("severity", "uncertain")).lower()
+    for item in findings[:MAX_VALIDATED_FINDINGS]:
+        if not isinstance(item, dict):
+            dropped_count += 1
+            continue
+        excerpt = _safe_str(item.get("exact_excerpt"), max_len=2000)
+        category = _safe_str(item.get("category", "other"), max_len=40).lower()
+        severity = _safe_str(item.get("severity", "uncertain"), max_len=40).lower()
 
         # 1. Category and severity validation
         if category not in VALID_CATEGORIES:

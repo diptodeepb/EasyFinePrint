@@ -312,7 +312,7 @@ export default function Features() {
             </p>
           </div>
 
-          {/* Card 2: SSRF & Anti-Spam Security */}
+          {/* Card 2: OWASP Top 10 & SSRF Security */}
           <div className="rounded-xl p-4 sm:p-5 bg-[#f5eedf] dark:bg-[#121215] card-3d-interactive space-y-3">
             <div className="flex items-start sm:items-center gap-2.5 sm:gap-3">
               <div className="w-8 h-8 rounded-lg bg-[#e5ddcf] dark:bg-zinc-900 border border-[#b5a994] dark:border-[var(--edge-card)] flex items-center justify-center text-[#1c1917] dark:text-zinc-300 shrink-0 badge-3d">
@@ -320,17 +320,17 @@ export default function Features() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold text-[#1c1917] dark:text-zinc-100">
-                  Multi-Hop SSRF &amp; IP Protection
+                  OWASP Top 10 &amp; API Hardening
                 </h3>
                 <span className="text-[11px] font-mono text-[#78716c] dark:text-zinc-500 block">
-                  DNS re-resolution &amp; RFC-1918 blocking
+                  End-to-end SSRF, XSS, CSP &amp; rate-limit defense
                 </span>
               </div>
             </div>
             <p className="text-xs text-[#5c5549] dark:text-zinc-400 leading-relaxed">
-              Prevents Server-Side Request Forgery by pre-resolving hostnames and rejecting private RFC-1918
-              ranges, loopback addresses, AWS/GCP metadata endpoints (169.254.169.254), and credential-stuffed URLs
-              before any outbound socket is opened. Follows redirects strictly with hop-by-hop verification.
+              Enforces OWASP Top 10 (2025) and API Security Top 10 (2023) controls: hop-by-hop SSRF
+              validation blocking private/metadata/IPv6-tunneled ranges, strict Content Security Policy,
+              XSS URL sanitization, sliding-window rate limits, streaming body caps, and anonymized audit logs.
             </p>
           </div>
 
@@ -375,7 +375,7 @@ export default function Features() {
             <p className="text-xs text-[#5c5549] dark:text-zinc-400 leading-relaxed">
               Extracts cleanly across traditional web articles and modern Single-Page Applications
               (React, Next.js, Redux, Vue) by recursively parsing client-side JSON hydration state
-              and sandboxed script evaluation.
+              and isolated Node.js VM evaluation with code-generation restrictions and stripped secrets.
             </p>
           </div>
         </div>

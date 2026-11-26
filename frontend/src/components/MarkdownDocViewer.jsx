@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { getSafeHref } from '../lib/safeUrl';
 
 /**
  * Format inline markdown tokens: **bold**, `code`, [link](url), and bare URLs
@@ -18,31 +19,41 @@ function formatInline(text) {
     }
 
     if (match[2] && match[3]) {
-      // Markdown link: [text](url)
-      parts.push(
-        <a
-          key={match.index}
-          href={match[3]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
-        >
-          {match[2]}
-        </a>
-      );
+      // Markdown link: [text](url) — strictly sanitize href against javascript:/data:/vbscript:
+      const safeHref = getSafeHref(match[3]);
+      if (safeHref) {
+        parts.push(
+          <a
+            key={match.index}
+            href={safeHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
+          >
+            {match[2]}
+          </a>
+        );
+      } else {
+        parts.push(match[2]);
+      }
     } else if (match[4]) {
       // Bare URL: https://...
-      parts.push(
-        <a
-          key={match.index}
-          href={match[4]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
-        >
-          {match[4]}
-        </a>
-      );
+      const safeBareHref = getSafeHref(match[4]);
+      if (safeBareHref) {
+        parts.push(
+          <a
+            key={match.index}
+            href={safeBareHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#1c1917] hover:text-black dark:text-zinc-200 dark:hover:text-white underline underline-offset-4 decoration-[#d5cbba] hover:decoration-[#1c1917] dark:decoration-zinc-600 dark:hover:decoration-white transition-colors break-all [overflow-wrap:anywhere]"
+          >
+            {match[4]}
+          </a>
+        );
+      } else {
+        parts.push(match[4]);
+      }
     } else if (match[5]) {
       // Code: `code`
       parts.push(

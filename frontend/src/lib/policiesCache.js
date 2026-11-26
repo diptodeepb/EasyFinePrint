@@ -9,6 +9,7 @@
  */
 
 import { api } from "./api.js";
+import { isSafeIdentifier } from "./safeUrl.js";
 
 const CACHE_KEY = "efp_policies_session_cache_v1";
 const COOLDOWN_KEY = "efp_policies_refresh_cooldown_until";
@@ -46,12 +47,24 @@ function safeRemoveSessionItem(key) {
   }
 }
 
+function isValidPolicyCacheArray(arr) {
+  if (!Array.isArray(arr) || arr.length > 250) return false;
+  return arr.every(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      !Array.isArray(item) &&
+      typeof item.id === "string" &&
+      isSafeIdentifier(item.id),
+  );
+}
+
 /**
  * Retrieve cached policies from in-memory store or sessionStorage.
  * @returns {{ data: Array, timestamp: number } | null}
  */
 export function getCachedPolicies() {
-  if (memoryCache && Array.isArray(memoryCache.data)) {
+  if (memoryCache && isValidPolicyCacheArray(memoryCache.data)) {
     return memoryCache;
   }
 
@@ -60,10 +73,18 @@ export function getCachedPolicies() {
 
   try {
     const parsed = JSON.parse(raw);
-    if (parsed && Array.isArray(parsed.data) && typeof parsed.timestamp === "number") {
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      !Array.isArray(parsed) &&
+      isValidPolicyCacheArray(parsed.data) &&
+      typeof parsed.timestamp === "number" &&
+      Number.isFinite(parsed.timestamp)
+    ) {
       memoryCache = parsed;
       return memoryCache;
     }
+    safeRemoveSessionItem(CACHE_KEY);
   } catch {
     safeRemoveSessionItem(CACHE_KEY);
   }

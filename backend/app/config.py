@@ -1,6 +1,7 @@
 """Application configuration loaded from environment variables."""
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import Optional
+from typing import Any, Optional
 
 
 class Settings(BaseSettings):
@@ -20,6 +21,24 @@ class Settings(BaseSettings):
     max_policy_chars: int = 500000
     sentry_dsn: Optional[str] = None
 
+    # Security & Access Control (OWASP Top 10:2025 & API Security Top 10:2023)
+    admin_api_key: str = ""
+    require_admin_key: bool = False
+    allowed_origin_regex: str = r"^https://easyfineprint(?:-[a-zA-Z0-9-]+)*\.vercel\.app$"
+    enable_api_docs: Optional[bool] = None
+    rate_limit_enabled: bool = True
+    trust_proxy_headers: bool = False
+    max_json_body_bytes: int = 10 * 1024 * 1024
+    max_tunnel_body_bytes: int = 262144  # 256 KB
+    max_discovery_body_bytes: int = 65536  # 64 KB
+
+    @field_validator("enable_api_docs", mode="before")
+    @classmethod
+    def _empty_str_to_none(cls, v: Any) -> Any:
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",
@@ -34,6 +53,12 @@ class Settings(BaseSettings):
         if self.environment.lower() == "production":
             return "https://easyfineprint.vercel.app"
         return origin or "http://localhost:5173"
+
+    def docs_enabled(self) -> bool:
+        """Return True if interactive OpenAPI docs should be exposed."""
+        if self.enable_api_docs is not None:
+            return bool(self.enable_api_docs)
+        return (self.environment or "").strip().lower() != "production"
 
 
 settings = Settings()

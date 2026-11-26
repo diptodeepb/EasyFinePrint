@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, ExternalLink, Loader2, AlertCircle, ChevronLeft, ChevronRight, CheckCircle2, Globe } from 'lucide-react';
 import { api } from '../lib/api';
+import { lockBodyScroll, unlockBodyScroll } from '../lib/scrollLock';
+import { getSafeHref } from '../lib/safeUrl';
 
 const PAGE_SIZE = 5;
 
@@ -13,8 +15,9 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
   const [error, setError] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const modalRef = useRef(null);
-  const isBackdropMouseDown = useRef(false);
-  const isBackdropTouchStart = useRef(false);
+  const backdropRef = useRef(null);
+  const candidatesListRef = useRef(null);
+  const isBackdropPointerDown = useRef(false);
 
   // Close modal on Escape key
   useEffect(() => {
@@ -28,13 +31,34 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll while modal is open
+  // Lock page scroll on both desktop and mobile while modal is open
   useEffect(() => {
     if (!isOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     return () => {
-      document.body.style.overflow = originalOverflow;
+      unlockBodyScroll();
+    };
+  }, [isOpen]);
+
+  // Prevent touchmove scroll-through on backdrop and non-scrollable modal regions
+  useEffect(() => {
+    if (!isOpen) return;
+    const backdrop = backdropRef.current;
+    if (!backdrop) return;
+
+    const handleTouchMove = (e) => {
+      const list = candidatesListRef.current;
+      if (list && list.contains(e.target) && list.scrollHeight > list.clientHeight) {
+        return;
+      }
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    backdrop.addEventListener('touchmove', handleTouchMove, { passive: false });
+    return () => {
+      backdrop.removeEventListener('touchmove', handleTouchMove);
     };
   }, [isOpen]);
 
@@ -126,40 +150,28 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
-      onMouseDown={(e) => {
-        isBackdropMouseDown.current = e.target === e.currentTarget;
+      ref={backdropRef}
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 overscroll-none touch-none"
+      onPointerDown={(e) => {
+        isBackdropPointerDown.current = e.target === e.currentTarget;
       }}
       onClick={(e) => {
-        if (
-          isBackdropMouseDown.current &&
-          (e.target === e.currentTarget || (modalRef.current && !modalRef.current.contains(e.target)))
-        ) {
+        const shouldClose =
+          isBackdropPointerDown.current &&
+          (e.target === e.currentTarget || (modalRef.current && !modalRef.current.contains(e.target)));
+        isBackdropPointerDown.current = false;
+        e.stopPropagation();
+        if (shouldClose) {
           e.preventDefault();
-          e.stopPropagation();
           onClose();
         }
-        isBackdropMouseDown.current = false;
-      }}
-      onTouchStart={(e) => {
-        isBackdropTouchStart.current = e.target === e.currentTarget;
-      }}
-      onTouchEnd={(e) => {
-        if (
-          isBackdropTouchStart.current &&
-          (e.target === e.currentTarget || (modalRef.current && !modalRef.current.contains(e.target)))
-        ) {
-          e.preventDefault();
-          e.stopPropagation();
-          onClose();
-        }
-        isBackdropTouchStart.current = false;
       }}
     >
       <div
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-lg bg-[#f5eedf] dark:bg-[#121215] rounded-t-2xl sm:rounded-xl p-4 sm:p-5 border border-[#b5a994] dark:border-[var(--edge-card)] shadow-2xl sm:shadow-[4px_4px_0_0_var(--shadow-card)] text-[#1c1917] dark:text-zinc-100 max-h-[88vh] sm:max-h-[85vh] flex flex-col"
+        onPointerDown={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg bg-[#f5eedf] dark:bg-[#121215] rounded-t-2xl sm:rounded-xl p-4 sm:p-5 border border-[#b5a994] dark:border-[var(--edge-card)] shadow-2xl sm:shadow-[4px_4px_0_0_var(--shadow-card)] text-[#1c1917] dark:text-zinc-100 max-h-[88vh] sm:max-h-[85vh] flex flex-col overscroll-contain touch-pan-y"
       >
         {/* Close Button */}
         <button
@@ -260,7 +272,10 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
 
         {/* Candidates list with pagination */}
         {!loading && totalItems > 0 && (
-          <div className="space-y-2.5 flex-1 overflow-y-auto pr-1.5 pb-1 min-h-0">
+          <div
+            ref={candidatesListRef}
+            className="space-y-2.5 flex-1 overflow-y-auto overscroll-contain touch-pan-y pr-1.5 pb-1 min-h-0"
+          >
             {paginatedCandidates.map((cand, idx) => {
               const isKnown = cand.source === 'known_directory';
               return (
@@ -302,17 +317,29 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
                       {cand.snippet}
                     </p>
                   )}
-                  <a
-                    href={cand.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[11px] font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors truncate flex items-center gap-1.5 w-fit max-w-full hover:underline underline-offset-2 cursor-pointer group/url"
-                    title={`Open ${cand.url} in new tab`}
-                  >
-                    <ExternalLink className="w-3 h-3 shrink-0 text-[#78716c] group-hover/url:text-[#1c1917] dark:text-zinc-500 dark:group-hover/url:text-white transition-colors" />
-                    <span className="truncate">{cand.url}</span>
-                  </a>
+                  {(() => {
+                    const safeCandUrl = getSafeHref(cand.url);
+                    if (!safeCandUrl) {
+                      return (
+                        <span className="text-[11px] font-mono text-[#5c5549] dark:text-zinc-400 truncate">
+                          {cand.url}
+                        </span>
+                      );
+                    }
+                    return (
+                      <a
+                        href={safeCandUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors truncate flex items-center gap-1.5 w-fit max-w-full hover:underline underline-offset-2 cursor-pointer group/url"
+                        title={`Open ${cand.url} in new tab`}
+                      >
+                        <ExternalLink className="w-3 h-3 shrink-0 text-[#78716c] group-hover/url:text-[#1c1917] dark:text-zinc-500 dark:group-hover/url:text-white transition-colors" />
+                        <span className="truncate">{cand.url}</span>
+                      </a>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -321,33 +348,33 @@ export default function DiscoveryModal({ isOpen, onClose, onSelectUrl }) {
 
         {/* Pagination Navigation Bar */}
         {!loading && totalItems > PAGE_SIZE && (
-          <div className="mt-2.5 pt-2 border-t border-[#d5cbba] dark:border-zinc-800/80 flex items-center justify-between text-xs font-mono text-[#5c5549] dark:text-zinc-400 shrink-0">
-            <span className="text-[11px] text-[#78716c] dark:text-zinc-500">
+          <div className="mt-2.5 pt-2.5 border-t border-[#d5cbba] dark:border-zinc-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono text-[#5c5549] dark:text-zinc-400 shrink-0">
+            <span className="text-[11px] text-[#78716c] dark:text-zinc-500 whitespace-nowrap text-center sm:text-left">
               Showing {startIndex + 1}&ndash;{Math.min(startIndex + PAGE_SIZE, totalItems)} of {totalItems} policies
             </span>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 type="button"
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
-                className="px-2 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer btn-3d-sm"
+                className="px-2.5 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer whitespace-nowrap shrink-0 btn-3d-sm"
                 aria-label="Previous page"
               >
-                <ChevronLeft className="w-3 h-3" />
+                <ChevronLeft className="w-3 h-3 shrink-0" />
                 <span>Prev</span>
               </button>
-              <span className="px-2 py-0.5 rounded bg-[#ece5d8] border border-[#d5cbba] text-[11px] text-[#5c5549] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400">
+              <span className="px-2.5 py-1 rounded bg-[#ece5d8] border border-[#d5cbba] text-[11px] text-[#5c5549] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-400 whitespace-nowrap shrink-0 tabular-nums">
                 {currentPage} / {totalPages}
               </span>
               <button
                 type="button"
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
-                className="px-2 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer btn-3d-sm"
+                className="px-2.5 py-1 rounded bg-[#ece5d8] text-[#1c1917] hover:bg-[#ded6c6] active:bg-[#d5cbba] dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white dark:active:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 text-[11px] cursor-pointer whitespace-nowrap shrink-0 btn-3d-sm"
                 aria-label="Next page"
               >
                 <span>Next</span>
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3 h-3 shrink-0" />
               </button>
             </div>
           </div>

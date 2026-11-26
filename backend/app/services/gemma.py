@@ -18,6 +18,7 @@ import httpx
 import json_repair
 
 from app.config import settings
+from app.security.sanitizers import sanitize_error_message, strip_control_chars
 from app.services.validator import (
     validate_initial_findings,
     validate_change_explanations,
@@ -445,7 +446,7 @@ def inspect_quota_error(exc: Exception) -> Tuple[str, str]:
 
     return (
         "error",
-        f"AI service temporarily unavailable ({exc}). Deterministic tracking remains operational."
+        f"AI service temporarily unavailable ({sanitize_error_message(exc, fallback='upstream error')}). Deterministic tracking remains operational."
     )
 
 
@@ -591,7 +592,7 @@ async def call_cloudflare_ai(
         },
     }
 
-    async with httpx.AsyncClient(timeout=timeout) as client:
+    async with httpx.AsyncClient(timeout=timeout, verify=True, follow_redirects=False) as client:
         resp = await client.post(url, headers=headers, json=payload)
 
         # Fallback to single prompt format if 400 Bad Request indicates chat template issue
@@ -607,30 +608,33 @@ async def call_cloudflare_ai(
 
         if resp.status_code in (401, 403):
             raise PermissionError(
-                f"Cloudflare Workers AI authentication failed (HTTP {resp.status_code}): {resp.text}"
+                f"Cloudflare Workers AI authentication failed (HTTP {resp.status_code})"
             )
         elif resp.status_code == 429:
             raise RuntimeError(
-                f"Cloudflare Workers AI rate limit reached (HTTP 429): {resp.text}"
+                "Cloudflare Workers AI rate limit reached (HTTP 429)"
             )
         elif resp.status_code >= 500:
             raise RuntimeError(
-                f"Cloudflare Workers AI upstream server error (HTTP {resp.status_code}): {resp.text}"
+                f"Cloudflare Workers AI upstream server error (HTTP {resp.status_code})"
             )
 
         resp.raise_for_status()
+        if len(resp.content) > 2 * 1024 * 1024:
+            raise RuntimeError("Cloudflare Workers AI response exceeded maximum safe size.")
         data = resp.json()
         return _extract_text_from_cf_response(data)
 
 
 def sanitize_prompt_text(text: str) -> str:
-    """Neutralize LLM control tokens and chat delimiters to prevent indirect prompt injection."""
+    """Neutralize LLM control tokens, chat delimiters, and prompt boundary tags to prevent indirect prompt injection."""
     if not text:
         return ""
+    cleaned = strip_control_chars(text, allow_newlines=True)
     return re.sub(
-        r"(<\|im_start\|>|<\|im_end\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<start_of_turn>|<end_of_turn>|<think>[\s\S]*?</think>)",
+        r"(<\|im_start\|>|<\|im_end\|>|<\|endoftext\|>|\[INST\]|\[/INST\]|<start_of_turn>|<end_of_turn>|</?UNTRUSTED_DOCUMENT_CONTENT>|\[DETERMINISTIC DIFF ITEMS\]|<think>[\s\S]*?</think>)",
         "[REDACTED_TOKEN]",
-        text,
+        cleaned,
         flags=re.IGNORECASE,
     )
 
@@ -750,9 +754,9 @@ async def analyze_policy_risk(policy_text: str) -> Dict[str, Any]:
     # Compute risk score and level
     risk_score, risk_level = compute_risk_score(validated_findings)
 
-    # Prefer model's plain-English overview if substantive, otherwise synthesize
-    if model_summary and len(model_summary.strip()) >= 30:
-        summary_text = model_summary.strip()
+    # Prefer model's plain-English overview if substantive, otherwise synthesize (bounded & sanitized)
+    if isinstance(model_summary, str) and len(model_summary.strip()) >= 30:
+        summary_text = strip_control_chars(model_summary.strip(), allow_newlines=False, max_length=2000)
     else:
         summary_text = synthesize_overview(
             findings=validated_findings,
@@ -794,7 +798,16 @@ async def explain_policy_changes(
         if alt not in candidate_models:
             candidate_models.append(alt)
 
-    diff_payload = json.dumps(bounded_diff, ensure_ascii=False)
+    sanitized_diff = []
+    for item in bounded_diff:
+        clean_item = dict(item)
+        if clean_item.get("old_text"):
+            clean_item["old_text"] = sanitize_prompt_text(clean_item["old_text"])
+        if clean_item.get("new_text"):
+            clean_item["new_text"] = sanitize_prompt_text(clean_item["new_text"])
+        sanitized_diff.append(clean_item)
+
+    diff_payload = json.dumps(sanitized_diff, ensure_ascii=False)
     for model in candidate_models:
         try:
             raw = await asyncio.wait_for(
@@ -818,8 +831,15 @@ async def explain_policy_changes(
                 new_text=new_text,
             )
 
+            raw_summary = data.get("summary")
+            clean_summary = (
+                strip_control_chars(raw_summary, allow_newlines=False, max_length=2000).strip()
+                if isinstance(raw_summary, str) and raw_summary.strip()
+                else "Policy changes analyzed."
+            )
+
             return {
-                "summary": data.get("summary", "Policy changes analyzed."),
+                "summary": clean_summary,
                 "changes": validated_changes,
                 "model_id": model,
                 "validation_status": val_status,

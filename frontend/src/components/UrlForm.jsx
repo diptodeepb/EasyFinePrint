@@ -9,6 +9,7 @@ import {
   X,
   FileText,
 } from "lucide-react";
+import { getSafeHref } from "../lib/safeUrl";
 
 const SAMPLE_POLICIES = [
   {
@@ -179,17 +180,14 @@ export default function UrlForm({
       return;
     }
 
-    if (
-      !clean.startsWith("http://") &&
-      !clean.startsWith("https://") &&
-      !clean.startsWith("/")
-    ) {
-      setError("Enter a valid URL (starting with https://, http://, or /)");
+    const safeTarget = getSafeHref(clean);
+    if (!safeTarget) {
+      setError("Enter a valid public URL (starting with https://, http://, or / without embedded credentials)");
       return;
     }
 
     setElapsed(0);
-    onAnalyze(clean);
+    onAnalyze(safeTarget);
   };
 
   const handlePastedUrlChange = (e) => {
@@ -234,12 +232,9 @@ export default function UrlForm({
       return;
     }
 
-    if (
-      !cleanUrl.startsWith("http://") &&
-      !cleanUrl.startsWith("https://") &&
-      !cleanUrl.startsWith("/")
-    ) {
-      setError("Enter a valid URL (starting with https://, http://, or /)");
+    const safePastedTarget = getSafeHref(cleanUrl);
+    if (!safePastedTarget) {
+      setError("Enter a valid URL (starting with https://, http://, or / without embedded credentials)");
       return;
     }
 
@@ -361,7 +356,7 @@ export default function UrlForm({
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck="false"
-                  className="w-full pl-10 pr-10 py-3 sm:py-2.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black hover:border-black/80 dark:border-zinc-300 dark:hover:border-zinc-200 text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 disabled:opacity-50 font-mono min-h-[44px] input-3d"
+                  className="w-full pl-10 pr-10 py-3 sm:py-2.5 rounded-lg bg-[#faf5ec] dark:bg-zinc-950 border border-black hover:border-black/80 dark:border-zinc-600 dark:hover:border-zinc-500 text-[#1c1917] dark:text-zinc-100 placeholder-[#78716c] dark:placeholder-zinc-500 text-base sm:text-sm focus:outline-none focus:border-black dark:focus:border-white focus:ring-1 focus:ring-black/40 dark:focus:ring-white/40 disabled:opacity-50 font-mono min-h-[44px] input-3d"
                 />
                 {url && !loading && (
                   <button

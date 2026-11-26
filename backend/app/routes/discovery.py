@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 from app.schemas.policy import DiscoverySearchRequest, DiscoveryResponse, DiscoveryCandidate
 from app.services.discovery import discover_policy_urls
+from app.security.sanitizers import strip_control_chars
 
 router = APIRouter(prefix="/discovery", tags=["discovery"])
 
@@ -17,9 +18,9 @@ async def search_policy_urls(req: DiscoverySearchRequest):
 
     candidates = [
         DiscoveryCandidate(
-            title=c["title"],
+            title=strip_control_chars(c["title"], allow_newlines=False, max_length=200),
             url=c["url"],
-            snippet=c.get("snippet"),
+            snippet=strip_control_chars(c.get("snippet"), allow_newlines=False, max_length=400) if c.get("snippet") else None,
             source=c.get("source", "discovery"),
         )
         for c in result.get("candidates", [])

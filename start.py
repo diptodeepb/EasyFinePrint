@@ -80,7 +80,7 @@ _load_sensitive_strings()
 _RE_BEARER = re.compile(r"(Bearer\s+)[A-Za-z0-9_\-\.]{8,}", re.IGNORECASE)
 _RE_MONGO_PASS = re.compile(r"(mongodb(?:\+srv)?://[^:]+:)([^@]+)(@)", re.IGNORECASE)
 _RE_KV_SECRETS = re.compile(
-    r"(?i)\b(api_key|token|api_token|secret|password|account_id|dsn)\b\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.]{8,})['\"]?"
+    r"(?i)\b(api_key|token|api_token|secret|password|account_id|dsn|admin_api_key|x-admin-key)\b\s*[:=]\s*['\"]?([A-Za-z0-9_\-\.]{6,})['\"]?"
 )
 _RE_SENTRY_INGEST = re.compile(
     r"https?://(?:[^\s@/]+@)?[a-z0-9_.-]*ingest[a-z0-9_.-]*\.sentry\.io[^\s\"]*",

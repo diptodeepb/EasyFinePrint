@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="theme-color" content="#050507" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,31 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap"
       rel="stylesheet"
     />
-    <script>
-      (function() {
-        try {
-          var saved = localStorage.getItem('theme');
-          var isDark = true;
-          if (saved === 'light') {
-            isDark = false;
-          } else if (saved === 'dark') {
-            isDark = true;
-          } else {
-            // 'system' or default
-            isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-          }
-          if (isDark) {
-            document.documentElement.classList.add('dark');
-            var metaDark = document.querySelector('meta[name="theme-color"]');
-            if (metaDark) metaDark.setAttribute('content', '#050507');
-          } else {
-            document.documentElement.classList.remove('dark');
-            var metaLight = document.querySelector('meta[name="theme-color"]');
-            if (metaLight) metaLight.setAttribute('content', '#f4ecde');
-          }
-        } catch (e) {}
-      })();
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root"></div>

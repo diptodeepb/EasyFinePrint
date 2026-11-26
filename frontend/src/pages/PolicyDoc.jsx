@@ -57,7 +57,7 @@ export default function PrivacyPolicy() {
             Privacy Policy
           </h1>
           <p className="text-xs sm:text-sm text-[#5c5549] dark:text-zinc-400 flex items-center gap-1.5 flex-wrap">
-            <span>Effective Date: October 24, 2026</span>
+            <span>Effective Date: November 27, 2026</span>
             <span className="text-[#78716c] dark:text-zinc-600">&middot;</span>
             <a
               href="https://github.com/diptodeepb/EasyFinePrint/blob/main/LICENSE"
@@ -115,7 +115,7 @@ export default function PrivacyPolicy() {
           <a
             href="https://github.com/diptodeepb/EasyFinePrint/blob/main/docs/PRIVACY_POLICY.md"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors group"
           >
             <span>View markdown source</span>

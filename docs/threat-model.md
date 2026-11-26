@@ -178,3 +178,51 @@ A malicious or careless actor uses the direct text paste ingestion pipeline to s
    - Direct user paste is rejected if the target URL matches an existing system-maintained policy.
    - Robust URL canonicalization resolves evasive variants (trailing slashes, root slashes, `http`/`https` protocols, `:80`/`:443` default ports, `www.` subdomains, query parameters, hash fragments, and casing) to prevent duplicate spoofing or bypassing system crawls. Submissions trigger HTTP 400 Bad Request.
 
+---
+
+## 10. OWASP Top 10 (2025) & OWASP API Security Top 10 (2023) Production Control Matrix
+
+### 10.1 OWASP Top 10:2025 Coverage
+- **A01:2025 (Broken Access Control)**:
+  - `DELETE /api/policies/{policy_id}` enforces `require_admin_access` (constant-time `hmac.compare_digest` against `ADMIN_API_KEY`; fail-closed `403` in `production` when unconfigured).
+  - Scoped CORS regex (`^https://easyfineprint(?:-[a-zA-Z0-9-]+)*\.vercel\.app$`) and explicit allowed headers (no `*`).
+  - Mutating `/api/*` endpoints enforce `Origin` and `Sec-Fetch-Site` CSRF/cross-site guards.
+  - `get_self_policy` validates exact domain/subdomain allowlists instead of substring matching.
+- **A02:2025 (Security Misconfiguration)**:
+  - Interactive Swagger/ReDoc/OpenAPI routes (`/docs`, `/redoc`, `/openapi.json`) are disabled when `ENVIRONMENT=production` (unless `ENABLE_API_DOCS=true`).
+  - Both backend (`main.py`) and frontend (`frontend/vercel.json`) enforce `Content-Security-Policy` (without `'unsafe-inline'` scripts; theme bootstrap extracted to `/theme-init.js`), `Strict-Transport-Security`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Cross-Origin-Opener-Policy: same-origin`, `Referrer-Policy`, and `Permissions-Policy`.
+  - Unsafe HTTP methods (`TRACE`, `TRACK`) are rejected with HTTP 405.
+- **A03:2025 (Software Supply Chain Failures)**:
+  - Child Node.js processes (`extractor.py`) run with a minimal stripped `env` (`PATH`, `LANG` only — zero inherited secrets), `--disallow-code-generation-from-strings`, and `--max-old-space-size=64`.
+  - CI enforces `pip check`, `npm ci` lockfile determinism, `oxlint`, unit tests, and production bundling.
+- **A04:2025 (Cryptographic Failures)**:
+  - HSTS preload enabled; TLS certificate verification (`verify=True`) enforced on all outbound `httpx` clients; constant-time `hmac.compare_digest` for key checks; SHA-256 content hashing; upstream error responses sanitized to avoid leaking credentials or account IDs.
+- **A05:2025 (Injection)**:
+  - Backend Tier 3 (`raw_text` paste) enforces `validate_url` (rejecting `javascript:`, `data:`, `file://`, embedded credentials, literal private IPs).
+  - Frontend `safeUrl.js` (`getSafeHref`, `isSafeIdentifier`) sanitizes all dynamic `<a href>`, `<Link to>`, markdown links, and API path identifiers; `rel="noopener noreferrer"` enforced on external links.
+  - Node.js `node:vm` sandbox disables code generation from strings (`--disallow-code-generation-from-strings`, `codeGeneration: { strings: false, wasm: false }`) and uses null-prototype sandbox objects to block `constructor.constructor` escapes.
+  - Prompt sanitization strips `<UNTRUSTED_DOCUMENT_CONTENT>`, `</UNTRUSTED_DOCUMENT_CONTENT>`, `[DETERMINISTIC DIFF ITEMS]`, and LLM chat delimiters in both initial and diff prompts.
+  - Strict `^[a-zA-Z0-9_-]{1,128}$` ID sanitization + MongoDB `$eq` binding + null-byte rejection across schemas.
+- **A06:2025 (Insecure Design)**:
+  - Separation of deterministic facts vs. probabilistic AI interpretations; streaming body size limits (ASGI `BodySizeLimitMiddleware` defeating chunked transfer encoding DoS); bounded TTL LRU cache in discovery; per-IP sliding-window rate limiting.
+- **A07:2025 (Authentication Failures)**:
+  - Brute-force rate limiting (`admin_auth` tier) and audit logging on missing/invalid `X-Admin-Key` / Bearer credentials; zero PII/credential persistence in client storage.
+- **A08:2025 (Software or Data Integrity Failures)**:
+  - `policiesCache.js` validates `sessionStorage` payloads against strict schema/ID checks before hydrating React state; `repositories.py` restricts `provenance` to an audited enum and whitelists mutable policy fields.
+- **A09:2025 (Security Logging and Alerting Failures)**:
+  - `X-Request-ID` correlation middleware and structured JSON `SECURITY_EVENT` audit logs (`audit_logger.py`) with automatic secret redaction and hashed IP references (`ip_<sha256_prefix>`).
+- **A10:2025 (Mishandling of Exceptional Conditions)**:
+  - Fail-closed exception handling in `url_guard.py`, `ErrorBoundary.jsx` hiding internal JS error details in production builds, sanitized exception messages in `policies.py` and `gemma.py`, and elimination of undefined-variable edge cases during exact-match and self-policy rechecks.
+
+### 10.2 OWASP API Security Top 10:2023 Coverage
+- **API1:2023 (BOLA) / API5:2023 (BFLA)**: Strict regex path constraints on all `{policy_id}` / `{snapshot_id}` routes and `require_admin_access` on `DELETE /api/policies/{policy_id}`.
+- **API2:2023 (Broken Authentication)**: Constant-time `hmac.compare_digest` verification, `WWW-Authenticate: Bearer` challenges, and `admin_auth` rate limiting.
+- **API3:2023 (BOPLA)**: `ConfigDict(extra="forbid")` on all request Pydantic models to block mass assignment; explicit `response_model` schemas on all endpoints and `_id` stripping in `_normalize_doc` to prevent excessive data exposure.
+- **API4:2023 (Unrestricted Resource Consumption)**: Streaming ASGI body limits (10 MB default, 256 KB `/api/tunnel`, 64 KB `/api/discovery/search`), 5 MB outbound fetch cap, bounded discovery cache (`MAX_CACHE_ENTRIES=500`, `CACHE_TTL_SECONDS=900`), and per-IP sliding-window rate limiting with `Retry-After` & `X-RateLimit-*` headers.
+- **API6:2023 (Unrestricted Access to Sensitive Business Flows)**: Dedicated rate-limit tiers for `analyze`, `check`, `discovery`, and `tunnel` plus 30s frontend manual-refresh cooldown.
+- **API7:2023 (SSRF)**: Zero `follow_redirects=True` across the entire backend (`extractor.py`, `discovery.py`, `fetch_wayback_snapshot`, Node fetch fallback, and `/api/tunnel`), hop-by-hop DNS/IP revalidation, IPv6 tunneling (`sixtofour`, `teredo`, `ipv4_mapped`, `site_local`) blocking, and literal-IP validation in `validate_url`.
+- **API8:2023 (Security Misconfiguration)**: Tightened CORS, `Cache-Control: no-store` on `/api/*`, production OpenAPI disablement, strict `Content-Security-Policy`, and `X-API-Version`.
+- **API9:2023 (Improper Inventory Management)**: Full endpoint inventory in `README.md`, `X-API-Version: 1.0.0`, and production disablement of `/docs`, `/redoc`, and `/openapi.json`.
+- **API10:2023 (Unsafe Consumption of APIs)**: Bounded/sanitized Cloudflare AI outputs, `archive.org` host allowlist for Wayback snapshots, strict numeric `project_id` (`^[0-9]{1,20}$`) & `https://*.sentry.io` validation on `/api/tunnel` with `follow_redirects=False`.
+
+
