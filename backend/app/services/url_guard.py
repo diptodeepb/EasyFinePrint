@@ -1,11 +1,12 @@
 """SSRF Protection and URL Validation Service.
 
 Enforces strict URL format checks, DNS resolution validation (IPv4 & IPv6),
-private/loopback/cloud-metadata blocking, and hop-by-hop redirect inspection.
+private/loopback/cloud-metadata/tunneling blocking, and hop-by-hop redirect inspection.
 """
 from __future__ import annotations
 import ipaddress
 import logging
+import re
 import socket
 from urllib.parse import urlparse, ParseResult
 from typing import Tuple, List
@@ -16,12 +17,24 @@ logger = logging.getLogger("easyfineprint.url_guard")
 BLOCKED_HOSTNAMES = {
     "metadata.google.internal",
     "metadata.internal",
+    "metadata.azure.internal",
     "instance-data",
     "localhost",
+    "localhost.localdomain",
+    "0.0.0.0",
+    "::",
 }
+
+BLOCKED_SUFFIXES = (
+    ".internal",
+    ".local",
+    ".localhost",
+    ".home.arpa",
+)
 
 CARRIER_GRADE_NAT = ipaddress.ip_network("100.64.0.0/10")
 ALLOWED_PORTS = {80, 443}
+_RE_CTRL_OR_NULL = re.compile(r"[\x00-\x1f\x7f]")
 
 
 class URLValidationError(Exception):
@@ -63,26 +76,41 @@ def is_ip_allowed(ip_str: str) -> Tuple[bool, str]:
         if ip in CARRIER_GRADE_NAT:
             return False, f"Carrier-grade NAT address blocked ({ip_str})"
 
-    # IPv6 specific checks
+    # IPv6 specific checks (mapped, site-local, 6to4, Teredo tunneling bypasses)
     if isinstance(ip, ipaddress.IPv6Address):
-        # IPv4-mapped IPv6 address (e.g. ::ffff:127.0.0.1)
+        if ip.is_site_local:
+            return False, f"IPv6 site-local address blocked ({ip_str})"
         if ip.ipv4_mapped:
             return is_ip_allowed(str(ip.ipv4_mapped))
+        if ip.sixtofour:
+            return is_ip_allowed(str(ip.sixtofour))
+        if ip.teredo:
+            server_ip, client_ip = ip.teredo
+            ok_srv, reason_srv = is_ip_allowed(str(server_ip))
+            if not ok_srv:
+                return False, reason_srv
+            return is_ip_allowed(str(client_ip))
 
     return True, "OK"
 
 
 def validate_url(url_str: str) -> ParseResult:
     """
-    Perform structural validation on URL.
+    Perform structural and literal-IP validation on URL.
     Returns parsed URL on success, raises URLValidationError on violation.
     """
     if not url_str or not isinstance(url_str, str):
         raise URLValidationError("URL cannot be empty")
 
+    if _RE_CTRL_OR_NULL.search(url_str):
+        raise URLValidationError("URL contains prohibited control characters.")
+
     url_str = url_str.strip()
     if len(url_str) > 2048:
         raise URLValidationError("URL exceeds maximum permitted length of 2048 characters.")
+
+    if any(ch.isspace() for ch in url_str):
+        raise URLValidationError("URL must not contain whitespace.")
 
     try:
         parsed = urlparse(url_str)
@@ -97,18 +125,31 @@ def validate_url(url_str: str) -> ParseResult:
     if parsed.username or parsed.password:
         raise URLValidationError("Embedded credentials in URL are prohibited.")
 
-    hostname = parsed.hostname
+    raw_hostname = parsed.hostname
+    if not raw_hostname:
+        raise URLValidationError("Missing hostname in URL.")
+
+    hostname = raw_hostname.lower().rstrip(".")
     if not hostname:
         raise URLValidationError("Missing hostname in URL.")
 
-    # Check hostname against blacklisted names
-    if hostname.lower() in BLOCKED_HOSTNAMES or hostname.lower().endswith(".internal") or hostname.lower().endswith(".local"):
+    # Check hostname against blacklisted names and suffixes
+    if hostname in BLOCKED_HOSTNAMES or hostname.endswith(BLOCKED_SUFFIXES):
         raise URLValidationError(f"Access to hostname '{hostname}' is blocked.")
 
     # Port check
     port = parsed.port
     if port is not None and port not in ALLOWED_PORTS:
         raise URLValidationError(f"Non-standard port '{port}' is prohibited.")
+
+    # Literal IP check (defends even when caller only performs structural validation)
+    try:
+        ipaddress.ip_address(hostname)
+        allowed, reason = is_ip_allowed(hostname)
+        if not allowed:
+            raise URLValidationError(f"Target IP {hostname} is forbidden: {reason}")
+    except ValueError:
+        pass
 
     return parsed
 
@@ -121,23 +162,30 @@ def resolve_and_verify_hostname(hostname: str) -> List[str]:
     if not hostname:
         raise URLValidationError("Missing hostname.")
 
+    clean_host = hostname.strip().lower().rstrip(".")
+    if not clean_host:
+        raise URLValidationError("Missing hostname.")
+
+    if clean_host in BLOCKED_HOSTNAMES or clean_host.endswith(BLOCKED_SUFFIXES):
+        raise URLValidationError(f"Access to hostname '{clean_host}' is blocked.")
+
     # If hostname is already a literal IP address
     try:
-        ipaddress.ip_address(hostname)
-        allowed, reason = is_ip_allowed(hostname)
+        ipaddress.ip_address(clean_host)
+        allowed, reason = is_ip_allowed(clean_host)
         if not allowed:
-            raise URLValidationError(f"Target IP {hostname} is forbidden: {reason}")
-        return [hostname]
+            raise URLValidationError(f"Target IP {clean_host} is forbidden: {reason}")
+        return [clean_host]
     except ValueError:
         pass  # Hostname is a domain name
 
     try:
-        addr_info = socket.getaddrinfo(hostname, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        addr_info = socket.getaddrinfo(clean_host, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
     except (OSError, UnicodeError) as exc:
         if not isinstance(exc, socket.gaierror):
-            logger.warning("DNS resolution failed for '%s': %s", hostname, exc)
+            logger.warning("DNS resolution failed for '%s': %s", clean_host, exc)
         raise URLValidationError(
-            f"Unable to resolve domain '{hostname}'. Please check that the URL is spelled correctly and the website is publicly reachable."
+            f"Unable to resolve domain '{clean_host}'. Please check that the URL is spelled correctly and the website is publicly reachable."
         ) from exc
 
     resolved_ips: List[str] = []
@@ -148,11 +196,11 @@ def resolve_and_verify_hostname(hostname: str) -> List[str]:
             resolved_ips.append(ip_str)
 
     if not resolved_ips:
-        raise URLValidationError(f"No IP addresses resolved for hostname {hostname}")
+        raise URLValidationError(f"No IP addresses resolved for hostname {clean_host}")
 
     for ip_str in resolved_ips:
         allowed, reason = is_ip_allowed(ip_str)
         if not allowed:
-            raise URLValidationError(f"Resolved IP {ip_str} for host {hostname} is forbidden: {reason}")
+            raise URLValidationError(f"Resolved IP {ip_str} for host {clean_host} is forbidden: {reason}")
 
     return resolved_ips

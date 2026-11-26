@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from app.schemas.policy import (
     PolicyAnalyzeRequest,
     PolicySelfAnalyzeRequest,
@@ -14,6 +14,8 @@ from app.schemas.policy import (
     CheckEventResponse,
     FindingSchema,
     DiffChangeSchema,
+    SelfPolicyMetadataResponse,
+    DeletePolicyResponse,
 )
 from app.services.extractor import (
     safe_fetch_page,
@@ -28,8 +30,12 @@ from app.services.normalizer import (
 )
 from app.services.diff_engine import compute_policy_diff
 from app.services.gemma import analyze_policy_risk, explain_policy_changes, is_ai_configured
+from app.services.url_guard import validate_url, URLValidationError
 from app.legal import get_self_policy, SELF_POLICIES
 from app.db.repositories import repo
+from app.security.auth import require_admin_access
+from app.security.audit_logger import log_security_event
+from app.security.sanitizers import sanitize_error_message
 
 logger = logging.getLogger("easyfineprint.policies")
 router = APIRouter(prefix="/policies", tags=["policies"])
@@ -144,6 +150,7 @@ async def _process_policy_ingestion(
                 "Exact character-for-character match for %s. Reusing baseline analysis instantly.",
                 policy.get("canonical_url"),
             )
+            effective_title = title or policy.get("title") or "Policy Agreement"
             await repo.record_check_event(
                 policy_id=policy["id"],
                 status="unchanged",
@@ -154,68 +161,68 @@ async def _process_policy_ingestion(
             await repo.update_policy(policy["id"], {
                 "last_checked_at": datetime.now(timezone.utc),
                 "latest_snapshot_id": latest_snap["id"],
-                "title": title or policy.get("title"),
+                "title": effective_title,
             })
             return PolicyResponse(
                 id=policy["id"],
                 url=policy["url"],
                 canonical_url=policy["canonical_url"],
-                title=policy["title"],
+                title=effective_title,
                 status=policy["status"],
                 created_at=policy["created_at"],
                 last_checked_at=datetime.now(timezone.utc),
                 latest_snapshot_id=latest_snap["id"],
                 latest_analysis=_format_analysis_response(latest_analysis),
                 reanalysis_status="skipped_unchanged",
-                provenance=latest_analysis.get("provenance", "live") if latest_analysis else "live",
-                warnings=latest_analysis.get("warnings", []) if latest_analysis else [],
+                provenance=latest_analysis.get("provenance", "live"),
+                warnings=latest_analysis.get("warnings", []),
             )
 
-        if should_upgrade:
-            logger.info(
-                "Exact match found for %s, but previous analysis is unrated or fallback. Upgrading analysis with Gemma 4...",
-                policy.get("canonical_url"),
-            )
-            ai_res = await analyze_policy_risk(normalized_text)
-            analysis_doc = await repo.create_analysis(
-                policy_id=policy["id"],
-                analysis_type="initial",
-                new_snapshot_id=latest_snap["id"],
-                summary=ai_res["summary"],
-                risk_score=ai_res.get("risk_score"),
-                risk_level=ai_res.get("risk_level"),
-                findings=ai_res.get("findings", []),
-                changes=[],
-                model_id=ai_res["model_id"],
-                validation_status=ai_res["validation_status"],
-                provenance=provenance,
-                warnings=warnings_list,
-            )
-            await repo.record_check_event(
-                policy_id=policy["id"],
-                status="reanalyzed",
-                message="Upgraded policy analysis with single-pass Gemma 4 clause risk scoring.",
-                new_snapshot_id=latest_snap["id"],
-            )
-            await repo.update_policy(policy["id"], {
-                "last_checked_at": datetime.now(timezone.utc),
-                "latest_snapshot_id": latest_snap["id"],
-                "title": title or policy.get("title"),
-            })
-            return PolicyResponse(
-                id=policy["id"],
-                url=policy["url"],
-                canonical_url=policy["canonical_url"],
-                title=policy["title"],
-                status=policy["status"],
-                created_at=policy["created_at"],
-                last_checked_at=datetime.now(timezone.utc),
-                latest_snapshot_id=latest_snap["id"],
-                latest_analysis=_format_analysis_response(analysis_doc),
-                reanalysis_status="upgraded",
-                provenance=provenance,
-                warnings=warnings_list,
-            )
+        logger.info(
+            "Exact match found for %s without existing analysis; generating baseline analysis.",
+            policy.get("canonical_url"),
+        )
+        ai_res = await analyze_policy_risk(normalized_text)
+        analysis_doc = await repo.create_analysis(
+            policy_id=policy["id"],
+            analysis_type="initial",
+            new_snapshot_id=latest_snap["id"],
+            summary=ai_res["summary"],
+            risk_score=ai_res.get("risk_score"),
+            risk_level=ai_res.get("risk_level"),
+            findings=ai_res.get("findings", []),
+            changes=[],
+            model_id=ai_res["model_id"],
+            validation_status=ai_res["validation_status"],
+            provenance=provenance,
+            warnings=warnings_list,
+        )
+        await repo.record_check_event(
+            policy_id=policy["id"],
+            status="reanalyzed",
+            message="Generated policy analysis with single-pass Gemma 4 clause risk scoring.",
+            new_snapshot_id=latest_snap["id"],
+        )
+        effective_title = title or policy.get("title") or "Policy Agreement"
+        await repo.update_policy(policy["id"], {
+            "last_checked_at": datetime.now(timezone.utc),
+            "latest_snapshot_id": latest_snap["id"],
+            "title": effective_title,
+        })
+        return PolicyResponse(
+            id=policy["id"],
+            url=policy["url"],
+            canonical_url=policy["canonical_url"],
+            title=effective_title,
+            status=policy["status"],
+            created_at=policy["created_at"],
+            last_checked_at=datetime.now(timezone.utc),
+            latest_snapshot_id=latest_snap["id"],
+            latest_analysis=_format_analysis_response(analysis_doc),
+            reanalysis_status="upgraded",
+            provenance=provenance,
+            warnings=warnings_list,
+        )
 
     # 5. NEW POLICY OR GENUINE TEXT CHANGE:
     if not policy:
@@ -315,7 +322,7 @@ async def _process_policy_ingestion(
 
 
 @router.post("/analyze", response_model=PolicyResponse)
-async def analyze_policy(req: PolicyAnalyzeRequest):
+async def analyze_policy(req: PolicyAnalyzeRequest, request: Request):
     """
     4-Tier Hybrid Policy Ingestion, Analysis, and Diff Pipeline:
     - Tier 1: Direct Safe Scrape & Client JavaScript Hydration Extraction
@@ -370,6 +377,18 @@ async def analyze_policy(req: PolicyAnalyzeRequest):
                     ),
                 )
 
+        # Enforce strict URL scheme, authority, port, and literal-IP SSRF checks (blocks javascript:, data:, file://, 169.254.169.254, etc.)
+        try:
+            validate_url(raw_url)
+        except URLValidationError as exc:
+            log_security_event(
+                "tier3_url_validation_rejected",
+                severity="WARNING",
+                detail=str(exc),
+                request=request,
+            )
+            raise HTTPException(status_code=400, detail=str(exc))
+
         # 2. Reject if URL already exists as a system-maintained policy in DB
         system_match = await repo.find_system_policy_by_canonical(canon_raw)
         if system_match:
@@ -421,12 +440,18 @@ async def analyze_policy(req: PolicyAnalyzeRequest):
     except ExtractionError as exc:
         err_msg = str(exc).lower()
         # Immediately reject SSRF, invalid protocols, and prohibited private IPs with HTTP 400
-        if any(kw in err_msg for kw in ("prohibited", "invalid", "ssrf", "blocked", "forbidden", "loopback", "private", "redirect hops")):
-            raise HTTPException(status_code=400, detail=str(exc))
-        tier1_error = str(exc)
+        if any(kw in err_msg for kw in ("prohibited", "invalid", "ssrf", "blocked", "forbidden", "loopback", "private", "redirect hops", "credentials")):
+            log_security_event(
+                "ssrf_or_url_blocked",
+                severity="WARNING",
+                detail=str(exc),
+                request=request,
+            )
+            raise HTTPException(status_code=400, detail=sanitize_error_message(exc))
+        tier1_error = sanitize_error_message(exc, fallback="origin challenge")
         logger.info("Tier 1 live scrape blocked for %s: %s. Initiating Tier 2 Wayback Machine fallback...", raw_url, exc)
     except Exception as exc:
-        tier1_error = str(exc)
+        tier1_error = sanitize_error_message(exc, fallback="origin challenge")
         logger.warning("Tier 1 unexpected scrape failure for %s: %s", raw_url, exc)
 
     # -------------------------------------------------------------
@@ -512,29 +537,38 @@ async def analyze_self_policy(req: Optional[PolicySelfAnalyzeRequest] = None):
     )
 
 
-@router.get("/self-policies")
+@router.get("/self-policies", response_model=List[SelfPolicyMetadataResponse])
 async def list_self_policies_metadata():
     """List available self-policies (Terms of Use, Privacy Policy) for dogfooding, in-app viewing, and testing."""
     return [
-        {
-            "key": item["key"],
-            "title": item["title"],
-            "url": item["url"],
-            "canonical_url": item["canonical_url"],
-            "description": item["description"],
-            "text": item["text"],
-        }
+        SelfPolicyMetadataResponse(
+            key=item["key"],
+            title=item["title"],
+            url=item["url"],
+            canonical_url=item["canonical_url"],
+            description=item["description"],
+            text=item["text"],
+        )
         for item in SELF_POLICIES.values()
     ]
 
 
-@router.get("/self-policies/{key}")
-async def get_single_self_policy(key: str = Path(..., description="Self-policy key ('terms' or 'privacy')")):
+@router.get("/self-policies/{key}", response_model=SelfPolicyMetadataResponse)
+async def get_single_self_policy(
+    key: str = Path(..., pattern=r"^[a-zA-Z0-9_-]{1,32}$", description="Self-policy key ('terms' or 'privacy')"),
+):
     """Retrieve full text and metadata for EasyFinePrint's own Terms of Use or Privacy Policy."""
     doc = get_self_policy(key)
     if not doc:
         raise HTTPException(status_code=404, detail=f"Self policy '{key}' not found. Valid keys: 'terms', 'privacy'.")
-    return doc
+    return SelfPolicyMetadataResponse(
+        key=doc["key"],
+        title=doc["title"],
+        url=doc["url"],
+        canonical_url=doc["canonical_url"],
+        description=doc["description"],
+        text=doc["text"],
+    )
 
 
 
@@ -612,20 +646,22 @@ async def check_policy_for_updates(
         raise HTTPException(status_code=400, detail="Policy has no baseline snapshot. Run initial analysis first.")
 
     # Check if target is an internal self-policy (dogfooding)
+    provenance = "live"
+    warnings: List[str] = []
     self_doc = get_self_policy(policy.get("canonical_url", "") or policy.get("url", ""))
     if self_doc:
         title = self_doc["title"]
         extracted_text = self_doc["text"]
         canonical_url = self_doc["canonical_url"]
         status_code = 200
+        provenance = "self"
     else:
         # Fetch page with Tier 1 live scrape + Tier 2 archive fallback
-        provenance = "live"
-        warnings = []
         try:
             html, canonical_url, status_code = await safe_fetch_page(policy["canonical_url"])
             title, extracted_text, warnings = extract_policy_content(html)
         except ExtractionError as exc:
+            safe_err = sanitize_error_message(exc, fallback="Extraction failed")
             # Attempt Tier 2 Wayback Machine lookup
             wb_res = await fetch_wayback_snapshot(policy["canonical_url"])
             if wb_res:
@@ -646,13 +682,13 @@ async def check_policy_for_updates(
                     await repo.record_check_event(
                         policy_id=policy_id,
                         status="extraction_failed",
-                        message=str(exc),
+                        message=safe_err,
                         old_snapshot_id=latest_snap["id"],
                     )
                     return CheckResponse(
                         status="extraction_failed",
                         policy_id=policy_id,
-                        message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
+                        message=f"Extraction failed: {safe_err}. Previous version baseline is preserved.",
                         old_snapshot_id=latest_snap["id"],
                     )
             else:
@@ -660,27 +696,28 @@ async def check_policy_for_updates(
                 await repo.record_check_event(
                     policy_id=policy_id,
                     status="extraction_failed",
-                    message=str(exc),
+                    message=safe_err,
                     old_snapshot_id=latest_snap["id"],
                 )
                 return CheckResponse(
                     status="extraction_failed",
                     policy_id=policy_id,
-                    message=f"Extraction failed: {exc}. Previous version baseline is preserved.",
+                    message=f"Extraction failed: {safe_err}. Previous version baseline is preserved.",
                     old_snapshot_id=latest_snap["id"],
                 )
         except Exception as exc:
             logger.error("Recheck unexpected error: %s", exc)
+            safe_err = sanitize_error_message(exc, fallback="Fetch failed")
             await repo.record_check_event(
                 policy_id=policy_id,
                 status="extraction_failed",
-                message=str(exc),
+                message=safe_err,
                 old_snapshot_id=latest_snap["id"],
             )
             return CheckResponse(
                 status="extraction_failed",
                 policy_id=policy_id,
-                message=f"Fetch failed: {exc}",
+                message=f"Fetch failed: {safe_err}",
                 old_snapshot_id=latest_snap["id"],
             )
 
@@ -930,10 +967,21 @@ async def reanalyze_policy(
     )
 
 
-@router.delete("/{policy_id}")
-async def delete_policy_endpoint(policy_id: str):
-    """Delete a tracked policy and all associated snapshots, analyses, and check events."""
+@router.delete("/{policy_id}", response_model=DeletePolicyResponse)
+async def delete_policy_endpoint(
+    request: Request,
+    policy_id: str = Path(..., pattern=POLICY_ID_PATTERN, description="Unique policy identifier"),
+    _: None = Depends(require_admin_access),
+):
+    """Delete a tracked policy and all associated snapshots, analyses, and check events (admin protected in production)."""
     deleted = await repo.delete_policy(policy_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Policy not found")
-    return {"status": "deleted", "policy_id": policy_id}
+    log_security_event(
+        "policy_deleted",
+        severity="INFO",
+        detail=f"Deleted policy {policy_id}",
+        request=request,
+        extra={"policy_id": policy_id},
+    )
+    return DeletePolicyResponse(status="deleted", policy_id=policy_id)

@@ -16,6 +16,10 @@ logger = logging.getLogger("easyfineprint.repository")
 
 import re
 
+_ALLOWED_PROVENANCE = {"live", "archive", "user_pasted", "cached_fallback", "self"}
+_ALLOWED_POLICY_UPDATE_FIELDS = {"title", "status", "provenance", "latest_snapshot_id", "last_checked_at"}
+
+
 def _sanitize_string_id(val: Any, field_name: str = "id") -> str:
     """Strictly sanitize identifier strings, rejecting null bytes, dicts, or NoSQL operator injection."""
     if not isinstance(val, str):
@@ -23,7 +27,7 @@ def _sanitize_string_id(val: Any, field_name: str = "id") -> str:
     clean = val.strip()
     if not clean or len(clean) > 128:
         raise ValueError(f"Invalid {field_name}: invalid length")
-    if not re.match(r"^[a-zA-Z0-9_\-\.:/]+$", clean):
+    if not re.match(r"^[a-zA-Z0-9_-]+$", clean):
         raise ValueError(f"Invalid {field_name}: illegal characters detected")
     return clean
 
@@ -32,8 +36,11 @@ def _normalize_doc(doc: Optional[dict]) -> Optional[dict]:
     if not doc:
         return None
     res = dict(doc)
-    if "_id" in res:
-        res["id"] = str(res.get("_id", res.get("id")))
+    raw_oid = res.pop("_id", None)
+    if "id" not in res and raw_oid is not None:
+        res["id"] = str(raw_oid)
+    elif raw_oid is not None and not res.get("id"):
+        res["id"] = str(raw_oid)
     for k, v in res.items():
         if isinstance(v, datetime) and v.tzinfo is None:
             res[k] = v.replace(tzinfo=timezone.utc)
@@ -240,6 +247,7 @@ class PolicyRepository:
         title: str,
         provenance: str = "live",
     ) -> dict:
+        safe_provenance = provenance if provenance in _ALLOWED_PROVENANCE else "live"
         now = datetime.now(timezone.utc)
         policy_id = f"pol_{uuid.uuid4().hex[:12]}"
         doc = {
@@ -249,7 +257,7 @@ class PolicyRepository:
             "canonical_url": canonical_url,
             "title": title,
             "status": "active",
-            "provenance": provenance,
+            "provenance": safe_provenance,
             "created_at": now,
             "last_checked_at": now,
             "latest_snapshot_id": None,
@@ -258,16 +266,19 @@ class PolicyRepository:
             await get_db()["policies"].insert_one(doc)
         else:
             self._mem_policies[policy_id] = dict(doc)
-        return doc
+        return _normalize_doc(doc)
 
     async def update_policy(self, policy_id: str, updates: dict) -> Optional[dict]:
         clean_id = _sanitize_string_id(policy_id, "policy_id")
+        safe_updates = {k: v for k, v in updates.items() if k in _ALLOWED_POLICY_UPDATE_FIELDS}
+        if not safe_updates:
+            return await self.get_policy_by_id(clean_id)
         if await self._use_mongo():
-            await get_db()["policies"].update_one({"_id": {"$eq": clean_id}}, {"$set": updates})
+            await get_db()["policies"].update_one({"_id": {"$eq": clean_id}}, {"$set": safe_updates})
             return await self.get_policy_by_id(clean_id)
         if clean_id in self._mem_policies:
-            self._mem_policies[clean_id].update(updates)
-            return dict(self._mem_policies[clean_id])
+            self._mem_policies[clean_id].update(safe_updates)
+            return _normalize_doc(self._mem_policies[clean_id])
         return None
 
     async def delete_policy(self, policy_id: str) -> bool:

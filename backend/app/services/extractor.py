@@ -10,6 +10,7 @@ HTML-only content types, and multi-tier text extraction:
 from __future__ import annotations
 import json
 import logging
+import os
 import re
 import shutil
 import subprocess
@@ -23,6 +24,13 @@ from app.config import settings
 from app.services.url_guard import validate_url, resolve_and_verify_hostname, URLValidationError
 
 logger = logging.getLogger("easyfineprint.extractor")
+
+def _minimal_subprocess_env() -> dict:
+    """Return a clean child-process environment stripped of API keys, DB URIs, and secrets."""
+    return {
+        "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin"),
+        "LANG": "C.UTF-8",
+    }
 
 DEFAULT_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -52,21 +60,19 @@ class ExtractionError(Exception):
     pass
 
 
-async def _fetch_via_node_fallback(target_url: str, byte_limit: int, timeout_sec: int) -> Tuple[str, str, int]:
+async def _fetch_via_node_fallback(target_url: str, byte_limit: int, timeout_sec: int, max_redirects: int = 5) -> Tuple[str, str, int]:
     """
     Fallback HTTP/2 fetch using Node.js native engine when standard httpx encounters
-    connection timeouts or TLS fingerprint blocks, while preserving strict SSRF validation.
+    connection timeouts or TLS fingerprint blocks, while enforcing hop-by-hop SSRF validation.
     """
     node_path = shutil.which("node")
     if not node_path:
         raise ExtractionError("Node.js is not installed for fallback network fetch.")
 
-    parsed = validate_url(target_url)
-    resolve_and_verify_hostname(parsed.hostname)
-
     js_fetcher = """
     const url = process.argv[1];
     const timeoutMs = parseInt(process.argv[2], 10) * 1000;
+    const maxBytes = parseInt(process.argv[3], 10);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -80,13 +86,40 @@ async def _fetch_via_node_fallback(target_url: str, byte_limit: int, timeout_sec
             "Sec-Ch-Ua-Platform": '"Windows"'
         },
         signal: controller.signal,
-        redirect: 'follow'
+        redirect: 'manual'
     }).then(async (res) => {
         clearTimeout(timeout);
-        const text = await res.text();
+        if (res.status >= 300 && res.status < 400) {
+            process.stdout.write(JSON.stringify({
+                status: res.status,
+                location: res.headers.get("location") || "",
+                contentType: res.headers.get("content-type") || "",
+                text: ""
+            }));
+            return;
+        }
+        const contentType = (res.headers.get("content-type") || "").toLowerCase();
+        const reader = res.body ? res.body.getReader() : null;
+        let received = 0;
+        const chunks = [];
+        if (reader) {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                received += value.byteLength;
+                if (received > maxBytes) {
+                    controller.abort();
+                    process.stderr.write("Page exceeded maximum allowed byte size");
+                    process.exit(2);
+                }
+                chunks.push(Buffer.from(value));
+            }
+        }
+        const text = Buffer.concat(chunks).toString("utf-8");
         process.stdout.write(JSON.stringify({
             status: res.status,
             url: res.url || url,
+            contentType: contentType,
             text: text
         }));
     }).catch((err) => {
@@ -96,33 +129,54 @@ async def _fetch_via_node_fallback(target_url: str, byte_limit: int, timeout_sec
     });
     """
 
-    try:
-        proc = subprocess.run(
-            [node_path, "-e", js_fetcher, target_url, str(timeout_sec)],
-            capture_output=True,
-            text=True,
-            timeout=timeout_sec + 2,
-        )
-        if proc.returncode != 0:
-            raise ExtractionError(f"Node fallback fetch failed: {proc.stderr.strip() or 'Unknown error'}")
+    current_url = target_url
+    redirects = 0
+    while True:
+        try:
+            parsed = validate_url(current_url)
+            resolve_and_verify_hostname(parsed.hostname)
+        except URLValidationError as exc:
+            raise ExtractionError(str(exc))
 
-        data = json.loads(proc.stdout)
-        final_url = data.get("url", target_url)
+        try:
+            proc = subprocess.run(
+                [node_path, "-e", js_fetcher, current_url, str(timeout_sec), str(byte_limit)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_sec + 2,
+                env=_minimal_subprocess_env(),
+            )
+            if proc.returncode != 0:
+                raise ExtractionError(f"Node fallback fetch failed: {proc.stderr.strip() or 'Unknown error'}")
 
-        # Validate final resolved URL against SSRF
-        p_final = validate_url(final_url)
-        resolve_and_verify_hostname(p_final.hostname)
+            data = json.loads(proc.stdout)
+            status = int(data.get("status", 200))
 
-        status = data.get("status", 200)
-        html_text = data.get("text", "")
-        if len(html_text.encode("utf-8")) > byte_limit:
-            html_text = html_text[:byte_limit]
+            if status in (301, 302, 303, 307, 308):
+                redirects += 1
+                if redirects > max_redirects:
+                    raise ExtractionError(f"Maximum redirect hops exceeded ({max_redirects})")
+                location = data.get("location") or ""
+                if not location:
+                    raise ExtractionError("Redirect response missing Location header")
+                current_url = urljoin(current_url, location)
+                continue
 
-        return html_text, final_url, status
-    except subprocess.TimeoutExpired:
-        raise ExtractionError(f"Connection timed out while fetching {target_url} via browser engine")
-    except Exception as exc:
-        raise ExtractionError(f"Browser engine fetch error: {exc}")
+            if status != 200:
+                raise ExtractionError(f"Target server returned HTTP status {status}")
+
+            content_type = (data.get("contentType") or "").lower()
+            if content_type and not any(allowed in content_type for allowed in ALLOWED_CONTENT_TYPES):
+                raise ExtractionError(f"Prohibited content type '{content_type}'. Only HTML documents are accepted.")
+
+            html_text = data.get("text", "")
+            return html_text, current_url, status
+        except ExtractionError:
+            raise
+        except subprocess.TimeoutExpired:
+            raise ExtractionError(f"Connection timed out while fetching {current_url} via browser engine")
+        except Exception as exc:
+            raise ExtractionError(f"Browser engine fetch error: {exc}")
 
 
 async def safe_fetch_page(
@@ -296,18 +350,20 @@ def extract_js_hydration_policy(html: str) -> str:
 def evaluate_inline_scripts_with_node(html: str) -> str:
     """
     Sandboxed Node.js VM execution fallback.
-    Executes inline JavaScript in an isolated V8 VM context (node:vm) with a 2-second timeout
-    to render and extract dynamic window / document legal text objects.
+    Executes inline JavaScript in an isolated V8 VM context (node:vm) with a 2-second timeout,
+    code generation disabled (--disallow-code-generation-from-strings + context codeGeneration: false),
+    and zero inherited secrets in child process env.
     """
-    if not shutil.which("node"):
+    node_path = shutil.which("node")
+    if not node_path:
         return ""
 
     soup = BeautifulSoup(html, "html.parser")
-    scripts = [s.get_text() for s in soup.find_all("script") if s.get_text() and len(s.get_text()) > 100]
+    scripts = [s.get_text() for s in soup.find_all("script") if s.get_text() and 100 < len(s.get_text()) <= 300000]
 
     extracted_paragraphs: List[str] = []
 
-    for script_txt in scripts:
+    for script_txt in scripts[:12]:
         # Only evaluate scripts likely containing legal text definitions
         lower = script_txt.lower()
         if not any(kw in lower for kw in ("terms", "privacy", "agreement", "policy", "staticpage", "content", "initial_state", "description")):
@@ -337,16 +393,15 @@ def evaluate_inline_scripts_with_node(html: str) -> str:
             matchMedia: () => ({ matches: false, addListener: noop, removeListener: noop }),
         };
         stubWin.window = stubWin;
-        const sandbox = {
-            window: stubWin,
-            document: stubDoc,
-            self: stubWin,
-            location: stubWin.location,
-            navigator: stubWin.navigator,
-            console: { log: noop, error: noop, warn: noop },
-        };
+        const sandbox = Object.create(null);
+        sandbox.window = stubWin;
+        sandbox.document = stubDoc;
+        sandbox.self = stubWin;
+        sandbox.location = stubWin.location;
+        sandbox.navigator = stubWin.navigator;
+        sandbox.console = { log: noop, error: noop, warn: noop };
         sandbox.globalThis = sandbox;
-        vm.createContext(sandbox);
+        vm.createContext(sandbox, { codeGeneration: { strings: false, wasm: false } });
         try {
             vm.runInContext(process.argv[1], sandbox, { timeout: 2000 });
             const res = [];
@@ -380,10 +435,11 @@ def evaluate_inline_scripts_with_node(html: str) -> str:
 
         try:
             proc = subprocess.run(
-                ["node", "-e", runner_js, script_txt],
+                [node_path, "--disallow-code-generation-from-strings", "--max-old-space-size=64", "-e", runner_js, script_txt],
                 capture_output=True,
                 text=True,
                 timeout=2.5,
+                env=_minimal_subprocess_env(),
             )
             if proc.returncode == 0 and proc.stdout:
                 items = json.loads(proc.stdout)
@@ -515,11 +571,18 @@ async def fetch_wayback_snapshot(target_url: str, timeout_sec: float = 18.0) -> 
     Tier 2 Public Web Archive Fallback (Internet Archive / Wayback Machine):
     Queries the official Wayback Machine Availability API to retrieve the closest
     public snapshot of a legal agreement when origin servers or CDN firewalls block cloud scrapers.
+    Enforces strict SSRF hop-by-hop validation, host checks, and byte limits.
     Returns (html_content, archive_url, timestamp_str) or None if unavailable.
     """
+    try:
+        parsed_target = validate_url(target_url)
+        resolve_and_verify_hostname(parsed_target.hostname)
+    except URLValidationError:
+        return None
+
     api_url = f"https://archive.org/wayback/available?url={httpx.URL(target_url)}"
     try:
-        async with httpx.AsyncClient(timeout=timeout_sec, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=timeout_sec, follow_redirects=False, verify=True) as client:
             resp = await client.get(api_url, headers={"User-Agent": DEFAULT_USER_AGENT})
             if resp.status_code != 200:
                 return None
@@ -529,29 +592,57 @@ async def fetch_wayback_snapshot(target_url: str, timeout_sec: float = 18.0) -> 
                 return None
 
             archive_url = snapshot.get("url")
-            timestamp = snapshot.get("timestamp", "")
-            if not archive_url:
+            timestamp = str(snapshot.get("timestamp", ""))
+            if not archive_url or not isinstance(archive_url, str):
                 return None
 
-            # Fetch archived HTML snapshot safely
-            parsed_archive = validate_url(archive_url)
-            resolve_and_verify_hostname(parsed_archive.hostname)
+            # Manually follow up to 4 hops ensuring every hop passes SSRF checks and archive.org domain allowlist
+            current_url = archive_url
+            snap_html = ""
+            for _ in range(5):
+                parsed_archive = validate_url(current_url)
+                host = (parsed_archive.hostname or "").lower().rstrip(".")
+                if not (host == "archive.org" or host.endswith(".archive.org")):
+                    logger.warning("Rejected non-archive Wayback snapshot URL host: %s", host)
+                    return None
+                resolve_and_verify_hostname(host)
 
-            snap_resp = await client.get(archive_url, headers=STANDARD_BROWSER_HEADERS)
-            if snap_resp.status_code != 200 or len(snap_resp.text) < 200:
+                async with client.stream("GET", current_url, headers=STANDARD_BROWSER_HEADERS) as snap_resp:
+                    if snap_resp.status_code in (301, 302, 303, 307, 308):
+                        location = snap_resp.headers.get("location")
+                        if not location:
+                            return None
+                        current_url = urljoin(current_url, location)
+                        continue
+                    if snap_resp.status_code != 200:
+                        return None
+                    content_type = snap_resp.headers.get("content-type", "").lower()
+                    if content_type and not any(allowed in content_type for allowed in ALLOWED_CONTENT_TYPES):
+                        return None
+
+                    chunks = []
+                    total_bytes = 0
+                    async for chunk in snap_resp.aiter_bytes():
+                        total_bytes += len(chunk)
+                        if total_bytes > settings.max_fetch_bytes:
+                            return None
+                        chunks.append(chunk)
+                    snap_html = b"".join(chunks).decode(snap_resp.encoding or "utf-8", errors="replace")
+                    break
+
+            if len(snap_html) < 200:
                 return None
 
             # Clean out any Wayback Machine top navigation injected toolbars
-            html = snap_resp.text
             try:
-                clean_soup = BeautifulSoup(html, "html.parser")
+                clean_soup = BeautifulSoup(snap_html, "html.parser")
                 for banner in clean_soup.find_all(id=re.compile(r"^(wm-ipp|donato)")):
                     banner.decompose()
                 cleaned_html = str(clean_soup)
             except Exception:
-                cleaned_html = html
+                cleaned_html = snap_html
 
-            return cleaned_html, archive_url, timestamp
+            return cleaned_html, current_url, timestamp
     except Exception as exc:
         logger.debug("Wayback Machine archive fallback lookup failed for %s: %s", target_url, exc)
         return None

@@ -59,7 +59,7 @@ export default function Footer() {
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>GitHub Repository</span>
@@ -70,7 +70,7 @@ export default function Footer() {
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint/issues"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>Issue Tracker</span>
@@ -81,7 +81,7 @@ export default function Footer() {
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint/blob/main/docs/architecture.md"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>architecture.md</span>
@@ -92,7 +92,7 @@ export default function Footer() {
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint/blob/main/docs/evaluation.md"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>evaluation.md</span>
@@ -103,7 +103,7 @@ export default function Footer() {
                   <a
                     href="https://github.com/diptodeepb/EasyFinePrint/blob/main/docs/threat-model.md"
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>threat-model.md</span>
@@ -139,7 +139,7 @@ export default function Footer() {
                   <a
                     href={licenseUrl}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 group"
                   >
                     <span>Apache 2.0 License</span>

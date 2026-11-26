@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ArrowRight, Star } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { lockBodyScroll, unlockBodyScroll } from "../lib/scrollLock";
 
 export default function Header() {
   const location = useLocation();
@@ -10,6 +11,8 @@ export default function Header() {
     path: location.pathname,
   });
   const headerRef = useRef(null);
+  const mobileBackdropRef = useRef(null);
+  const isBackdropPointerDown = useRef(false);
 
   const mobileMenuOpen = menuState.open && menuState.path === location.pathname;
 
@@ -41,13 +44,32 @@ export default function Header() {
     };
   }, [mobileMenuOpen, setMobileMenuOpen]);
 
-  // Lock body scroll while mobile menu is open to prevent background scrolling
+  // Lock body & html scroll while mobile menu is open to prevent background scrolling
   useEffect(() => {
     if (!mobileMenuOpen) return;
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    lockBodyScroll();
     return () => {
-      document.body.style.overflow = originalOverflow;
+      unlockBodyScroll();
+    };
+  }, [mobileMenuOpen]);
+
+  // Prevent touchmove scroll-through on mobile menu backdrop and header drawer
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const backdrop = mobileBackdropRef.current;
+    const header = headerRef.current;
+
+    const handleTouchMove = (e) => {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    backdrop?.addEventListener("touchmove", handleTouchMove, { passive: false });
+    header?.addEventListener("touchmove", handleTouchMove, { passive: false });
+    return () => {
+      backdrop?.removeEventListener("touchmove", handleTouchMove);
+      header?.removeEventListener("touchmove", handleTouchMove);
     };
   }, [mobileMenuOpen]);
 
@@ -144,7 +166,7 @@ export default function Header() {
             <a
               href="https://github.com/diptodeepb/EasyFinePrint"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 text-xs font-mono text-[#5c5549] dark:text-zinc-300 hover:text-[#1c1917] dark:hover:text-white px-2.5 py-1.5 rounded-lg min-h-[36px] bg-[#f5eedf] dark:bg-zinc-900 hover:bg-[#e2d9c7] dark:hover:bg-zinc-800/80 btn-3d-secondary"
               title="Star on GitHub"
             >
@@ -177,7 +199,7 @@ export default function Header() {
 
         {/* Mobile Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden relative bg-[#f4ecde]/98 dark:bg-[#07070a]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 rounded-b-2xl border-b border-[#b5a994] dark:border-[var(--edge-card)] shadow-[0_4px_0_0_var(--shadow-card)]">
+          <div className="md:hidden relative bg-[#f4ecde]/98 dark:bg-[#07070a]/98 backdrop-blur-xl px-4 py-4 space-y-4 animate-in slide-in-from-top-2 duration-150 rounded-b-2xl border-b border-[#b5a994] dark:border-[var(--edge-card)] shadow-[0_4px_0_0_var(--shadow-card)] overscroll-none touch-none">
             {/* Architectural Top Divider Line for Mobile Menu */}
             <div
               className="absolute inset-x-0 top-0 h-[1px] pointer-events-none select-none overflow-hidden"
@@ -247,7 +269,7 @@ export default function Header() {
               <a
                 href="https://github.com/diptodeepb/EasyFinePrint"
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg hover:text-[#1c1917] dark:hover:text-white hover:bg-[#e2d9c7]/50 dark:hover:bg-zinc-900/50 transition-colors w-full"
                 title="Star on GitHub"
@@ -275,16 +297,19 @@ export default function Header() {
       {/* Mobile outside click backdrop */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-stone-900/50 dark:bg-black/60 backdrop-blur-xs md:hidden transition-opacity duration-200"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setMobileMenuOpen(false);
+          ref={mobileBackdropRef}
+          className="fixed inset-0 z-40 bg-stone-900/50 dark:bg-black/60 backdrop-blur-xs md:hidden transition-opacity duration-200 overscroll-none touch-none"
+          onPointerDown={(e) => {
+            isBackdropPointerDown.current = e.target === e.currentTarget;
           }}
-          onTouchEnd={(e) => {
+          onClick={(e) => {
+            const shouldClose = isBackdropPointerDown.current && e.target === e.currentTarget;
+            isBackdropPointerDown.current = false;
             e.preventDefault();
             e.stopPropagation();
-            setMobileMenuOpen(false);
+            if (shouldClose) {
+              setMobileMenuOpen(false);
+            }
           }}
           aria-hidden="true"
         />

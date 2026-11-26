@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { api } from "../lib/api";
 import { formatLocalDate } from "../lib/dateUtils";
+import { getSafeHref } from "../lib/safeUrl";
 import {
   getCachedPolicies,
   isCacheStale,
@@ -604,30 +605,39 @@ export default function Home() {
                             </div>
                           </td>
                           <td className="py-3.5 px-3 text-[#78716c] dark:text-zinc-500 text-left max-w-[180px] lg:max-w-xs truncate">
-                            {pol.canonical_url?.startsWith("/") ? (
-                              <Link
-                                to={pol.canonical_url}
-                                className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
-                                title={pol.canonical_url}
-                              >
-                                <span className="truncate">
-                                  {pol.canonical_url}
-                                </span>
-                              </Link>
-                            ) : (
-                              <a
-                                href={pol.canonical_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate group"
-                                title={pol.canonical_url}
-                              >
-                                <span className="truncate">
-                                  {pol.canonical_url}
-                                </span>
-                                <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
-                              </a>
-                            )}
+                            {(() => {
+                              const safeUrl = getSafeHref(pol.canonical_url);
+                              if (safeUrl && safeUrl.startsWith("/")) {
+                                return (
+                                  <Link
+                                    to={safeUrl}
+                                    className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate"
+                                    title={pol.canonical_url}
+                                  >
+                                    <span className="truncate">
+                                      {pol.canonical_url}
+                                    </span>
+                                  </Link>
+                                );
+                              }
+                              if (safeUrl) {
+                                return (
+                                  <a
+                                    href={safeUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1.5 max-w-full text-[11px] truncate group"
+                                    title={pol.canonical_url}
+                                  >
+                                    <span className="truncate">
+                                      {pol.canonical_url}
+                                    </span>
+                                    <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+                                  </a>
+                                );
+                              }
+                              return <span className="truncate text-[11px]">{pol.canonical_url}</span>;
+                            })()}
                           </td>
                           <td className="py-3.5 px-3 whitespace-nowrap text-left">
                             {score !== null && score !== undefined ? (
@@ -730,26 +740,35 @@ export default function Home() {
                       </div>
 
                       <div className="text-[#78716c] dark:text-zinc-500 font-mono text-[11px] truncate">
-                        {pol.canonical_url?.startsWith("/") ? (
-                          <Link
-                            to={pol.canonical_url}
-                            className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors block"
-                            title={pol.canonical_url}
-                          >
-                            {pol.canonical_url}
-                          </Link>
-                        ) : (
-                          <a
-                            href={pol.canonical_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
-                            title={pol.canonical_url}
-                          >
-                            <span className="truncate">{pol.canonical_url}</span>
-                            <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
-                          </a>
-                        )}
+                        {(() => {
+                          const safeUrl = getSafeHref(pol.canonical_url);
+                          if (safeUrl && safeUrl.startsWith("/")) {
+                            return (
+                              <Link
+                                to={safeUrl}
+                                className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors block"
+                                title={pol.canonical_url}
+                              >
+                                {pol.canonical_url}
+                              </Link>
+                            );
+                          }
+                          if (safeUrl) {
+                            return (
+                              <a
+                                href={safeUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate hover:text-[#1c1917] dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
+                                title={pol.canonical_url}
+                              >
+                                <span className="truncate">{pol.canonical_url}</span>
+                                <ExternalLink className="w-2.5 h-2.5 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+                              </a>
+                            );
+                          }
+                          return <span className="truncate">{pol.canonical_url}</span>;
+                        })()}
                       </div>
                     </div>
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { api } from '../lib/api';
 import { formatLocalDate } from '../lib/dateUtils';
+import { getSafeHref } from '../lib/safeUrl';
 import FindingCard from '../components/FindingCard';
 import DiffViewer from '../components/DiffViewer';
 import VersionHistory from '../components/VersionHistory';
@@ -309,24 +310,33 @@ export default function PolicyDetail() {
             <h1 className="text-lg sm:text-xl font-bold text-[#1c1917] dark:text-zinc-100 tracking-tight leading-snug">
               {policy.title || 'Policy Document'}
             </h1>
-            {policy.canonical_url?.startsWith('/') ? (
-              <Link
-                to={policy.canonical_url}
-                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full"
-              >
-                <span className="truncate break-all">{policy.canonical_url}</span>
-              </Link>
-            ) : (
-              <a
-                href={policy.canonical_url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
-              >
-                <span className="truncate break-all">{policy.canonical_url}</span>
-                <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-              </a>
-            )}
+            {(() => {
+              const safeUrl = getSafeHref(policy.canonical_url);
+              if (safeUrl && safeUrl.startsWith('/')) {
+                return (
+                  <Link
+                    to={safeUrl}
+                    className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full"
+                  >
+                    <span className="truncate break-all">{policy.canonical_url}</span>
+                  </Link>
+                );
+              }
+              if (safeUrl) {
+                return (
+                  <a
+                    href={safeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-mono text-[#5c5549] hover:text-[#1c1917] dark:text-zinc-400 dark:hover:text-white transition-colors inline-flex items-center gap-1 max-w-full group"
+                  >
+                    <span className="truncate break-all">{policy.canonical_url}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                );
+              }
+              return <span className="text-xs font-mono text-[#5c5549] dark:text-zinc-400 truncate break-all">{policy.canonical_url}</span>;
+            })()}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap text-xs font-mono shrink-0">

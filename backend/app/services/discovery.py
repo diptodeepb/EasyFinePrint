@@ -8,8 +8,9 @@ and search engine fallback). Enforces strict multi-hop SSRF validation.
 from __future__ import annotations
 import logging
 import re
+from collections import OrderedDict
 from datetime import datetime, timezone
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 from bs4 import BeautifulSoup
 import httpx
@@ -18,11 +19,57 @@ from app.services.known_directory import KNOWN_DIRECTORY, DIRECTORY_ALIASES, sea
 
 logger = logging.getLogger("easyfineprint.discovery")
 
-# In-memory query cache: normalized_query -> (candidates, timestamp)
-_query_cache: Dict[str, tuple[List[Dict[str, Any]], datetime]] = {}
+# Bounded TTL in-memory query cache: normalized_query -> (candidates, timestamp)
+MAX_CACHE_ENTRIES = 500
+CACHE_TTL_SECONDS = 900
+_query_cache: OrderedDict[str, tuple[List[Dict[str, Any]], datetime]] = OrderedDict()
 
 # Configurable upper limit for auto-discovered candidate legal resources per company
 MAX_DISCOVERY_CANDIDATES = 15
+MAX_DISCOVERY_BYTES = 600_000
+
+
+async def _safe_discovery_get(
+    target_url: str,
+    timeout_sec: float = 4.5,
+    max_bytes: int = MAX_DISCOVERY_BYTES,
+    max_redirects: int = 4,
+) -> Optional[Tuple[int, str, str, str]]:
+    """
+    SSRF-safe HTTP GET for discovery with manual hop-by-hop redirect validation
+    and streaming byte cap. Returns (status_code, final_url, content_type, body_text) or None.
+    """
+    current_url = target_url
+    async with httpx.AsyncClient(timeout=timeout_sec, follow_redirects=False, verify=True) as client:
+        for _ in range(max_redirects + 1):
+            try:
+                parsed = validate_url(current_url)
+                resolve_and_verify_hostname(parsed.hostname)
+            except URLValidationError:
+                return None
+
+            async with client.stream("GET", current_url, headers=BROWSER_HEADERS) as resp:
+                if resp.status_code in (301, 302, 303, 307, 308):
+                    location = resp.headers.get("location")
+                    if not location:
+                        return None
+                    current_url = urljoin(current_url, location)
+                    continue
+
+                content_type = resp.headers.get("content-type", "").lower()
+                if resp.status_code != 200:
+                    return resp.status_code, current_url, content_type, ""
+
+                chunks = []
+                total_bytes = 0
+                async for chunk in resp.aiter_bytes():
+                    total_bytes += len(chunk)
+                    chunks.append(chunk)
+                    if total_bytes >= max_bytes:
+                        break
+                body_text = b"".join(chunks)[:max_bytes].decode(resp.encoding or "utf-8", errors="replace")
+                return resp.status_code, current_url, content_type, body_text
+    return None
 
 # Common canonical legal endpoint paths probed during dynamic inspection
 CANONICAL_LEGAL_PATHS = [
@@ -118,61 +165,63 @@ async def crawl_homepage_for_policy_links(base_url: str) -> List[Dict[str, str]]
     seen_urls: set[str] = set()
 
     try:
-        async with httpx.AsyncClient(timeout=4.5, follow_redirects=True, verify=True) as client:
-            resp = await client.get(base_url, headers=BROWSER_HEADERS)
-            if resp.status_code != 200 or not resp.text:
-                return []
+        fetched = await _safe_discovery_get(base_url, timeout_sec=4.5, max_bytes=MAX_DISCOVERY_BYTES)
+        if not fetched:
+            return []
+        status_code, final_url, _, html_text = fetched
+        if status_code != 200 or not html_text:
+            return []
 
-            soup = BeautifulSoup(resp.text[:600000], "html.parser")
-            target_keywords = [
-                "terms", "privacy", "legal", "tos", "policy", "policies",
-                "agreement", "disclaimer", "condition", "acceptable use",
-                "cookie", "cookies", "security", "dpa", "data protection", "eula"
-            ]
+        soup = BeautifulSoup(html_text[:MAX_DISCOVERY_BYTES], "html.parser")
+        target_keywords = [
+            "terms", "privacy", "legal", "tos", "policy", "policies",
+            "agreement", "disclaimer", "condition", "acceptable use",
+            "cookie", "cookies", "security", "dpa", "data protection", "eula"
+        ]
 
-            # Collect candidate anchor tags prioritizing footers and navs
-            all_links = []
-            for container in soup.find_all(["footer", "nav", "div", "section"]):
-                all_links.extend(container.find_all("a", href=True))
-            if not all_links:
-                all_links = soup.find_all("a", href=True)
+        # Collect candidate anchor tags prioritizing footers and navs
+        all_links = []
+        for container in soup.find_all(["footer", "nav", "div", "section"]):
+            all_links.extend(container.find_all("a", href=True))
+        if not all_links:
+            all_links = soup.find_all("a", href=True)
 
-            for a in all_links:
-                href = a["href"].strip()
-                if not href or href.startswith(("#", "javascript:", "mailto:", "tel:")):
-                    continue
+        for a in all_links:
+            href = a["href"].strip()
+            if not href or href.startswith(("#", "javascript:", "mailto:", "tel:")):
+                continue
 
-                text = a.get_text(separator=" ", strip=True)
-                combined = f"{text} {href}".lower()
+            text = a.get_text(separator=" ", strip=True)
+            combined = f"{text} {href}".lower()
 
-                if any(kw in combined for kw in target_keywords):
-                    full_url = urljoin(str(resp.url), href)
-                    # Strip URL fragments and tracking queries
-                    parsed_full = urlparse(full_url)
-                    clean_full_url = f"{parsed_full.scheme}://{parsed_full.netloc}{parsed_full.path}"
-                    if parsed_full.query and not any(utm in parsed_full.query for utm in ("utm_", "ref", "source")):
-                        clean_full_url = f"{clean_full_url}?{parsed_full.query}"
+            if any(kw in combined for kw in target_keywords):
+                full_url = urljoin(final_url, href)
+                # Strip URL fragments and tracking queries
+                parsed_full = urlparse(full_url)
+                clean_full_url = f"{parsed_full.scheme}://{parsed_full.netloc}{parsed_full.path}"
+                if parsed_full.query and not any(utm in parsed_full.query for utm in ("utm_", "ref", "source")):
+                    clean_full_url = f"{clean_full_url}?{parsed_full.query}"
 
-                    if clean_full_url.startswith(("http://", "https://")) and clean_full_url not in seen_urls:
-                        # Validate full URL against SSRF
-                        try:
-                            p_target = validate_url(clean_full_url)
-                            resolve_and_verify_hostname(p_target.hostname)
-                        except URLValidationError:
-                            continue
+                if clean_full_url.startswith(("http://", "https://")) and clean_full_url not in seen_urls:
+                    # Validate full URL against SSRF
+                    try:
+                        p_target = validate_url(clean_full_url)
+                        resolve_and_verify_hostname(p_target.hostname)
+                    except URLValidationError:
+                        continue
 
-                        seen_urls.add(clean_full_url)
-                        clean_title = _normalize_title(text, default_title="Legal Resource")
-                        snippet = f"Discovered directly on official website ({parsed.hostname})"
-                        candidates.append({
-                            "title": clean_title,
-                            "url": clean_full_url,
-                            "snippet": snippet,
-                            "source": "discovery",
-                        })
+                    seen_urls.add(clean_full_url)
+                    clean_title = _normalize_title(text, default_title="Legal Resource")
+                    snippet = f"Discovered directly on official website ({parsed.hostname})"
+                    candidates.append({
+                        "title": clean_title,
+                        "url": clean_full_url,
+                        "snippet": snippet,
+                        "source": "discovery",
+                    })
 
-                        if len(candidates) >= MAX_DISCOVERY_CANDIDATES:
-                            break
+                    if len(candidates) >= MAX_DISCOVERY_CANDIDATES:
+                        break
 
     except Exception as exc:
         logger.debug("Crawl discovery exception for %s: %s", base_url, exc)
@@ -195,39 +244,34 @@ async def probe_canonical_endpoints(base_url: str, seen_urls: set[str]) -> List[
     host_root = f"{parsed.scheme}://{parsed.netloc}"
 
     try:
-        async with httpx.AsyncClient(timeout=3.0, follow_redirects=True, verify=True) as client:
-            for path, default_title in CANONICAL_LEGAL_PATHS:
-                target_url = urljoin(host_root, path)
-                if target_url in seen_urls:
-                    continue
+        for path, default_title in CANONICAL_LEGAL_PATHS:
+            target_url = urljoin(host_root, path)
+            if target_url in seen_urls:
+                continue
 
-                try:
-                    p_target = validate_url(target_url)
-                    resolve_and_verify_hostname(p_target.hostname)
-                except URLValidationError:
+            try:
+                fetched = await _safe_discovery_get(target_url, timeout_sec=3.0, max_bytes=100_000)
+                if not fetched:
                     continue
+                status_code, final_url, content_type, body_text = fetched
+                # Successful response containing HTML and legal terms
+                if status_code == 200 and "text/html" in content_type:
+                    text_sample = body_text[:10000].lower()
+                    # Verify the page actually contains policy text rather than a soft-404 homepage
+                    if any(kw in text_sample for kw in ("terms", "privacy", "agreement", "conditions", "policy", "governs")):
+                        if final_url not in seen_urls:
+                            seen_urls.add(final_url)
+                            discovered.append({
+                                "title": f"{parsed.netloc.replace('www.', '').capitalize()} {default_title}",
+                                "url": final_url,
+                                "snippet": f"Verified official legal endpoint on {parsed.hostname}",
+                                "source": "auto_probe",
+                            })
+            except Exception:
+                continue
 
-                try:
-                    resp = await client.get(target_url, headers=BROWSER_HEADERS)
-                    # Successful response containing HTML and legal terms
-                    if resp.status_code == 200 and "text/html" in resp.headers.get("content-type", ""):
-                        text_sample = resp.text[:10000].lower()
-                        # Verify the page actually contains policy text rather than a soft-404 homepage
-                        if any(kw in text_sample for kw in ("terms", "privacy", "agreement", "conditions", "policy", "governs")):
-                            clean_url = str(resp.url)
-                            if clean_url not in seen_urls:
-                                seen_urls.add(clean_url)
-                                discovered.append({
-                                    "title": f"{parsed.netloc.replace('www.', '').capitalize()} {default_title}",
-                                    "url": clean_url,
-                                    "snippet": f"Verified official legal endpoint on {parsed.hostname}",
-                                    "source": "auto_probe",
-                                })
-                except Exception:
-                    continue
-
-                if len(discovered) >= 6:
-                    break
+            if len(discovered) >= 6:
+                break
     except Exception as exc:
         logger.debug("Canonical probing error for %s: %s", base_url, exc)
 
@@ -249,59 +293,55 @@ async def search_engine_fallback(query: str, seen_urls: set[str]) -> List[Dict[s
     ]
 
     try:
-        async with httpx.AsyncClient(timeout=4.0, follow_redirects=True, verify=True) as client:
-            for s_url in search_urls:
-                try:
-                    p_s = validate_url(s_url)
-                    resolve_and_verify_hostname(p_s.hostname)
-                except URLValidationError:
+        for s_url in search_urls:
+            fetched = await _safe_discovery_get(s_url, timeout_sec=4.0, max_bytes=400_000)
+            if not fetched:
+                continue
+            status_code, _, _, body_text = fetched
+            if status_code != 200 or not body_text:
+                continue
+
+            soup = BeautifulSoup(body_text[:400000], "html.parser")
+            # DuckDuckGo HTML results use .result__url or a.result__snippet
+            for a in soup.find_all("a", href=True):
+                href = a["href"]
+                # Handle DDG redirect wrappers
+                if "uddg=" in href:
+                    import urllib.parse
+                    match = re.search(r"uddg=([^&]+)", href)
+                    if match:
+                        href = urllib.parse.unquote(match.group(1))
+
+                if not href.startswith(("http://", "https://")):
                     continue
 
-                resp = await client.get(s_url, headers=BROWSER_HEADERS)
-                if resp.status_code != 200 or not resp.text:
-                    continue
-
-                soup = BeautifulSoup(resp.text[:400000], "html.parser")
-                # DuckDuckGo HTML results use .result__url or a.result__snippet
-                for a in soup.find_all("a", href=True):
-                    href = a["href"]
-                    # Handle DDG redirect wrappers
-                    if "uddg=" in href:
-                        import urllib.parse
-                        match = re.search(r"uddg=([^&]+)", href)
-                        if match:
-                            href = urllib.parse.unquote(match.group(1))
-
-                    if not href.startswith(("http://", "https://")):
+                combined = f"{a.get_text()} {href}".lower()
+                if any(kw in combined for kw in ("terms", "privacy", "tos", "policy", "legal")):
+                    try:
+                        p_target = validate_url(href)
+                        resolve_and_verify_hostname(p_target.hostname)
+                    except URLValidationError:
                         continue
 
-                    combined = f"{a.get_text()} {href}".lower()
-                    if any(kw in combined for kw in ("terms", "privacy", "tos", "policy", "legal")):
-                        try:
-                            p_target = validate_url(href)
-                            resolve_and_verify_hostname(p_target.hostname)
-                        except URLValidationError:
-                            continue
+                    # Avoid search engines, ads, or aggregators
+                    if any(agg in p_target.netloc for agg in ("duckduckgo.com", "google.com", "bing.com", "yahoo.com", "youtube.com")):
+                        continue
 
-                        # Avoid search engines, ads, or aggregators
-                        if any(agg in p_target.netloc for agg in ("duckduckgo.com", "google.com", "bing.com", "yahoo.com", "youtube.com")):
-                            continue
+                    if href not in seen_urls:
+                        seen_urls.add(href)
+                        title_text = _normalize_title(a.get_text(), default_title="Official Legal Policy")
+                        discovered.append({
+                            "title": title_text,
+                            "url": href,
+                            "snippet": f"Discovered via search for {clean_q} ({p_target.hostname})",
+                            "source": "search_discovery",
+                        })
 
-                        if href not in seen_urls:
-                            seen_urls.add(href)
-                            title_text = _normalize_title(a.get_text(), default_title="Official Legal Policy")
-                            discovered.append({
-                                "title": title_text,
-                                "url": href,
-                                "snippet": f"Discovered via search for {clean_q} ({p_target.hostname})",
-                                "source": "search_discovery",
-                            })
+                    if len(discovered) >= 4:
+                        break
 
-                        if len(discovered) >= 4:
-                            break
-
-                if discovered:
-                    break
+            if discovered:
+                break
     except Exception as exc:
         logger.debug("Search engine fallback exception for query '%s': %s", query, exc)
 
@@ -323,14 +363,18 @@ async def discover_policy_urls(query: str, max_candidates: int = MAX_DISCOVERY_C
     if not clean_q:
         return {"candidates": [], "cached": False, "total": 0}
 
-    # 1. Check in-memory cache
+    # 1. Check bounded TTL in-memory cache
+    now = datetime.now(timezone.utc)
     if clean_q in _query_cache:
-        cached_candidates, _ = _query_cache[clean_q]
-        return {
-            "candidates": cached_candidates[:max_candidates],
-            "cached": True,
-            "total": len(cached_candidates),
-        }
+        cached_candidates, cached_at = _query_cache[clean_q]
+        if (now - cached_at).total_seconds() < CACHE_TTL_SECONDS:
+            _query_cache.move_to_end(clean_q)
+            return {
+                "candidates": cached_candidates[:max_candidates],
+                "cached": True,
+                "total": len(cached_candidates),
+            }
+        del _query_cache[clean_q]
 
     candidates: List[Dict[str, str]] = []
     seen_urls: set[str] = set()
@@ -393,7 +437,9 @@ async def discover_policy_urls(query: str, max_candidates: int = MAX_DISCOVERY_C
     ordered_candidates = _prioritize_policies(candidates)
     restricted_candidates = ordered_candidates[:max_candidates]
 
-    # Cache result
+    # Cache result with bounded LRU size eviction (prevents OOM DoS)
+    while len(_query_cache) >= MAX_CACHE_ENTRIES:
+        _query_cache.popitem(last=False)
     _query_cache[clean_q] = (restricted_candidates, datetime.now(timezone.utc))
 
     return {

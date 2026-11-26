@@ -32,7 +32,9 @@ export default class ErrorBoundary extends React.Component {
               Something went wrong while displaying this view
             </h2>
             <p className="text-xs text-[#5c5549] dark:text-zinc-400 max-w-md leading-relaxed">
-              {this.state.error?.message || 'An unexpected rendering error occurred.'}
+              {import.meta.env?.PROD
+                ? 'An unexpected rendering error occurred. Please return to the dashboard or reload.'
+                : this.state.error?.message || 'An unexpected rendering error occurred.'}
             </p>
           </div>
           <div className="flex items-center gap-2.5 pt-2">

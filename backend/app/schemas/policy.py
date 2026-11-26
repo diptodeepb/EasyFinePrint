@@ -2,7 +2,8 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import List, Literal, Optional
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from app.security.sanitizers import contains_null_byte, strip_control_chars
 
 
 FindingCategory = Literal[
@@ -45,12 +46,27 @@ class DiffChangeSchema(BaseModel):
 
 
 class PolicyAnalyzeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     url: str = Field(..., min_length=1, max_length=2048, description="Target public policy URL")
     raw_text: Optional[str] = Field(None, max_length=500_000, description="Directly pasted legal policy text for user-provided ingestion")
     title: Optional[str] = Field(None, max_length=200, description="Optional title for the policy document")
 
+    @field_validator("url", "raw_text", "title")
+    @classmethod
+    def reject_null_bytes_and_sanitize(cls, v: Optional[str], info) -> Optional[str]:
+        if v is None:
+            return None
+        if contains_null_byte(v):
+            raise ValueError(f"Null bytes are prohibited in {info.field_name}.")
+        if info.field_name in ("url", "title"):
+            return strip_control_chars(v, allow_newlines=False)
+        return strip_control_chars(v, allow_newlines=True)
+
 
 class PolicySelfAnalyzeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     policy_type: Literal["terms", "privacy"] = Field("terms", description="Self-policy document type")
 
 
@@ -121,8 +137,40 @@ class CheckResponse(BaseModel):
     analysis: Optional[AnalysisResponse] = None
 
 
+class SelfPolicyMetadataResponse(BaseModel):
+    key: str
+    title: str
+    url: str
+    canonical_url: str
+    description: str
+    text: str
+
+
+class DeletePolicyResponse(BaseModel):
+    status: Literal["deleted"]
+    policy_id: str
+
+
+class HealthResponse(BaseModel):
+    status: Literal["healthy", "degraded"]
+    service: str
+    timestamp: str
+
+
 class DiscoverySearchRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     query: str = Field(..., min_length=2, max_length=120, description="Company or service name")
+
+    @field_validator("query")
+    @classmethod
+    def validate_clean_query(cls, v: str) -> str:
+        if contains_null_byte(v):
+            raise ValueError("Null bytes are prohibited in query.")
+        cleaned = strip_control_chars(v, allow_newlines=False).strip()
+        if len(cleaned) < 2:
+            raise ValueError("Please enter at least 2 characters for query.")
+        return cleaned
 
 
 class DiscoveryCandidate(BaseModel):
